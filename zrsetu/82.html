@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
 <title>涩图time</title>
 <style>
+
 *{
 margin:0;
 padding:0;
@@ -13,7 +14,7 @@ box-sizing:border-box
 
 body{
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
-background:#fafafa;
+  background:#fafafa;
 color:#333;
 line-height:1.6;
 }
@@ -60,12 +61,10 @@ position:relative
   animation:skeleton 1.5s infinite ease-in-out;
   overflow:hidden;
 }
-
 @keyframes skeleton{
   0%{background-position:200% 0}
   100%{background-position:-200% 0}
 }
-
 /* 图片本身淡入 */
 .img-wrap {
   position: relative;
@@ -74,7 +73,7 @@ position:relative
   overflow: hidden;
 }
 
-/* 添加一个 shimmer 背景层 */
+/* 添加一个 shimmer 背景层，而不是动画在容器上 */
 .img-wrap::before {
   content: "";
   position: absolute;
@@ -118,21 +117,22 @@ position:relative
   opacity: 1;
 }
 
+
 /* ===== 迅雷下载模块===== */
 
 .explanation {
-  background: linear-gradient(135deg, #f8fafc, #edf5f8);
-  border: 1px solid #d4e3ec;
+  background: linear-gradient(135deg, #f2f4f6, #eceef0);  
+  border: 1px solid #dde2e9;
   border-radius: 16px;
   padding: 22px;
   text-align: center;
   color: #4a5568;
   margin: 25px 0;
-  box-shadow: 0 4px 14px rgba(92, 168, 230, 0.12);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);  
 }
 .explanation h2 {
   font-size: 20px;
-  color: #1a5f8a; /* Retained deepened blue */
+  color: #2d2d2d;
   margin-bottom: 10px;
   font-weight: 600;
 }
@@ -141,26 +141,26 @@ position:relative
   color: #506070;
 }
 .explanation p span {
-  color: #2d3748; /* Deep gray color*/
+  color: #2d3748;
   font-weight: 700;
-  text-shadow: 0 0 8px rgba(45, 55, 72, 0.3); /* Adjusted shadow to match deep gray */
+  text-shadow: 0 0 8px rgba(45, 55, 72, 0.3);
 }
 .preserve {
   display: inline-block;
   margin-top: 15px;
   padding: 11px 28px;
   border-radius: 999px;
-  background: linear-gradient(90deg, #5ca8e6, #3d91cf);
+  background: linear-gradient(135deg, #383f50, #626982);
   color: #fff;
   text-decoration: none;
   font-weight: 600;
-  box-shadow: 0 6px 16px rgba(92, 168, 230, 0.35);
+  box-shadow: 0 6px 16px rgba(56, 63, 80, 0.38);
   transition: all .3s ease;
 }
 .preserve:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 22px rgba(92, 168, 230, 0.45);
-  background: linear-gradient(90deg, #6cb6ee, #4b9edc);
+  box-shadow: 0 8px 22px rgba(56, 63, 80, 0.48);
+  background: linear-gradient(135deg, #424a5e, #6d748c);
 }
 
 .fixed-button{
@@ -169,33 +169,28 @@ position:relative
 }
 .fixed-button a{
   display:block;text-align:center;background:#5ca8e6;color:#fff;
-  padding:8px;border-radius:999px;text-decoration:none;
+  padding:10px;border-radius:999px;text-decoration:none;
   font-weight:600;box-shadow:0 5px 14px rgba(92,168,230,.4);
   transition:.3s;
 }
 .fixed-button a:hover{background:#4b96d8;transform:translateY(-2px)}
-
-.responsive-video {
-           width: 100%;
-           height: 240;
-           border-radius: 8px;
-           object-fit: cover;
-        }
 
 .collection-wrap {
     display: block;
     width: 100%;
     text-align: center;
 }
-
-.Collection {
+.collection {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+
     width: 300px;  
     height: 44px; 
+
     margin: 0 auto 25px;
     padding: 0;           
+
     background: #5ca8e6;
     color: #fff;
     border-radius: 999px;
@@ -203,17 +198,22 @@ position:relative
     font-weight: 600;
     font-size: 1.1rem;
     line-height: 1;        
+
     box-sizing: border-box;
     box-shadow: 0 6px 16px rgba(92,168,230,.4);
     transition: all .3s ease;
 }
-
-.Collection:hover {
+.collection:hover {
     background: #4b96d8;
     transform: translateY(-2px);
     box-shadow: 0 8px 20px rgba(75,150,216,.5);
 }
-
+.responsive-video {
+           width: 100%;
+           height: auto;
+           border-radius: 8px;
+           object-fit: contain;
+}
 </style>
 </head>
 <body>
@@ -373,46 +373,24 @@ position:relative
 </div>
 
 <script>
-(function(){
-  const imgs=document.querySelectorAll('.img-wrap img');
-  const ioOptions={root:null,rootMargin:'200px',threshold:0.01};
+(() => {
+  const imgs = document.querySelectorAll('.img-wrap img');
+  
+  imgs.forEach(img => {
+    const src = img.dataset.src;
+    if (!src) return;
 
-  if('IntersectionObserver'in window){
-    const io=new IntersectionObserver((entries,observer)=>{
-      entries.forEach(entry=>{
-        if(entry.isIntersecting){
-          const img=entry.target;
-          const src=img.dataset.src;
-          if(src){
-            img.src=src;
-            img.onload=()=>img.closest('.img-wrap').classList.add('loaded');
-            img.onerror=()=>img.closest('.img-wrap').style.background='#f5f5f5';
-            img.removeAttribute('data-src');
-          }
-          observer.unobserve(img);
-        }
-      });
-    },ioOptions);
-    imgs.forEach(img=>io.observe(img));
-  }else{
-    const lazyLoad=()=>{
-      imgs.forEach(img=>{
-        if(img.dataset.src){
-          const rect=img.getBoundingClientRect();
-          if(rect.top<window.innerHeight+200){
-            img.src=img.dataset.src;
-            img.onload=()=>img.closest('.img-wrap').classList.add('loaded');
-            img.removeAttribute('data-src');
-          }
-        }
-      });
+    const tempImg = new Image();
+    tempImg.src = src;
+    
+    tempImg.onload = () => {
+      img.src = src;
+      img.closest('.img-wrap').classList.add('loaded');
     };
-    lazyLoad();
-    window.addEventListener('scroll',lazyLoad,{passive:true});
-    window.addEventListener('resize',lazyLoad);
-  }
+  });
 })();
 </script>
 </body>
 
 </html>
+

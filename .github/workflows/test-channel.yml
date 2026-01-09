@@ -1,25 +1,75 @@
-name: 测试读取 Telegram 频道
+import os
+import requests
+import json
+from datetime import datetime
 
-on:
-  workflow_dispatch:    # 允许手动触发运行
+TOKEN = os.environ['TELEGRAM_BOT_TOKEN']
+CHAT_ID = os.environ['TELEGRAM_CHANNEL_CHAT_ID']
+CHANNEL_USERNAME = "setutime_pipi"
 
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: 拉取代码
-        uses: actions/checkout@v4
+def get_file_download_url(file_id):
+    url = f"https://api.telegram.org/bot{TOKEN}/getFile?file_id={file_id}"
+    resp = requests.get(url).json()
+    if resp['ok']:
+        file_path = resp['result']['file_path']
+        return f"https://api.telegram.org/file/bot{TOKEN}/{file_path}"
+    return "(获取失败)"
 
-      - name: 设置 Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
+def main():
+    print("=== 超级调试版：开始读取频道消息 ===")
+    print(f"频道用户名: @{CHANNEL_USERNAME}")
+    print(f"频道 Chat ID: {CHAT_ID}")
+    print(f"当前时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} JST\n")
 
-      - name: 安装 requests
-        run: pip install requests
+    offset = None
+    found = 0
 
-      - name: 运行测试脚本
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHANNEL_CHAT_ID: ${{ secrets.TELEGRAM_CHANNEL_CHAT_ID }}
-        run: python update_from_tg.py
+    # 只循环一次（GitHub Actions 不适合无限轮询），但用长 timeout 等新消息
+    params = {
+        'offset': offset,
+        'limit': 100,
+        'timeout': 60,  # 等 60 秒，看能不能等到新消息
+        'allowed_updates': json.dumps(['channel_post', 'edited_channel_post'])  # 关键！强制只接收频道消息
+    }
+
+    print("正在调用 getUpdates，参数:", params)
+    response = requests.get(f"https://api.telegram.org/bot{TOKEN}/getUpdates", params=params, timeout=70)
+    data = response.json()
+    print("Telegram 返回完整 JSON:", json.dumps(data, indent=2, ensure_ascii=False))
+
+    if not data['ok']:
+        print("API 错误！请检查 Token 或网络")
+        return
+
+    updates = data['result']
+    print(f"本次收到 {len(updates)} 条 updates")
+
+    for update in updates:
+        post = update.get('channel_post') or update.get('edited_channel_post')
+        if not post or str(post['chat']['id']) != CHAT_ID:
+            continue
+
+        found += 1
+        msg_id = post['message_id']
+        link = f"https://t.me/{CHANNEL_USERNAME}/{msg_id}"
+        text = post.get('text') or post.get('caption') or '(无文字)'
+
+        print(f"✅ 成功读取到频道消息！ID: {msg_id}")
+        print(f"   永久链接: {link}")
+        print(f"   内容: {text}")
+
+        if 'document' in post:
+            doc = post['document']
+            name = doc.get('file_name', '未知文件')
+            file_url = get_file_download_url(doc['file_id'])
+            print(f"   📦 压缩包: {name}")
+            print(f"   📎 文件直链: {file_url}")
+
+        # 更新 offset，避免下次重复
+        if 'update_id' in update:
+            offset = update['update_id'] + 1
+
+    print(f"\n=== 本次运行结束 === 找到 {found} 条频道新消息")
+
+if __name__ == '__main__':
+    main()

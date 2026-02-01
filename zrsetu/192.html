@@ -350,19 +350,20 @@ position:relative
 
 <script>
 (() => {
+  // 图片预加载
   const imgs = document.querySelectorAll('.img-wrap img');
-  
   imgs.forEach(img => {
     const src = img.dataset.src;
     if (!src) return;
-
     const tempImg = new Image();
     tempImg.src = src;
-    
     tempImg.onload = () => {
       img.src = src;
       img.closest('.img-wrap').classList.add('loaded');
-       // 只修改 JS 跳转逻辑
+    };
+  });
+
+  // 只修改 JS 跳转逻辑
   const titleEl = document.querySelector('.title');
   if (titleEl) {
     const match = titleEl.innerText.match(/\d+/); 
@@ -373,8 +374,9 @@ position:relative
       const prevLink = document.getElementById('prev-link');
       if (prevLink) {
         prevLink.href = `https://setutime.com/zrsetu/${prevNo}`;
-    };
-  });
+      }
+    }
+  }
 })();
 </script>
 </body>

@@ -211,7 +211,43 @@ position:relative
     transform: translateY(-2px);
     box-shadow: 0 8px 20px rgba(75,150,216,.5);
 }
+/* 上一期 */
+.prev-banner-link {
+    display: block;
+    margin: 15px 0 40px;
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent; 
+}
 
+.prev-banner-card {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 2 / 1; 
+    background: #000000;
+    border-radius: 16px; 
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+.banner-text {
+    color: #ffffff;
+    font-family: "PingFang SC", -apple-system, sans-serif;
+    font-weight: 800; 
+    font-size: 1.8rem; 
+    letter-spacing: 2px; 
+    z-index: 2;
+}
+
+.banner-sub {
+    color: rgba(255, 255, 255, 0.6); 
+    font-size: 0.75rem;
+    letter-spacing: 4px; 
+    margin-top: 8px;
+    z-index: 2;
+    text-transform: uppercase;
+}
 </style>
 </head>
 <body>
@@ -317,18 +353,12 @@ position:relative
     <p style="text-align:center;font-size:22px">上一期↓↓↓（点击跳转）</p>
    <div class="collection-wrap"><a href="https://setutime.com" target="_blank" class="collection">SetuTime 合集</a></div>
 
-          <!-- ‼️ 3️⃣⬇️-->
-    <a href="https://setutime.com/setu/42">
-      
-        <div class="image-item">
-        <div class="img-wrap">
-          
-                               <!-- ‼️ 4️⃣⬇️-->
-        <img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_756998_Gjre4wfs_AUQTKoQ_1769593063" alt="上一期">
+    <a href="#" id="prev-link" class="prev-banner-link">
+        <div class="prev-banner-card">
+            <span class="banner-text">跳转上一期 >>></span>
+            <span id="prev-sub" class="banner-sub">Previous Issue</span>
         </div>
-      </div>
     </a>
-  </div>
 
   <div class="fixed-button">
     <a href="https://qm.qq.com/q/Dn8g0Wlx4c" target="_blank">qq：51301105 添加好友获取更新</a>
@@ -337,20 +367,33 @@ position:relative
 
 <script>
 (() => {
+  // 图片预加载
   const imgs = document.querySelectorAll('.img-wrap img');
-  
   imgs.forEach(img => {
     const src = img.dataset.src;
     if (!src) return;
-
     const tempImg = new Image();
     tempImg.src = src;
-    
     tempImg.onload = () => {
       img.src = src;
       img.closest('.img-wrap').classList.add('loaded');
     };
   });
+
+  // 只修改 JS 跳转逻辑
+  const titleEl = document.querySelector('.title');
+  if (titleEl) {
+    const match = titleEl.innerText.match(/\d+/); 
+    if (match) {
+      const currentNo = parseInt(match[0]);
+      const prevNo = currentNo - 1;
+
+      const prevLink = document.getElementById('prev-link');
+      if (prevLink) {
+        prevLink.href = `https://setutime.com/setu/${prevNo}`;
+      }
+    }
+  }
 })();
 </script>
 </body>

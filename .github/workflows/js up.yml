@@ -1,7 +1,7 @@
 name: Update Lazy Loading Script
 
 on:
-  workflow_dispatch: # 允许手动触发
+  workflow_dispatch:
 
 jobs:
   update-scripts:
@@ -20,8 +20,7 @@ jobs:
           python3 - <<'EOF'
           import os
 
-          # 定义 js1 (旧代码) 和 js2 (新代码) 的核心部分
-          # 注意：这里去掉了 <script> 标签，只匹配内部逻辑以提高灵活性
+          # 这里的变量名是 new_js 
           old_js = """(() => {
             const imgs = document.querySelectorAll('.img-wrap img');
             
@@ -69,7 +68,6 @@ jobs:
               }
           });"""
 
-          # 目标目录
           target_dirs = ['zrsetu', 'setu']
 
           for root_dir in target_dirs:
@@ -82,16 +80,16 @@ jobs:
                           with open(file_path, 'r', encoding='utf-8') as f:
                               content = f.read()
                           
-                          # 如果内容包含旧 JS，则进行替换
-                          if old_js.strip() in content.strip():
+                          # 修复位置：这里必须使用定义的变量 new_js 
+                          if old_js.strip() in content:
                               print(f"Updating: {file_path}")
-                              new_content = content.replace(old_js.strip(), new_content.strip())
+                              updated_full_content = content.replace(old_js.strip(), new_js.strip())
                               with open(file_path, 'w', encoding='utf-8') as f:
-                                  f.write(new_content)
+                                  f.write(updated_full_content)
           EOF
 
       - name: Commit and Push changes
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "Update image lazy loading logic to IntersectionObserver version"
+          commit_message: "Fix: Update image lazy loading logic"
           file_pattern: 'zrsetu/*.html setu/*.html'

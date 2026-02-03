@@ -349,35 +349,54 @@ position:relative
 </div>
 
 <script>
-(() => {
-  // 图片预加载
-  const imgs = document.querySelectorAll('.img-wrap img');
-  imgs.forEach(img => {
-    const src = img.dataset.src;
-    if (!src) return;
-    const tempImg = new Image();
-    tempImg.src = src;
-    tempImg.onload = () => {
-      img.src = src;
-      img.closest('.img-wrap').classList.add('loaded');
-    };
-  });
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // 1. 图片懒加载逻辑
+    if ('IntersectionObserver' in window) {
+        const imageObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    const wrap = img.parentElement; [cite: 1, 2]
+                    
+                    if (img.dataset.src) {
+                        img.src = img.dataset.src; [cite: 2]
+                        img.onload = () => {
+                            wrap.classList.add('loaded'); [cite: 3]
+                        };
+                    }
+                    observer.unobserve(img); [cite: 4]
+                }
+            });
+        }, {
+            rootMargin: "0px 0px 300px 0px" [cite: 5]
+        });
 
-  // 只修改 JS 跳转逻辑
-  const titleEl = document.querySelector('.title');
-  if (titleEl) {
-    const match = titleEl.innerText.match(/\d+/); 
-    if (match) {
-      const currentNo = parseInt(match[0]);
-      const prevNo = currentNo - 1;
-
-      const prevLink = document.getElementById('prev-link');
-      if (prevLink) {
-        prevLink.href = `https://setutime.com/zrsetu/${prevNo}`;
-      }
+        const imgs = document.querySelectorAll('.img-wrap img'); [cite: 5]
+        imgs.forEach(img => imageObserver.observe(img)); [cite: 6]
+    } else {
+        const imgs = document.querySelectorAll('.img-wrap img'); [cite: 6]
+        imgs.forEach(img => {
+            img.src = img.dataset.src; [cite: 7]
+            img.onload = () => img.parentElement.classList.add('loaded'); [cite: 7]
+        });
     }
-  }
-})();
+
+    // 2. JS 跳转逻辑
+    const titleEl = document.querySelector('.title'); [cite: 8]
+    if (titleEl) {
+        const match = titleEl.innerText.match(/\d+/); [cite: 8]
+        if (match) {
+            const currentNo = parseInt(match[0]); [cite: 9]
+            const prevNo = currentNo - 1; [cite: 9]
+            const prevLink = document.getElementById('prev-link'); [cite: 10]
+            if (prevLink) {
+                prevLink.href = `https://setutime.com/zrsetu/${prevNo}`; [cite: 11]
+            }
+        }
+    }
+});
+</script>
 </script>
 </body>
 </html>

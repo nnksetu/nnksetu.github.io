@@ -458,22 +458,43 @@ position:relative
 </div>
 
 <script>
-(() => {
-  const imgs = document.querySelectorAll('.img-wrap img');
-  
-  imgs.forEach(img => {
-    const src = img.dataset.src;
-    if (!src) return;
+document.addEventListener("DOMContentLoaded", function() {
+    // 检查浏览器是否支持 IntersectionObserver
+    if ('IntersectionObserver' in window) {
+        const imageObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                // 当图片进入视野或距离视野还有 300px 时开始加载
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    const wrap = img.parentElement;
+                    
+                    if (img.dataset.src) {
+                        img.src = img.dataset.src;
+                        
+                        img.onload = () => {
+                            wrap.classList.add('loaded');
+                        };
+                    }
+                    // 加载后移除监听，节省性能
+                    observer.unobserve(img);
+                }
+            });
+        }, {
+            rootMargin: "0px 0px 300px 0px" // 预加载缓冲区域
+        });
 
-    const tempImg = new Image();
-    tempImg.src = src;
-    
-    tempImg.onload = () => {
-      img.src = src;
-      img.closest('.img-wrap').classList.add('loaded');
-    };
-  });
-})();
+        // 选取所有需要懒加载的图片
+        const imgs = document.querySelectorAll('.img-wrap img');
+        imgs.forEach(img => imageObserver.observe(img));
+    } else {
+        // 兜底方案：如果浏览器太老不支持该 API，则直接加载全部
+        const imgs = document.querySelectorAll('.img-wrap img');
+        imgs.forEach(img => {
+            img.src = img.dataset.src;
+            img.onload = () => img.parentElement.classList.add('loaded');
+        });
+    }
+});
 </script>
 </body>
 </html>

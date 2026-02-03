@@ -6,75 +6,64 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
 <title>涩图time</title>
 <style>
-
-*{
-margin:0;
-padding:0;
-box-sizing:border-box
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-body{
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
-  background:#fafafa;
-color:#333;
-line-height:1.6;
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  background: #fafafa;
+  color: #333;
+  line-height: 1.6;
 }
 
-.container{
-max-width:100%;
-padding:15px
+.container {
+  max-width: 100%;
+  padding: 15px;
 }
 
-.header{
-text-align:center;
-padding:20px 0;
-margin-bottom:20px;
-border-bottom:1px solid #eee
+.header {
+  text-align: center;
+  padding: 20px 0;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #eee;
 }
 
-.title{
-font-size:1.5rem;
-font-weight:600;
-color:#1e1e1e
+.title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1e1e1e;
 }
 
-.image-grid{
-display:flex;
-flex-direction:column;
-gap:18px
+.image-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 100%;
+  max-width: min(90vw, 700px);
+  margin: 0 auto;
 }
 
-.image-item{
-border-radius:6px;
-overflow:hidden;
-box-shadow:0 3px 10px rgba(0,0,0,.06);
-background:#f0f2f5;
-position:relative
+.image-item {
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, .06);
+  background: #f0f2f5;
+  position: relative;
 }
 
-/* 骨架加载渐变*/
-.img-wrap{
-  position:relative;
-  width:100%;
-  min-height:180px;
-  background:linear-gradient(100deg,#f1f3f6 0%,#e2e7ec 50%,#f1f3f6 100%);
-  background-size:200% 100%;
-  animation:skeleton 1.5s infinite ease-in-out;
-  overflow:hidden;
-}
-@keyframes skeleton{
-  0%{background-position:200% 0}
-  100%{background-position:-200% 0}
-}
-/* 图片本身淡入 */
+/* 合并后的 .img-wrap：骨架屏 + 图片容器 */
 .img-wrap {
   position: relative;
   width: 100%;
-  background: #f3f4f6;
+  min-height: 180px;
+  background: #f3f4f6;                  /* fallback 背景色 */
   overflow: hidden;
 }
 
-/* 添加一个 shimmer 背景层，而不是动画在容器上 */
+/* shimmer 动画层 */
 .img-wrap::before {
   content: "";
   position: absolute;
@@ -90,7 +79,7 @@ position:relative
   100% { background-position: -200% 0; }
 }
 
-/* 图片层：保持原比例完整显示 */
+/* 图片本身：淡入 + 保持比例 */
 .img-wrap img {
   width: 100%;
   height: auto;
@@ -102,14 +91,7 @@ position:relative
   position: relative;
 }
 
-/* 自适应居中单列 */
-.image-grid {
-  width: 100%;
-  max-width: min(90vw, 700px); 
-  margin: 0 auto; 
-}
-
-/* 加载完成后，淡出骨架层 */
+/* 加载完成：移除 shimmer，显示图片 */
 .img-wrap.loaded::before {
   opacity: 0;
   transition: opacity 0.5s ease;
@@ -118,34 +100,36 @@ position:relative
   opacity: 1;
 }
 
-
-/* ===== 下载模块===== */
-
+/* ===== 下载模块 ===== */
 .explanation {
-  background: linear-gradient(135deg, #f2f4f6, #eceef0);  
+  background: linear-gradient(135deg, #f2f4f6, #eceef0);
   border: 1px solid #dde2e9;
   border-radius: 16px;
   padding: 22px;
   text-align: center;
   color: #4a5568;
   margin: 25px 0;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);  
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
 }
+
 .explanation h2 {
   font-size: 20px;
   color: #2d2d2d;
   margin-bottom: 10px;
   font-weight: 600;
 }
+
 .explanation p {
   font-size: 15px;
   color: #506070;
 }
+
 .explanation p span {
   color: #2d3748;
   font-weight: 700;
   text-shadow: 0 0 8px rgba(45, 55, 72, 0.3);
 }
+
 .preserve {
   display: inline-block;
   margin-top: 15px;
@@ -158,99 +142,117 @@ position:relative
   box-shadow: 0 6px 16px rgba(56, 63, 80, 0.38);
   transition: all .3s ease;
 }
+
 .preserve:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 22px rgba(56, 63, 80, 0.48);
   background: linear-gradient(135deg, #424a5e, #6d748c);
 }
 
-.fixed-button{
-  position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
-  width:calc(100% - 80px);max-width:500px;z-index:100;
+.fixed-button {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 80px);
+  max-width: 500px;
+  z-index: 100;
 }
-.fixed-button a{
-  display:block;text-align:center;background:#5ca8e6;color:#fff;
-  padding:10px;border-radius:999px;text-decoration:none;
-  font-weight:600;box-shadow:0 5px 14px rgba(92,168,230,.4);
-  transition:.3s;
+
+.fixed-button a {
+  display: block;
+  text-align: center;
+  background: #5ca8e6;
+  color: #fff;
+  padding: 10px;
+  border-radius: 999px;
+  text-decoration: none;
+  font-weight: 600;
+  box-shadow: 0 5px 14px rgba(92, 168, 230, .4);
+  transition: .3s;
 }
-.fixed-button a:hover{background:#4b96d8;transform:translateY(-2px)}
+
+.fixed-button a:hover {
+  background: #4b96d8;
+  transform: translateY(-2px);
+}
 
 .collection-wrap {
-    display: block;
-    width: 100%;
-    text-align: center;
+  display: block;
+  width: 100%;
+  text-align: center;
 }
+
 .collection {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    width: 300px;  
-    height: 44px; 
-
-    margin: 0 auto 25px;
-    padding: 0;           
-
-    background: #5ca8e6;
-    color: #fff;
-    border-radius: 999px;
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 1.1rem;
-    line-height: 1;        
-
-    box-sizing: border-box;
-    box-shadow: 0 6px 16px rgba(92,168,230,.4);
-    transition: all .3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 300px;
+  height: 44px;
+  margin: 0 auto 25px;
+  padding: 0;
+  background: #5ca8e6;
+  color: #fff;
+  border-radius: 999px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1.1rem;
+  line-height: 1;
+  box-sizing: border-box;
+  box-shadow: 0 6px 16px rgba(92, 168, 230, .4);
+  transition: all .3s ease;
 }
+
 .collection:hover {
-    background: #4b96d8;
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(75,150,216,.5);
-}
-/* 上一期模块 */
-.prev-banner-link {
-    display: block;
-    margin: 15px 0 40px;
-    text-decoration: none;
-    -webkit-tap-highlight-color: transparent; 
+  background: #4b96d8;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(75, 150, 216, .5);
 }
 
-.prev-banner-card {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 2 / 1; 
-    background: #000000;
-    border-radius: 16px; 
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-}
-.banner-text {
-    color: #ffffff;
-    font-family: "PingFang SC", -apple-system, sans-serif;
-    font-weight: 800; 
-    font-size: 1.8rem; 
-    letter-spacing: 2px; 
-    z-index: 2;
+/* 下一期模块 */
+.prev-next-link {
+  display: block;
+  margin: 15px 0 40px;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.banner-sub {
-    color: rgba(255, 255, 255, 0.6); 
-    font-size: 0.75rem;
-    letter-spacing: 4px; 
-    margin-top: 8px;
-    z-index: 2;
-    text-transform: uppercase;
+.prev-next-card {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2 / 1;
+  background: #000000;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
 }
+
+.next-text {
+  color: #ffffff;
+  font-family: "PingFang SC", -apple-system, sans-serif;
+  font-weight: 800;
+  font-size: 1.8rem;
+  letter-spacing: 2px;
+  z-index: 2;
+}
+
+.next-sub {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.75rem;
+  letter-spacing: 4px;
+  margin-top: 8px;
+  z-index: 2;
+  text-transform: uppercase;
+}
+
 .responsive-video {
-           width: 100%;
-           height: auto;
-           border-radius: 8px;
-           object-fit: contain;
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  object-fit: contain;
 }
 </style>
 </head>
@@ -338,10 +340,10 @@ position:relative
     
     <div class="collection-wrap"><a href="https://setutime.com" target="_blank" class="collection">SetuTime 合集</a></div>
 
-    <a href="#" id="prev-link" class="prev-banner-link">
-        <div class="prev-banner-card">
-            <span class="banner-text">跳转上一期 >>></span>
-            <span id="prev-sub" class="banner-sub">Previous Issue Gallery</span>
+    <a href="#" id="prev-link" class="prev-next-link">
+        <div class="prev-next-card">
+            <span class="next-text">跳转下一期 >>></span>
+            <span id="prev-sub" class="next-sub">Next Issue Gallery</span>
         </div>
     </a><br>
 
@@ -350,7 +352,6 @@ position:relative
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
-    // 1. 懒加载逻辑
     if ('IntersectionObserver' in window) {
         const imageObserver = new IntersectionObserver((entries, observer) => {
             entries.forEach(entry => {
@@ -375,8 +376,6 @@ document.addEventListener("DOMContentLoaded", function() {
             img.onload = () => img.parentElement.classList.add('loaded');
         });
     }
-
-    // 2. 跳转逻辑 (必须放在这个大括号内才能生效)
     const titleEl = document.querySelector('.title');
     if (titleEl) {
         const match = titleEl.innerText.match(/\d+/);
@@ -385,7 +384,6 @@ document.addEventListener("DOMContentLoaded", function() {
             const prevNo = currentNo - 1;
             const prevLink = document.getElementById('prev-link');
             if (prevLink) {
-                // 这样会覆盖掉 HTML 里的 192.html#
                 prevLink.href = `https://setutime.com/zrsetu/${prevNo}`;
             }
         }

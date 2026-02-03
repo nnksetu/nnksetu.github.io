@@ -373,22 +373,35 @@ position:relative
 </div>
 
 <script>
-(() => {
-  const imgs = document.querySelectorAll('.img-wrap img');
-  
-  imgs.forEach(img => {
-    const src = img.dataset.src;
-    if (!src) return;
-
-    const tempImg = new Image();
-    tempImg.src = src;
-    
-    tempImg.onload = () => {
-      img.src = src;
-      img.closest('.img-wrap').classList.add('loaded');
-    };
-  });
-})();
+document.addEventListener("DOMContentLoaded", function() {
+    if ('IntersectionObserver' in window) {
+        const imageObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    const wrap = img.parentElement;
+                    if (img.dataset.src) {
+                        img.src = img.dataset.src;
+                        img.onload = () => {
+                            wrap.classList.add('loaded');
+                        };
+                    }
+                    observer.unobserve(img);
+                }
+            });
+        }, {
+            rootMargin: "0px 0px 300px 0px"
+        });
+        const imgs = document.querySelectorAll('.img-wrap img');
+        imgs.forEach(img => imageObserver.observe(img));
+    } else {
+        const imgs = document.querySelectorAll('.img-wrap img');
+        imgs.forEach(img => {
+            img.src = img.dataset.src;
+            img.onload = () => img.parentElement.classList.add('loaded');
+        });
+    }
+});
 </script>
 </body>
 

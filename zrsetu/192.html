@@ -349,54 +349,60 @@ position:relative
 </div>
 
 <script>
-<script>
 document.addEventListener("DOMContentLoaded", function() {
-    // 1. 图片懒加载逻辑
+    // 检查浏览器是否支持 IntersectionObserver
     if ('IntersectionObserver' in window) {
         const imageObserver = new IntersectionObserver((entries, observer) => {
             entries.forEach(entry => {
+                // 当图片进入视野或距离视野还有 300px 时开始加载
                 if (entry.isIntersecting) {
-                    const img = entry.target;
-                    const wrap = img.parentElement; [cite: 1, 2]
+               
+                    const img = entry.target; [cite: 17]
+                    const wrap = img.parentElement; [cite: 17]
                     
                     if (img.dataset.src) {
-                        img.src = img.dataset.src; [cite: 2]
+                        img.src = img.dataset.src; [cite: 17]
+ 
+                        
                         img.onload = () => {
-                            wrap.classList.add('loaded'); [cite: 3]
-                        };
+                            wrap.classList.add('loaded'); [cite: 18, 19]
+                     
+    };
                     }
-                    observer.unobserve(img); [cite: 4]
+                    // 加载后移除监听，节省性能
+                    observer.unobserve(img); [cite: 19]
                 }
             });
-        }, {
-            rootMargin: "0px 0px 300px 0px" [cite: 5]
+        
+}, {
+            rootMargin: "0px 0px 300px 0px" // 预加载缓冲区域 [cite: 20]
         });
 
-        const imgs = document.querySelectorAll('.img-wrap img'); [cite: 5]
-        imgs.forEach(img => imageObserver.observe(img)); [cite: 6]
+        // 选取所有需要懒加载的图片
+        const imgs = document.querySelectorAll('.img-wrap img'); [cite: 20]
+imgs.forEach(img => imageObserver.observe(img)); [cite: 21]
     } else {
-        const imgs = document.querySelectorAll('.img-wrap img'); [cite: 6]
-        imgs.forEach(img => {
-            img.src = img.dataset.src; [cite: 7]
-            img.onload = () => img.parentElement.classList.add('loaded'); [cite: 7]
+        // 兜底方案：如果浏览器太老不支持该 API，则直接加载全部
+        const imgs = document.querySelectorAll('.img-wrap img'); [cite: 21]
+imgs.forEach(img => {
+            img.src = img.dataset.src; [cite: 22]
+            img.onload = () => img.parentElement.classList.add('loaded'); [cite: 22]
         });
-    }
-
-    // 2. JS 跳转逻辑
-    const titleEl = document.querySelector('.title'); [cite: 8]
-    if (titleEl) {
-        const match = titleEl.innerText.match(/\d+/); [cite: 8]
-        if (match) {
-            const currentNo = parseInt(match[0]); [cite: 9]
-            const prevNo = currentNo - 1; [cite: 9]
-            const prevLink = document.getElementById('prev-link'); [cite: 10]
-            if (prevLink) {
-                prevLink.href = `https://setutime.com/zrsetu/${prevNo}`; [cite: 11]
-            }
-        }
-    }
+}
 });
-</script>
+
+const titleEl = document.querySelector('.title'); [cite: 12]
+  if (titleEl) {
+    const match = titleEl.innerText.match(/\d+/); [cite: 12]
+if (match) {
+      const currentNo = parseInt(match[0]); [cite: 13]
+      const prevNo = currentNo - 1; [cite: 13]
+const prevLink = document.getElementById('prev-link'); [cite: 14]
+      if (prevLink) {
+        prevLink.href = `https://setutime.com/zrsetu/${prevNo}`; [cite: 14]
+}
+    }
+  }
 </script>
 </body>
 </html>

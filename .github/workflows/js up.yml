@@ -1,0 +1,97 @@
+name: Update Lazy Loading Script
+
+on:
+  workflow_dispatch: # 允许手动触发
+
+jobs:
+  update-scripts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Run Update Script
+        run: |
+          python3 - <<'EOF'
+          import os
+
+          # 定义 js1 (旧代码) 和 js2 (新代码) 的核心部分
+          # 注意：这里去掉了 <script> 标签，只匹配内部逻辑以提高灵活性
+          old_js = """(() => {
+            const imgs = document.querySelectorAll('.img-wrap img');
+            
+            imgs.forEach(img => {
+              const src = img.dataset.src;
+              if (!src) return;
+
+              const tempImg = new Image();
+              tempImg.src = src;
+              
+              tempImg.onload = () => {
+                img.src = src;
+                img.closest('.img-wrap').classList.add('loaded');
+              };
+            });
+          })();"""
+
+          new_js = """document.addEventListener("DOMContentLoaded", function() {
+              if ('IntersectionObserver' in window) {
+                  const imageObserver = new IntersectionObserver((entries, observer) => {
+                      entries.forEach(entry => {
+                          if (entry.isIntersecting) {
+                              const img = entry.target;
+                              const wrap = img.parentElement;
+                              if (img.dataset.src) {
+                                  img.src = img.dataset.src;
+                                  img.onload = () => {
+                                      wrap.classList.add('loaded');
+                                  };
+                              }
+                              observer.unobserve(img);
+                          }
+                      });
+                  }, {
+                      rootMargin: "0px 0px 300px 0px"
+                  });
+                  const imgs = document.querySelectorAll('.img-wrap img');
+                  imgs.forEach(img => imageObserver.observe(img));
+              } else {
+                  const imgs = document.querySelectorAll('.img-wrap img');
+                  imgs.forEach(img => {
+                      img.src = img.dataset.src;
+                      img.onload = () => img.parentElement.classList.add('loaded');
+                  });
+              }
+          });"""
+
+          # 目标目录
+          target_dirs = ['zrsetu', 'setu']
+
+          for root_dir in target_dirs:
+              if not os.path.exists(root_dir):
+                  continue
+              for root, dirs, files in os.walk(root_dir):
+                  for file in files:
+                      if file.endswith('.html'):
+                          file_path = os.path.join(root, file)
+                          with open(file_path, 'r', encoding='utf-8') as f:
+                              content = f.read()
+                          
+                          # 如果内容包含旧 JS，则进行替换
+                          if old_js.strip() in content.strip():
+                              print(f"Updating: {file_path}")
+                              new_content = content.replace(old_js.strip(), new_content.strip())
+                              with open(file_path, 'w', encoding='utf-8') as f:
+                                  f.write(new_content)
+          EOF
+
+      - name: Commit and Push changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Update image lazy loading logic to IntersectionObserver version"
+          file_pattern: 'zrsetu/*.html setu/*.html'

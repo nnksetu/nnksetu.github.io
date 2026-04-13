@@ -30,15 +30,7 @@ jobs:
               const content = fs.readFileSync(filePath, 'utf8');
 
               // 超级宽松正则：只要 style 里同时包含 text-align:left 和 font-size:16px 就匹配
-              //const regex = /<p[^>]*style\s*=\s*["'][^"']*?\btext-align\s*:\s*left[^"']*?font-size\s*:\s*16px[^>]*>([\s\S]*?)<\/p>/gi;
-
-// 分开定义两个模式，用 | 连接
-const oldStylePattern = /style\s*=\s*["'][^"']*?text-align\s*:\s*left[^"']*?font-size\s*:\s*16px[^"']*?/;
-const newIdPattern = /id\s*=\s*["']setu-title["']/;
-
-// 最终正则
-const regex = new RegExp('<p[^>]*?(?:' + oldStylePattern.source + '|' + newIdPattern.source + ')[^>]*>([\\s\\S]*?)<\\/p>', 'gi');
-
+              const regex = /<p[^>]*style\s*=\s*["'][^"']*?\btext-align\s*:\s*left[^"']*?font-size\s*:\s*16px[^>]*>([\s\S]*?)<\/p>/gi;
 
               const match = regex.exec(content);
               if (match && match[1]) {

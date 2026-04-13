@@ -1,15 +1,12 @@
 name: Auto Update data.json
-
 on:
   push:
     paths:
       - 'setu/**'
       - 'zrsetu/**'
   workflow_dispatch:
-
 permissions:
   contents: write
-
 jobs:
   update:
     runs-on: ubuntu-latest
@@ -18,7 +15,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-
       - name: 生成 data.json
         run: |
           cat > generate.js << 'EOF'
@@ -29,13 +25,23 @@ jobs:
             try {
               const content = fs.readFileSync(filePath, 'utf8');
 
-              // 超级宽松正则：只要 style 里同时包含 text-align:left 和 font-size:16px 就匹配
-              const regex = /<p[^>]*style\s*=\s*["'][^"']*?\btext-align\s*:\s*left[^"']*?font-size\s*:\s*16px[^>]*>([\s\S]*?)<\/p>/gi;
+              // 优先匹配新的 <div id="setu-title" class="title-capsule"> 格式
+              let regex = /<div[^>]*id=["']?setu-title["']?[^>]*class=["']?title-capsule["']?[^>]*>([\s\S]*?)<\/div>/i;
+              let match = regex.exec(content);
 
-              const match = regex.exec(content);
+              // 如果没匹配到，再尝试兼容旧的 <p style="text-align:left; font-size:16px"> 格式
+              if (!match || !match[1]) {
+                regex = /<p[^>]*style\s*=\s*["'][^"']*?\btext-align\s*:\s*left[^"']*?font-size\s*:\s*16px[^>]*>([\s\S]*?)<\/p>/gi;
+                match = regex.exec(content);
+              }
+
               if (match && match[1]) {
-                // 去掉里面的子标签（万一有人加了 <span> 之类的）
-                return match[1].replace(/<[^>]+>/g, '').trim();
+                // 处理提取到的文本：只去掉HTML标签，保留开头的 #
+                let text = match[1]
+                  .replace(/<[^>]+>/g, '')     // 移除所有HTML标签
+                  .trim();
+
+                return text;
               }
             } catch (e) {
               console.log(`读取失败 ${filePath}: ${e.message}`);
@@ -63,9 +69,7 @@ jobs:
           fs.writeFileSync('data.json', JSON.stringify(data, null, 2));
           console.log(`成功！setu ${data.setu.length}期，zrsetu ${data.zrsetu.length}期`);
           EOF
-
           node generate.js
-
       - name: 提交更新
         run: |
           git config user.name "AutoBot"

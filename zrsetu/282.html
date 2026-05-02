@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>涩图time</title>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  background: #fafafa;
+  color: #333;
+  line-height: 1.6;
+}
+
+.container {
+  max-width: 100%;
+  padding: 15px;
+}
+
+.header {
+  text-align: center;
+  padding: 20px 0;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1e1e1e;
+}
+#setu-title {
+    /* 强制对齐 */
+    display: block !important;
+    text-align: left !important;
+    width: 100% !important; 
+    
+    /* 宽度与位置：居中胶囊 */
+    max-width: min(92vw, 700px);
+    margin: 15px auto 25px !important; 
+    
+    /* 胶囊背景颜色 */
+    background-color: #f2f4f6 !important; 
+    border-radius: 999px !important;
+    
+    /* 内边距 */
+    padding: 12px 25px 12px 35px !important;
+    
+    font-size: 15px;
+    font-weight: 500;
+    color: #4a5568; 
+    line-height: 1.6;
+    
+    border: none;
+    box-sizing: border-box;
+    word-wrap: break-word;
+}
+
+.image-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 100%;
+  max-width: min(90vw, 700px);
+  margin: 0 auto;
+}
+
+.image-item {
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, .06);
+  background: #f0f2f5;
+  position: relative;
+}
+
+/* 合并后的 .img-wrap：骨架屏 + 图片容器 */
+.img-wrap {
+  position: relative;
+  width: 100%;
+  min-height: 180px;
+  background: #f3f4f6;                  /* fallback 背景色 */
+  overflow: hidden;
+}
+
+/* shimmer 动画层 */
+.img-wrap::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, #f3f4f6 0%, #e9eef6 50%, #f3f4f6 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite ease-in-out;
+  z-index: 1;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* 图片本身：淡入 + 保持比例 */
+.img-wrap img {
+  width: 100%;
+  height: auto;
+  display: block;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  z-index: 2;
+  object-fit: contain;
+  position: relative;
+}
+
+/* 加载完成：移除 shimmer，显示图片 */
+.img-wrap.loaded::before {
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+.img-wrap.loaded img {
+  opacity: 1;
+}
+
+/* ===== 下载模块 ===== */
+.explanation {
+  background: linear-gradient(135deg, #f2f4f6, #eceef0);
+  border: 1px solid #dde2e9;
+  border-radius: 16px;
+  padding: 22px;
+  text-align: center;
+  color: #4a5568;
+  margin: 25px 0;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+}
+
+.explanation h2 {
+  font-size: 20px;
+  color: #2d2d2d;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.explanation p {
+  font-size: 15px;
+  color: #506070;
+}
+
+.explanation p span {
+  color: #2d3748;
+  font-weight: 700;
+  text-shadow: 0 0 8px rgba(45, 55, 72, 0.3);
+}
+
+.preserve {
+  display: inline-block;
+  margin-top: 15px;
+  padding: 11px 28px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #383f50, #626982);
+  color: #fff;
+  text-decoration: none;
+  font-weight: 600;
+  box-shadow: 0 6px 16px rgba(56, 63, 80, 0.38);
+  transition: all .3s ease;
+}
+
+.preserve:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(56, 63, 80, 0.48);
+  background: linear-gradient(135deg, #424a5e, #6d748c);
+}
+
+.save {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 280px;
+    height: 46px;
+    margin: 0 auto;
+    padding: 0;
+    background: #f5f5f5;
+    color: #666;
+    border: 1px solid #e0e0e0;
+    border-radius: 999px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1.1rem;
+    line-height: 1;
+    box-sizing: border-box;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transition: all .3s ease;
+    font-family: -apple-system, sans-serif;
+}
+
+.save:hover {
+    background: #eeeeee;
+    color: #333;
+    transform: translateY(-2px); 
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+}
+.fixed-button {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 80px);
+  max-width: 500px;
+  z-index: 100;
+}
+
+.fixed-button a {
+  display: block;
+  text-align: center;
+  background: #5ca8e6;
+  color: #fff;
+  padding: 10px;
+  border-radius: 999px;
+  text-decoration: none;
+  font-weight: 600;
+  box-shadow: 0 5px 14px rgba(92, 168, 230, .4);
+  transition: .3s;
+}
+
+.fixed-button a:hover {
+  background: #4b96d8;
+  transform: translateY(-2px);
+}
+
+.collection-wrap {
+  display: block;
+  width: 100%;
+  text-align: center;
+}
+
+.collection {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 300px;
+  height: 44px;
+  margin: 0 auto 25px;
+  padding: 0;
+  background: #5ca8e6;
+  color: #fff;
+  border-radius: 999px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1.1rem;
+  line-height: 1;
+  box-sizing: border-box;
+  box-shadow: 0 6px 16px rgba(92, 168, 230, .4);
+  transition: all .3s ease;
+}
+
+.collection:hover {
+  background: #4b96d8;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(75, 150, 216, .5);
+}
+
+/* 下一期模块 */
+.prev-next-link {
+  display: block;
+  margin: 15px 0 40px;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.prev-next-card {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2 / 1;
+  background: #000000;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.next-text {
+  color: #ffffff;
+  font-family: "PingFang SC", -apple-system, sans-serif;
+  font-weight: 800;
+  font-size: 1.8rem;
+  letter-spacing: 2px;
+  z-index: 2;
+}
+
+.next-sub {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.75rem;
+  letter-spacing: 4px;
+  margin-top: 8px;
+  z-index: 2;
+  text-transform: uppercase;
+}
+
+.responsive-video {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  object-fit: contain;
+}
+  
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+                                     <!-- ‼️ 1️⃣⬇️-->
+    <h1 class="title">涩图time No.282</h1>
+  </div>
+
+  <div class="image-grid">
+ 
+    <div id="setu-title" class="title-capsule">
+     # 年年 - 角落 
+</div>
+    
+    <div style="text-align:center;">
+<a href="#" class="save save-blue">>>>原图保存<<<</a>
+</div>
+
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_579242_fs3ALRwyEqIRNm31_1777725955" alt="1"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_115224_jcqwYWopEQEA_YjM_1777725957" alt="2"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_621396_WL3sBIeoShvAujWo_1777725958" alt="3"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_965785_4x3oHpfgZZ7fxlOz_1777725959" alt="4"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_515302_TpMAObZ7goq-14WA_1777725961" alt="5"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_818742_ZCl7JbZv2U_QJZts_1777725962" alt="6"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_593275_VheFamtXoFVWFXOO_1777725964" alt="7"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_624352_RU_g68X3i6LQ0dMT_1777725966" alt="8"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_572336_BDC6zD4eAPq1d46n_1777725968" alt="9"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_318536_Dn2EfHqS0o8w0iph_1777725970" alt="10"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_720920_p6E8gGMVTNz_kjBG_1777725971" alt="11"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_431765_bA7EEdIDiJw2KB61_1777725973" alt="12"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_227433_NEroIqg0dW8D9fDw_1777725975" alt="13"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_707722_CkuUFv5eYssoTVZG_1777725976" alt="14"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_1773_x5k1IKWGLgKJk3Ae_1777725978" alt="15"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_517458_lgsAqumVk3Nmu75B_1777725979" alt="16"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_307608_ccBrP2eH28i5qzET_1777725981" alt="17"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_487946_OiAgrviC-DGBsWvC_1777725982" alt="18"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_831931_EOkEDRS7WECDoVdf_1777725983" alt="19"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_379649_9cynzLyREPEquahh_1777725985" alt="20"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_996629_EEyOJa_1U98EGun5_1777725986" alt="21"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_773324_AE-dau3DapBri1yk_1777725988" alt="22"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_549248_ohHWQhbZyQHGXTX1_1777725990" alt="23"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_390423_rP_gniRLMAcOt7VT_1777725992" alt="24"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_198802_ZgBgG0Sl_pGGvVBL_1777725994" alt="25"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_771463_z-vvT78VRuqppM6e_1777725995" alt="26"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_582578_AvXSivlHW6w_MF94_1777725997" alt="27"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_148767_jJAJJ3bbJ_hqXPOI_1777725999" alt="28"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_566575_mTaX3r_55W35JjY7_1777726000" alt="29"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_45993_rcqEg3E-VnJ5BDSd_1777726002" alt="30"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_829167_gLtlhSD7nE4qAw33_1777726003" alt="31"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_393732_G-YwZ2ChmBv4xKvp_1777726005" alt="32"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_769359_RQehdhJscK-5qWrb_1777726006" alt="33"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_597592_iJtm-ldwMiiOmVlo_1777726008" alt="34"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_477351_qqvjNATeLd3sxf5X_1777726010" alt="35"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_886681_cdoZpOxcSAhVQOZl_1777726011" alt="36"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_523259_LoKFQM-nsZKku6la_1777726013" alt="37"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_186101_i-m0dyAoByte94TR_1777726015" alt="38"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_538938_bF14vHPPLTwLQTnH_1777726016" alt="39"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_53520_vxuyVzOuBsi6mzC2_1777726018" alt="40"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_524497_cpXXhNaWP9ib5z2x_1777726019" alt="41"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_264448_tu3qj0A5Y3rZcIjo_1777726021" alt="42"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_925166_Q6HYfwXvy3sCw6r0_1777726022" alt="43"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_636544_WHcrJ2Z-zaOz0lRE_1777726024" alt="44"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_178002_nr8RQhqWHE54fJcm_1777726026" alt="45"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_50027_qjPr2eVBJLG4KXTi_1777726028" alt="46"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_758376_81Kn8G1RcqFswY98_1777726029" alt="47"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_329083_su6zLws0cQgCD1lG_1777726031" alt="48"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_817315_52Uq6yEoq3QKWcUH_1777726032" alt="49"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_166164_3ORp91HTAxmpm3Ja_1777726034" alt="50"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_606491_J8Wm9schCNVgTRji_1777726035" alt="51"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_550450_6F9slarbPBRyWn_q_1777726037" alt="52"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_111867_NfFyJOHuGMdiqTpE_1777726039" alt="53"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_627424_LclX8eY6hXvyrsBf_1777726040" alt="54"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_139856_bJsAhTbo0_eBPH-c_1777726042" alt="55"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_999398_csQ1RyNYygcpSTBJ_1777726043" alt="56"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_731102_nW9B_1ftGT5sWEtX_1777726045" alt="57"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_243321_QkCu9EUwBP9pIfdr_1777726047" alt="58"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_831494_N4It9zOiL_kjWe3B_1777726048" alt="59"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_304562_tP9i0ws3Banaa4Ls_1777726050" alt="60"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_760499_XLHLmtU0HLuTYvPv_1777726051" alt="61"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_548331_vCIJCzWTIuMJP2Mr_1777726053" alt="62"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_189783_SIfcKpLsxbSTnc-P_1777726055" alt="63"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_877431_A4p-oaNpzr5CF5gv_1777726056" alt="64"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_795868_RsuUyeiehBuRqXZg_1777726058" alt="65"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_289098_BKObk7znmSv5oVbp_1777726060" alt="66"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_920177_3DpMLcxhpK-7_GsH_1777726061" alt="67"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_637398_cIGgIDBsldBI7g4i_1777726063" alt="68"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_454823_JM6REyhWE8s3ibul_1777726065" alt="69"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_992709_EmVy6Ezt5VaowG34_1777726066" alt="70"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_580898__ahrjen5JjJUcq_W_1777726068" alt="71"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_316706_REn8y_ZZmIOauUfm_1777726070" alt="72"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_61700_E8ba_--HRVTSgyRH_1777726072" alt="73"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_591108_mjuPW4IzrP1omLxh_1777726073" alt="74"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_102457_C-iZ8fc9AeDnW4bP_1777726075" alt="75"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_623926_LFVIZ0Eyjjn0ngFV_1777726076" alt="76"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_826750__z4P0qJ7CmOddqkQ_1777726078" alt="77"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_665182_0u86pTq2ljooYj-K_1777726080" alt="78"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_130590_hyNO7r6eNcmkpuAh_1777726082" alt="79"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_423275_GomvH8usxwHrA8UK_1777726083" alt="80"></div></div>
+
+
+
+  
+    <div class="explanation">
+      <h2>本期无水印原图</h2>
+     <!--  <p>压缩包内含完整视频</p>  --> 
+
+                  <!--‼️ 2️⃣⬇️-->
+ <a href="" target="_blank" class="preserve">点击保存</a>
+    </div>
+    
+    <div class="collection-wrap"><a href="https://setutime.com" target="_blank" class="collection">SetuTime 合集</a></div>
+
+    <a href="#" id="prev-link" class="prev-next-link">
+        <div class="prev-next-card">
+            <span class="next-text">跳转下一期 >>></span>
+            <span id="prev-sub" class="next-sub">Next Issue Gallery</span>
+        </div>
+    </a><br>
+
+  <div class="fixed-button"><a href="https://qm.qq.com/q/3mnmFYTUbe" target="_blank">qq：45503380 添加好友获取更新</a></div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    if ('IntersectionObserver' in window) {
+        const imageObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    const wrap = img.parentElement;
+                    if (img.dataset.src) {
+                        img.src = img.dataset.src;
+                        img.onload = () => { wrap.classList.add('loaded'); };
+                    }
+                    observer.unobserve(img);
+                }
+            });
+        }, { rootMargin: "0px 0px 300px 0px" });
+
+        const imgs = document.querySelectorAll('.img-wrap img');
+        imgs.forEach(img => imageObserver.observe(img));
+    } else {
+        const imgs = document.querySelectorAll('.img-wrap img');
+        imgs.forEach(img => {
+            img.src = img.dataset.src;
+            img.onload = () => img.parentElement.classList.add('loaded');
+        });
+    }
+    const titleEl = document.querySelector('.title');
+    if (titleEl) {
+        const match = titleEl.innerText.match(/\d+/);
+        if (match) {
+            const currentNo = parseInt(match[0]);
+            const prevNo = currentNo - 1;
+            const prevLink = document.getElementById('prev-link');
+            if (prevLink) {
+                prevLink.href = `https://setutime.com/zrsetu/${prevNo}`;
+            }
+            const downloadUrl = `https://dl.setutime.com/support?id=zrsetu_${currentNo}`;
+            const topSaveBtn = document.querySelector('.save-blue');
+            if (topSaveBtn) {
+                topSaveBtn.href = downloadUrl;
+            }
+            const bottomSaveBtn = document.querySelector('.preserve');
+            if (bottomSaveBtn) {
+                bottomSaveBtn.href = downloadUrl;
+            }
+           
+        }
+    }
+});
+</script>
+</body>
+</html>

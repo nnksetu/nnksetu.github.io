@@ -36,20 +36,13 @@ body {
   color: #1e1e1e;
 }
 #setu-title {
-    /* 强制对齐 */
     display: block !important;
     text-align: left !important;
     width: 100% !important; 
-    
-    /* 宽度与位置：居中胶囊 */
     max-width: min(92vw, 700px);
     margin: 15px auto 25px !important; 
-    
-    /* 胶囊背景颜色 */
     background-color: #f2f4f6 !important; 
     border-radius: 999px !important;
-    
-    /* 内边距 */
     padding: 12px 25px 12px 35px !important;
     
     font-size: 15px;
@@ -84,7 +77,7 @@ body {
   position: relative;
   width: 100%;
   min-height: 180px;
-  background: #f3f4f6;                  /* fallback 背景色 */
+  background: #f3f4f6; 
   overflow: hidden;
 }
 
@@ -202,31 +195,44 @@ body {
     transform: translateY(-2px); 
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
 }
+
+/* --- 底部悬浮按钮样式 --- */
 .fixed-button {
   position: fixed;
   bottom: 20px;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-50%) scale(1);
   width: calc(100% - 80px);
   max-width: 500px;
-  z-index: 100;
+  z-index: 1000;
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.fixed-button.hidden {
+  transform: translateX(-50%) translateY(20px) scale(0.85);
+  opacity: 0;
 }
 
 .fixed-button a {
   display: block;
   text-align: center;
-  background: #5ca8e6;
-  color: #fff;
+  background: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  color: #000 !important;
   padding: 10px;
   border-radius: 999px;
   text-decoration: none;
   font-weight: 600;
-  box-shadow: 0 5px 14px rgba(92, 168, 230, .4);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  border: 1px solid rgba(255,255,255,0.6);
+  pointer-events: auto;
   transition: .3s;
 }
 
 .fixed-button a:hover {
-  background: #4b96d8;
+  background: rgba(255, 255, 255, 0.95) !important;
   transform: translateY(-2px);
 }
 
@@ -388,6 +394,7 @@ body {
 <div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_133096_Zu719XPHzuYcQxtp_1778057554" alt="59"></div></div>
 <div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_538646_1sBV5vbLN3XM01_O_1778057555" alt="60"></div></div>
 
+
   
     <div class="explanation">
       <h2>本期无水印原图</h2>
@@ -455,9 +462,32 @@ document.addEventListener("DOMContentLoaded", function() {
             if (bottomSaveBtn) {
                 bottomSaveBtn.href = downloadUrl;
             }
-           
         }
     }
+
+
+    const fixedBtn = document.querySelector('.fixed-button');
+    let lastScrollY = window.scrollY;
+    let ticking = false;
+
+    function updateButtonVisibility() {
+        const currentScrollY = window.scrollY;
+        if (currentScrollY > lastScrollY && currentScrollY > 10) {
+            fixedBtn.classList.add('hidden');
+        } else {
+            fixedBtn.classList.remove('hidden');
+        }
+        lastScrollY = currentScrollY;
+        ticking = false;
+    }
+
+    window.addEventListener('scroll', () => {
+        if (!ticking) {
+            // 优化滚动性能
+            window.requestAnimationFrame(updateButtonVisibility);
+            ticking = true;
+        }
+    });
 });
 </script>
 </body>

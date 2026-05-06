@@ -202,31 +202,44 @@ body {
     transform: translateY(-2px); 
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
 }
+
+/* --- 底部悬浮按钮样式 --- */
 .fixed-button {
   position: fixed;
   bottom: 20px;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-50%) scale(1);
   width: calc(100% - 80px);
   max-width: 500px;
-  z-index: 100;
+  z-index: 1000;
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.fixed-button.hidden {
+  transform: translateX(-50%) translateY(20px) scale(0.85);
+  opacity: 0;
 }
 
 .fixed-button a {
   display: block;
   text-align: center;
-  background: #5ca8e6;
-  color: #fff;
+  background: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  color: #000 !important;
   padding: 10px;
   border-radius: 999px;
   text-decoration: none;
   font-weight: 600;
-  box-shadow: 0 5px 14px rgba(92, 168, 230, .4);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  border: 1px solid rgba(255,255,255,0.6);
+  pointer-events: auto;
   transition: .3s;
 }
 
 .fixed-button a:hover {
-  background: #4b96d8;
+  background: rgba(255, 255, 255, 0.95) !important;
   transform: translateY(-2px);
 }
 
@@ -316,9 +329,12 @@ body {
                                      <!-- ‼️ 1️⃣⬇️-->
     <h1 class="title">涩图time No.49</h1>
   </div>
-<div class="image-grid">
-<div style="text-align:center;"><a href="#" class="save save-blue">>>>原图保存<<<</a></div>
 
+  <div class="image-grid">
+    
+    <div style="text-align:center;">
+<a href="#" class="save save-blue">>>>原图保存<<<</a>
+</div>
 
 <div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_472668_pOxMsUvI-NBHJPDw_1778063489" alt="1"></div></div>
 <div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_913226_53GaSrw3OhFXaoo7_1778063489" alt="2"></div></div>
@@ -391,10 +407,9 @@ body {
 <div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_345990_LBdVxlGGJJjGP7ba_1778063564" alt="69"></div></div>
 <div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_229785_HgYVI4NW70ouLppC_1778063565" alt="70"></div></div>
 <div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_385502_OFk9XopFbBZnCoyk_1778063550" alt="71"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_385502_OFk9XopFbBZnCoyk_1778063550" alt="72"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_385502_OFk9XopFbBZnCoyk_1778063550" alt="73"></div></div>
+
   
-<div class="image-item"><div class="img-wrap"><img data-src="https://r2.setutime.com/setu/49/gif-49-1.gif" alt="74"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://r2.setutime.com/setu/49/gif-49-1.gif" alt="72"></div></div>
 
   <div class="image-item">
   <video class="responsive-video" controls preload="metadata" playsinline webkit-playsinline>
@@ -417,11 +432,11 @@ body {
   </video>
 </div>
 
-    
+
+  
     <div class="explanation">
       <h2>本期无水印原图</h2>
-     <!-- <p>压缩包内含视频</p>--> 
-  <p>压缩包内含视频</p>
+     <!--  <p>压缩包内含完整视频</p>  --> 
 
                   <!--‼️ 2️⃣⬇️-->
  <a href="" target="_blank" class="preserve">点击保存</a>
@@ -437,6 +452,7 @@ body {
     </a><br>
 
   <div class="fixed-button"><a href="https://setutime.com">SetuTime 合集</a>
+</div>
 </div>
 
 <script>
@@ -473,9 +489,9 @@ document.addEventListener("DOMContentLoaded", function() {
             const prevNo = currentNo - 1;
             const prevLink = document.getElementById('prev-link');
             if (prevLink) {
-                prevLink.href = `https://setutime.com/setu/${prevNo}`;
+                prevLink.href = `https://setutime.com/zrsetu/${prevNo}`;
             }
-            const downloadUrl = `https://dl.setutime.com/support?id=setu_${currentNo}`;
+            const downloadUrl = `https://dl.setutime.com/support?id=zrsetu_${currentNo}`;
             const topSaveBtn = document.querySelector('.save-blue');
             if (topSaveBtn) {
                 topSaveBtn.href = downloadUrl;
@@ -484,9 +500,33 @@ document.addEventListener("DOMContentLoaded", function() {
             if (bottomSaveBtn) {
                 bottomSaveBtn.href = downloadUrl;
             }
-           
         }
     }
+
+
+    const fixedBtn = document.querySelector('.fixed-button');
+    let lastScrollY = window.scrollY;
+    let ticking = false;
+
+    function updateButtonVisibility() {
+        const currentScrollY = window.scrollY;
+        // 判断方向：下滑时添加 hidden 类，上滑时移除
+        if (currentScrollY > lastScrollY && currentScrollY > 10) {
+            fixedBtn.classList.add('hidden');
+        } else {
+            fixedBtn.classList.remove('hidden');
+        }
+        lastScrollY = currentScrollY;
+        ticking = false;
+    }
+
+    window.addEventListener('scroll', () => {
+        if (!ticking) {
+            // 优化滚动性能
+            window.requestAnimationFrame(updateButtonVisibility);
+            ticking = true;
+        }
+    });
 });
 </script>
 </body>

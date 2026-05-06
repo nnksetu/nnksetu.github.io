@@ -1,7 +1,11 @@
 name: 批量替换页脚链接 (通用版)
 
 on:
-  workflow_dispatch: # 手动触发执行
+  workflow_dispatch: 
+
+# 添加以下权限声明，允许 Actions 写入仓库
+permissions:
+  contents: write
 
 jobs:
   replace-text:
@@ -21,14 +25,10 @@ jobs:
           import os
           import re
 
-          # 目标文件夹
           target_dirs = ["setu", "zrsetu"]
+          # 使用更宽松的正则，兼容不同 QQ 和可能的换行符
+          pattern = re.compile(r"<div class=\"fixed-button\">.*?<a href=\"https://qm\.qq\.com/.*?</div>", re.DOTALL)
           
-          # 通用正则：匹配所有包含 qm.qq.com 的 fixed-button 块
-          # 它会匹配任何 QQ 链接和任何 QQ 号码文字
-          pattern = re.compile(r"<div class=\"fixed-button\"><a href=\"https://qm\.qq\.com/[^\"]+\" target=\"_blank\">qq：\d+ 添加好友获取更新</a>\s*</div>", re.DOTALL)
-          
-          # 新的统一按钮代码
           new_snippet = "<div class=\"fixed-button\"><a href=\"https://setutime.com\">SetuTime 合集</a>\n</div>"
 
           count = 0
@@ -42,7 +42,6 @@ jobs:
                               content = f.read()
                           
                           if pattern.search(content):
-                              # 使用正则进行无差别替换
                               new_content = pattern.sub(new_snippet, content)
                               with open(path, "w", encoding="utf-8") as f:
                                   f.write(new_content)
@@ -56,5 +55,5 @@ jobs:
           git config --global user.name "GitHub Action"
           git config --global user.email "action@github.com"
           git add .
-          git commit -m "自动更新页脚：清理所有旧版 QQ 按钮" || echo "没有检测到更改"
-          git push
+          # 如果没有更改则不报错
+          git diff --quiet && git diff --staged --quiet || (git commit -m "自动更新页脚：清理所有旧版 QQ 按钮" && git push)

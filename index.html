@@ -24,7 +24,6 @@
   .container{max-width:860px;margin:1.5rem auto;padding:0 1rem}
   .section-header-row {display: flex; align-items: center; justify-content: space-between; margin: 2rem 0 1rem;}
 
-
   .section-title {
     position: relative;
     font-size: 1.05rem;
@@ -40,12 +39,11 @@
     letter-spacing: 1px;
     user-select: none;
   }
-
   
   .search-trigger-right {
     display: flex; 
     align-items: center; 
-    background: #d1d5db; 
+    background: #f0f4ff; 
     padding: 7px 18px; 
     border-radius: 999px; 
     border: 1px solid #d1d5db; 
@@ -53,9 +51,9 @@
     transition: 0.2s; 
     min-width: 220px; 
     justify-content: space-between;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   }
-  .search-trigger-right:hover {background: #d1d5db;}
+  .search-trigger-right:hover {background: #e5edff; border-color: #3b82f6;}
   .search-trigger-right span {color: #6b7280; font-size: 0.9rem;}
   .search-trigger-right kbd {background: #fff; border: 1px solid #d1d5db; border-radius: 4px; padding: 1px 4px; font-size: 0.7rem; color: #9ca3af;}
 
@@ -95,26 +93,6 @@
   .qq-button{margin: 18px auto 28px;text-align: center}
   .qq-button a{display: inline-block;width: calc(100% - 60px);max-width: 420px;background: linear-gradient(135deg, #60a5fa, #3b82f6);color: #fff;padding: 11px 0;border-radius: 999px;text-decoration: none;font-weight: 600;font-size: 0.98rem;box-shadow: 0 4px 12px rgba(92,168,230,.4);transition: .3s}
   .qq-button a:hover{background: linear-gradient(135deg, #4b96d8, #2563eb);transform: translateY(-2px)}
-
- 
-  .cos-theme .section-title { 
-    color: #be185d; 
-    border-left-color: #f06292;
-    background: linear-gradient(to right, rgba(244, 143, 177, 0.15) 0%, rgba(244, 143, 177, 0.05) 30%, transparent 100%);
-  }
-  
-  .cos-theme .search-trigger-right { border-color: #f06292; background: #fff5f8; }
-  .cos-theme .qq-button a { background: linear-gradient(135deg, #f48fb1, #f06292); box-shadow: 0 4px 12px rgba(240, 98, 146, 0.4); }
-  .cos-theme .qq-button a:hover { background: linear-gradient(135deg, #f06292, #ec407a); }
-  .cos-theme ul.list li .num { color: #f06292; }
-  /* 调优边框颜色与阴影 */
-  .cos-theme ul.list li:hover { border-color: #f8b8c8; box-shadow: 0 8px 20px rgba(248, 184, 200, 0.4); background: #fffcfd; }
-  .cos-theme .pagination button { color: #f06292; }
-  .cos-theme .pagination button.active { background: linear-gradient(135deg, #f48fb1, #f06292); color: #fff; box-shadow: 0 0 0 3px rgba(240, 98, 146, 0.3); }
-  
-  #searchOverlay svg { stroke: #f06292; }
-  .cos-theme-results .title { color: #f06292 !important; }
-  .search-results .item:hover { background: #fff5f8; }
 </style>
 </head>
 <body ontouchstart="">
@@ -131,7 +109,7 @@
   <ul class="list" id="setu-list">加载中...</ul>
   <div id="setu-pagination" class="pagination"></div>
 
-  <div class="cos-theme">
+  <div>
     <div class="section-header-row">
       <div class="section-title">Cos写真</div>
       <div class="search-trigger-right" onclick="toggleSearch(true)">
@@ -238,10 +216,8 @@ function renderPage(items, containerId, paginationId, page = 1) {
 function toggleSearch(show) {
   const overlay = document.getElementById('searchOverlay');
   const input = document.getElementById('searchInput');
-  const searchIcon = overlay.querySelector('svg');
   if (show) {
     overlay.style.display = 'flex';
-    searchIcon.setAttribute('stroke', '#f06292');
     setTimeout(() => overlay.classList.add('active'), 10);
     input.focus();
   } else {
@@ -261,7 +237,7 @@ document.getElementById('searchInput').oninput = function(e) {
   if (!val) { resultsDiv.innerHTML = ''; return; }
   const matched = allZrsetuItems.filter(item => item.caption && item.caption.toLowerCase().includes(val));
   resultsDiv.innerHTML = matched.map(item => `
-    <div class="item cos-theme-results" onclick="window.open('${rootUrl}zrsetu/${item.file}', '_blank')">
+    <div class="item" onclick="window.open('${rootUrl}zrsetu/${item.file}', '_blank')">
       <div class="title">第${item.file.match(/\d+/)?.[0] || '?'}期</div>
       <div class="sub">${item.caption}</div>
     </div>

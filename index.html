@@ -8,6 +8,7 @@
 <meta name="description" content="点击前往SetuTime~">
 <title>SetuTime 合集 - 奈奈</title>
 <style>
+  /* 基础全局样式 - 默认为蓝色调 */
   body{margin:0;font-family:"Segoe UI","Helvetica Neue",Arial,sans-serif;background:#ffffff;color:#374151;min-height:100vh;font-size:15px;overflow-x:hidden}
   header, .container {opacity: 0;transform: translateY(15px);transition: opacity 0.5s ease-out, transform 0.5s ease-out}
   .loaded header, .loaded .container {opacity: 1;transform: translateY(0)}
@@ -57,6 +58,53 @@
   .search-trigger-right span {color: #6b7280; font-size: 0.9rem;}
   .search-trigger-right kbd {background: #fff; border: 1px solid #d1d5db; border-radius: 4px; padding: 1px 4px; font-size: 0.7rem; color: #9ca3af;}
 
+  /* 列表与通用组件样式 */
+  ul.list{list-style:none;padding:0;margin:0}
+  ul.list li{background:#fff;border:1px solid #cbd5e1;border-radius:12px;padding:0.85rem 1rem;margin-bottom:0.7rem;box-shadow:0 4px 12px rgba(0,0,0,0.04);cursor:pointer;transition:all .25s;display:flex;align-items:center;gap:0.7rem;font-size:0.98rem}
+  ul.list li:hover,ul.list li:active{transform:translateY(-2px);box-shadow:0 8px 20px rgba(59,130,246,0.15);border-color:#93bbfc;background:#f8faff}
+  ul.list li .num{color:#3b82f6;font-weight:600;font-size:1rem;white-space:nowrap;flex-shrink:0}
+  ul.list li .caption{color:#4b5563;font-size:0.88rem;opacity:0.9;line-height:1.4}
+  
+  .pagination{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:0.5rem;margin:2.2rem 0 1rem}
+  .pagination button{min-width:38px;height:38px;background:#ffffff;color:#5d8eff;border:none;border-radius:10px;font-size:0.9rem;font-weight:500;cursor:pointer;transition:all .3s ease;box-shadow:0 2px 6px rgba(93,142,255,0.15)}
+  .pagination button:hover{transform:translateY(-3px);box-shadow:0 6px 16px rgba(93,142,255,0.28);background:#f8fbff}
+  .pagination button.active{background:linear-gradient(135deg,#a8c0ff,#e0e7ff);color:#2563eb;font-weight:600;box-shadow:0 0 0 3px rgba(168,192,255,0.4)}
+
+  .qq-button{margin: 18px auto 28px;text-align: center}
+  .qq-button a{display: inline-block;width: calc(100% - 60px);max-width: 420px;background: linear-gradient(135deg, #60a5fa, #3b82f6);color: #fff;padding: 11px 0;border-radius: 999px;text-decoration: none;font-weight: 600;font-size: 0.98rem;box-shadow: 0 4px 12px rgba(92,168,230,.4);transition: .3s}
+  .qq-button a:hover{background: linear-gradient(135deg, #4b96d8, #2563eb);transform: translateY(-2px)}
+
+  /* --- Cos写真分类：哔哩哔哩粉配色专区 --- */
+  .cos-theme .section-title { 
+    color: #fb7299; 
+    border-left-color: #fb7299;
+    background: linear-gradient(to right, rgba(251, 114, 153, 0.12) 0%, rgba(251, 114, 153, 0.04) 30%, transparent 100%);
+  }
+  
+  .cos-theme .search-trigger-right { border-color: #fb7299; background: #fff5f8; }
+  .cos-theme .search-trigger-right:hover { background: #ffeef3; border-color: #fb7299; }
+  
+  .cos-theme .qq-button a { 
+    background: linear-gradient(135deg, #ff85ad, #fb7299); 
+    box-shadow: 0 4px 12px rgba(251, 114, 153, 0.35); 
+  }
+  .cos-theme .qq-button a:hover { background: linear-gradient(135deg, #fb7299, #fa5a87); }
+  
+  .cos-theme ul.list li .num { color: #fb7299; }
+  .cos-theme ul.list li:hover { 
+    border-color: #ffb3c9; 
+    box-shadow: 0 8px 20px rgba(251, 114, 153, 0.15); 
+    background: #fffcfd; 
+  }
+  
+  .cos-theme .pagination button { color: #fb7299; }
+  .cos-theme .pagination button.active { 
+    background: linear-gradient(135deg, #ffb3c9, #ffccd9); 
+    color: #fb7299; 
+    box-shadow: 0 0 0 3px rgba(251, 114, 153, 0.2); 
+  }
+
+  /* 搜索弹窗样式 */
   .search-overlay {display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.35); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); z-index: 1000; justify-content: center; align-items: flex-start; padding-top: 12vh; opacity: 0; transition: opacity 0.1s ease-out;}
   .search-overlay.active {display: flex; opacity: 1;}
   .search-modal {width: 95%; max-width: 600px; background: #fff; border-radius: 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.05); border: 1px solid #e5e7eb; transform: scale(0.9); transition: transform 0.1s ease-out;}
@@ -73,26 +121,14 @@
   .search-results .item .title {font-weight: 700; color: #3b82f6; font-size: 0.95rem}
   .search-results .item .sub {font-size: 0.85rem; color: #4b5563; line-height: 1.4}
 
+  .page-info{color:#64748b;font-size:0.88rem;margin-top:1rem;text-align:center;font-weight:500}
+  .update-time{font-size:0.8rem;color:#94a3b8;text-align:center;margin:2rem 0 1rem}
+
   @media (max-width: 600px) {
     .search-trigger-right { min-width: 140px; padding: 6px 12px; }
     .search-trigger-right kbd { display: none; }
     .section-title { font-size: 1rem; padding-right: 50px; }
   }
-
-  ul.list{list-style:none;padding:0;margin:0}
-  ul.list li{background:#fff;border:1px solid #cbd5e1;border-radius:12px;padding:0.85rem 1rem;margin-bottom:0.7rem;box-shadow:0 4px 12px rgba(0,0,0,0.04);cursor:pointer;transition:all .25s;display:flex;align-items:center;gap:0.7rem;font-size:0.98rem}
-  ul.list li:hover,ul.list li:active{transform:translateY(-2px);box-shadow:0 8px 20px rgba(59,130,246,0.15);border-color:#93bbfc;background:#f8faff}
-  ul.list li .num{color:#3b82f6;font-weight:600;font-size:1rem;white-space:nowrap;flex-shrink:0}
-  ul.list li .caption{color:#4b5563;font-size:0.88rem;opacity:0.9;line-height:1.4}
-  .pagination{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:0.5rem;margin:2.2rem 0 1rem}
-  .pagination button{min-width:38px;height:38px;background:#ffffff;color:#5d8eff;border:none;border-radius:10px;font-size:0.9rem;font-weight:500;cursor:pointer;transition:all .3s ease;box-shadow:0 2px 6px rgba(93,142,255,0.15)}
-  .pagination button:hover{transform:translateY(-3px);box-shadow:0 6px 16px rgba(93,142,255,0.28);background:#f8fbff}
-  .pagination button.active{background:linear-gradient(135deg,#a8c0ff,#e0e7ff);color:#2563eb;font-weight:600;box-shadow:0 0 0 3px rgba(168,192,255,0.4)}
-  .page-info{color:#64748b;font-size:0.88rem;margin-top:1rem;text-align:center;font-weight:500}
-  .update-time{font-size:0.8rem;color:#94a3b8;text-align:center;margin:2rem 0 1rem}
-  .qq-button{margin: 18px auto 28px;text-align: center}
-  .qq-button a{display: inline-block;width: calc(100% - 60px);max-width: 420px;background: linear-gradient(135deg, #60a5fa, #3b82f6);color: #fff;padding: 11px 0;border-radius: 999px;text-decoration: none;font-weight: 600;font-size: 0.98rem;box-shadow: 0 4px 12px rgba(92,168,230,.4);transition: .3s}
-  .qq-button a:hover{background: linear-gradient(135deg, #4b96d8, #2563eb);transform: translateY(-2px)}
 </style>
 </head>
 <body ontouchstart="">
@@ -102,14 +138,13 @@
 
 <div class="container">
   <div class="section-title">二次元</div>
-  
   <div class="qq-button">
     <a href="https://ti.qq.com/open_qq/index2.html?url=mqqapi%3A%2F%2Fuserprofile%2Ffriend_profile_card%3Fsrc_type%3Dweb%26version%3D1.0%26source%3D2%26uin%3D51301105" target="_blank">qq：51301105 添加好友获取更新</a>
   </div>
   <ul class="list" id="setu-list">加载中...</ul>
   <div id="setu-pagination" class="pagination"></div>
 
-  <div>
+  <div class="cos-theme">
     <div class="section-header-row">
       <div class="section-title">Cos写真</div>
       <div class="search-trigger-right" onclick="toggleSearch(true)">

@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>涩图time</title>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  background: #fafafa;
+  color: #333;
+  line-height: 1.6;
+}
+
+.container {
+  max-width: 100%;
+  padding: 15px;
+}
+
+.header {
+  text-align: center;
+  padding: 20px 0;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1e1e1e;
+}
+#setu-title {
+    display: block !important;
+    text-align: left !important;
+    width: 100% !important; 
+    max-width: min(92vw, 700px);
+    margin: 15px auto 25px !important; 
+    background-color: #f2f4f6 !important; 
+    border-radius: 999px !important;
+    padding: 12px 25px 12px 35px !important;
+    
+    font-size: 15px;
+    font-weight: 500;
+    color: #4a5568; 
+    line-height: 1.6;
+    
+    border: none;
+    box-sizing: border-box;
+    word-wrap: break-word;
+}
+
+.image-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 100%;
+  max-width: min(90vw, 700px);
+  margin: 0 auto;
+}
+
+.image-item {
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, .06);
+  background: #f0f2f5;
+  position: relative;
+}
+
+/* 合并后的 .img-wrap：骨架屏 + 图片容器 */
+.img-wrap {
+  position: relative;
+  width: 100%;
+  min-height: 180px;
+  background: #f3f4f6; 
+  overflow: hidden;
+}
+
+/* shimmer 动画层 */
+.img-wrap::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, #f3f4f6 0%, #e9eef6 50%, #f3f4f6 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite ease-in-out;
+  z-index: 1;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* 图片本身：淡入 + 保持比例 */
+.img-wrap img {
+  width: 100%;
+  height: auto;
+  display: block;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  z-index: 2;
+  object-fit: contain;
+  position: relative;
+}
+
+/* 加载完成：移除 shimmer，显示图片 */
+.img-wrap.loaded::before {
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+.img-wrap.loaded img {
+  opacity: 1;
+}
+
+/* ===== 下载模块 ===== */
+.explanation {
+  background: linear-gradient(135deg, #f2f4f6, #eceef0);
+  border: 1px solid #dde2e9;
+  border-radius: 16px;
+  padding: 22px;
+  text-align: center;
+  color: #4a5568;
+  margin: 25px 0;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+}
+
+.explanation h2 {
+  font-size: 20px;
+  color: #2d2d2d;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.explanation p {
+  font-size: 15px;
+  color: #506070;
+}
+
+.explanation p span {
+  color: #2d3748;
+  font-weight: 700;
+  text-shadow: 0 0 8px rgba(45, 55, 72, 0.3);
+}
+
+.preserve {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 210px;              /* 下载模块按钮宽度 */
+  max-width: 100%;
+  height: 46px;
+  margin: 15px auto 0;
+  background: linear-gradient(135deg, #5db85d, #4cae4c);
+  box-shadow: 0 6px 16px rgba(93, 184, 93, 0.35);
+  
+  border-radius: 999px;
+  color: #fff;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1.1rem;
+  transition: all .3s ease;
+  box-sizing: border-box;
+}
+
+.preserve:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, #67c267, #5db85d);
+  box-shadow: 0 8px 22px rgba(93, 184, 93, 0.45);
+}
+
+.save {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 280px;
+    height: 46px;
+    margin: 0 auto;
+    padding: 0;
+    background: #f5f5f5;
+    color: #666;
+    border: 1px solid #e0e0e0;
+    border-radius: 999px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1.1rem;
+    line-height: 1;
+    box-sizing: border-box;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transition: all .3s ease;
+    font-family: -apple-system, sans-serif;
+}
+
+.save:hover {
+    background: #eeeeee;
+    color: #333;
+    transform: translateY(-2px); 
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+}
+
+/* --- 底部悬浮按钮样式 --- */
+.fixed-button {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%) scale(1);
+  width: calc(100% - 80px);
+  max-width: 500px;
+  z-index: 1000;
+  will-change: transform, opacity; 
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.fixed-button.hidden {
+  transform: translateX(-50%) translateY(20px) scale(0.85);
+  opacity: 0;
+}
+
+.fixed-button a {
+  display: block;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  color: #000 !important;
+  padding: 10px;
+  border-radius: 999px;
+  text-decoration: none;
+  font-weight: 600;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  border: 1px solid rgba(255,255,255,0.6);
+  pointer-events: auto;
+  transition: .3s;
+}
+
+.fixed-button a:hover {
+  background: rgba(255, 255, 255, 0.95) !important;
+  transform: translateY(-2px);
+}
+
+/* 下一期模块 */
+.prev-next-link {
+  display: block;
+  margin: 15px 0 40px;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.prev-next-card {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2 / 1;
+  background: #000000;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.next-text {
+  color: #ffffff;
+  font-family: "PingFang SC", -apple-system, sans-serif;
+  font-weight: 800;
+  font-size: 1.8rem;
+  letter-spacing: 2px;
+  z-index: 2;
+}
+
+.next-sub {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.75rem;
+  letter-spacing: 4px;
+  margin-top: 8px;
+  z-index: 2;
+  text-transform: uppercase;
+}
+
+.responsive-video {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  object-fit: contain;
+}
+  
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+                                     <!-- ‼️ 1️⃣⬇️-->
+    <h1 class="title">涩图time No.338</h1>
+  </div>
+
+  <div class="image-grid"
+ 
+    <div id="setu-title" class="title-capsule">
+     # 金允希 - 女杀手 🔞 [116P]
+</div>
+     
+    <div style="text-align:center;">
+<a href="#" class="save save-blue">>>>原图保存<<<</a>
+</div>
+
+
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_798685_nTT9Nt_7Ky2noHsW_1778725663" alt="1"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_302922_qbyu3LcwDLkae-bi_1778725665" alt="2"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_603162_cyICe6RhgiXy0pjv_1778725666" alt="3"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_685314_Fzkr8JijvYVrJxGe_1778725668" alt="4"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_999970_MXFCt_Ao99E8F0de_1778725669" alt="5"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_279932_wNaX-HAl7pjf84cB_1778725671" alt="6"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_528872_QOCNxCk_8S6VZwge_1778725672" alt="7"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_693724_-u9JUPoEhzDraiin_1778725674" alt="8"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_401366_qPIukFoUaU71bil2_1778725676" alt="9"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_270376_qmD9TaJZ9qarLQ0w_1778725678" alt="10"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_725148_hGyYgk7Cryg0mKAZ_1778725679" alt="11"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_200963_aJqgSQLgHMLxLJ3E_1778725681" alt="12"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_748072_DExmjTr27DYuZWxt_1778725682" alt="13"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_473059_FeVOCXkz-ke7KFcB_1778725684" alt="14"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_818387_3LBjvHO_ou0U4SyL_1778725685" alt="15"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_62661_q6o-phtWQeQIbYFq_1778725687" alt="16"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_377258_4B41qGzw_5UsRcji_1778725688" alt="17"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_880615_zGb4C0ADh74VWiRc_1778725689" alt="18"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_154776_3aAWYbiw7YQAfoAa_1778725691" alt="19"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_482189_gKiCIfoLg7LACU6H_1778725692" alt="20"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_981215_Tr2lo38pQ89m9eW8_1778725693" alt="21"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_92850_wPqUCt07pkwawYsw_1778725695" alt="22"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_558785_UVARGsP_I6oVDk5v_1778725696" alt="23"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_841823_ZpwvJmlDhdy46N34_1778725697" alt="24"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_424787_5OkIkbl7DWuPA9Gx_1778725699" alt="25"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_106419_LEYo_rY_J4k-qNnF_1778725701" alt="26"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_695406_Nn37-Pw88BL0xutw_1778725702" alt="27"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_88173_umHKCbDkU8snPlXa_1778725704" alt="28"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_600408_CFRtf00i7Rfl4LCd_1778725705" alt="29"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_949454_7HarIlB6sQ10Vkm2_1778725706" alt="30"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_52359_J7jSy32Y6CDmrB2E_1778725709" alt="31"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_322093_Nqf61BUBafZRXnZv_1778725710" alt="32"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_643338_UrcPzb0jxQsGAqG1_1778725711" alt="33"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_195437_t9EEdEHHKr1VUead_1778725713" alt="34"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_593958_Do2h4pNstN4dL0VH_1778725714" alt="35"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_905185_YvoLDBToyUgsZsLm_1778725715" alt="36"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_398821_cV7cb3CbdUeMvwK4_1778725717" alt="37"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_992545_aR2_czk76xlGjiDl_1778725718" alt="38"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_422918_7sTmNy14RZQNFODy_1778725720" alt="39"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_602643_NQJLa8n-HmmJAETm_1778725721" alt="40"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_863555_moDVaCYLb0Ef_X9f_1778725722" alt="41"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_372430_lTBeXTFV40BQ4PZD_1778725724" alt="42"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_729239_URbGmx8NTkiq1TXD_1778725725" alt="43"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_39747_0bq-6muiSBe68vAu_1778725727" alt="44"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_411912_o8ltXJAdrr5PFkDh_1778725728" alt="45"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_787121_wEPhX3OY7VCy9fr9_1778725729" alt="46"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_215757_RWCFSE3uMsipXTns_1778725731" alt="47"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_547701_d93jzG1XG31RZ_uK_1778725732" alt="48"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_963668_GEbJIsSJo6M-j7fm_1778725733" alt="49"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_380413_DLBRh3JQlIn67bfx_1778725735" alt="50"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_841203_fAd1qaG10XZJFuj9_1778725736" alt="51"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_743823_xF49_dhA4uZPR1Hv_1778725739" alt="52"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_247728_QSaEsAZHhYFUJfkU_1778725741" alt="53"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_600213_l4rIYafJ7vikOv2c_1778725742" alt="54"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_54519_hHKZhU6VYKa9sGTs_1778725744" alt="55"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_491669_b7nafWR3MAQE40VF_1778725745" alt="56"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_949979_W8PCX6aeaXHykJBM_1778725746" alt="57"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_430271_p9d2gi8gvkRhonKb_1778725749" alt="58"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_665513_fTAsjh74dW4Nwlnu_1778725751" alt="59"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_30810_s4VLnk6Z2UFKtS9O_1778725754" alt="60"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_960847_aV5KSt98XXuMFyVV_1778725756" alt="61"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_597920_IxPFCX7uuw2Q-y2v_1778725758" alt="62"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_303306_kAEN-X2oEt1T55vS_1778725761" alt="63"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_961028_OqbTWzfJYH8wx6Fq_1778725763" alt="64"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_662509_OJq-3H-r97npQEgU_1778725765" alt="65"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_387664_DKhmZJ-X_k8mQDVM_1778725768" alt="66"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_304107_8GeihFvQF7wq31O-_1778725770" alt="67"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_959532_rErkf2Z18e3gpt7p_1778725771" alt="68"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_670632_LCFYBi3uTCdI7iSj_1778725773" alt="69"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_161028_XLqG-gC3375PhFC7_1778725776" alt="70"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_455149_Ht4itmrrt9oBbmQZ_1778725779" alt="71"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_114100_X7LI_TN3TTabalf7_1778725781" alt="72"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_501196_IxaOC9jdEVaLdgho_1778725782" alt="73"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_182936_6Cqzjbt6QjtYCly9_1778725784" alt="74"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_16251_Io1Gci3bINKtg45g_1778725786" alt="75"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_562688_bW5OSEpvAZ9v4N98_1778725787" alt="76"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_44509_yh8d8G442peCA8nT_1778725789" alt="77"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_661145_pEN_R5kFfpNjqr0C_1778725790" alt="78"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_174419_-85rooOE4RCGHzcD_1778725792" alt="79"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_46930_oh0Je-E02sEwPfvV_1778725794" alt="80"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_25940_-7Djan7vd5u-JNU__1778725796" alt="81"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_867637_nFOg-5H4U4l9gK0d_1778725797" alt="82"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_719965_XY5fBY69w00aTtR__1778725799" alt="83"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_254259_i9m8MryPr9XL7Nya_1778725801" alt="84"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_809153_kuckQXEUWYG_HYon_1778725802" alt="85"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_269570_5vN5PGDxbDetjNZM_1778725804" alt="86"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_746201_9XIvSChIygGMu-YC_1778725805" alt="87"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_428144_C_fyArokrJkTcctm_1778725807" alt="88"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_3591_xWNninpzxCemdfsq_1778725809" alt="89"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_743069_iYxZhIeIbExgBZOu_1778725810" alt="90"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_587294_3Nd7EOi6frZwAbsC_1778725812" alt="91"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_133575_jI-likHwd0hkILQL_1778725814" alt="92"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_897366_Du8VpJGrFmL_2JWA_1778725815" alt="93"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_353339_9NxKuKjvvat5iPct_1778725817" alt="94"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_6896_9UaznmvIRr0o5lVw_1778725819" alt="95"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_438556_m_eXyi2eX6EKmyga_1778725820" alt="96"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_125944_nqy7UxXL7Q5RtUqF_1778725822" alt="97"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_910498_9-k8FFJLb72IGpGM_1778725823" alt="98"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_631548_DOGr80amrLR53qDA_1778725825" alt="99"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_999774_-ommqhdEiKuOo1Sd_1778725827" alt="100"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_639252_uMj2wpa3g0XreyUG_1778725830" alt="101"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_791064_llXDiwbIHpWXGoS__1778725832" alt="102"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_485522_CanKBS72EwadElps_1778725834" alt="103"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_892165_7o8IILmDk73A8eW7_1778725836" alt="104"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_129234_4vKijV1X7NtJqre5_1778725839" alt="105"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_846339_Hu4rq6jRXao1tyxU_1778725840" alt="106"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_422418_JROa697ZeQCBbR6r_1778725842" alt="107"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_1413_y28BFyvnyQeMk7YG_1778725844" alt="108"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_523827_mp3iILhP5orC_jfO_1778725845" alt="109"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_95481_-R2ADTTRMqz163S2_1778725847" alt="110"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_855936_HlvaLoGX6T0FxYSD_1778725848" alt="111"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_697988_r0scwX4wJbwjQ_UM_1778725850" alt="112"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_408309_LtW9E4rK7aIGqqkJ_1778725852" alt="113"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_101413_qYbUklQbfooM6G81_1778725854" alt="114"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_949376_gwi9djS-owVdilUx_1778725855" alt="115"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_690048_rrrKVAt5OK05WISv_1778725857" alt="116"></div></div>
+
+  
+    <div class="explanation">
+      <h2>本期无水印原图</h2>
+     <!--  <p>压缩包内含完整视频</p>  --> 
+
+                  <!--‼️ 2️⃣⬇️-->
+ <a href="" target="_blank" class="preserve">>>>原图保存<<<</a>
+    </div>
+    
+
+    <a href="#" id="prev-link" class="prev-next-link">
+        <div class="prev-next-card">
+            <span class="next-text">跳转下一期 >>></span>
+            <span id="prev-sub" class="next-sub">Next Issue Gallery</span>
+        </div>
+    </a><br>
+
+  <div class="fixed-button"><a href="https://setutime.com">SetuTime 合集</a>
+</div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    if ('IntersectionObserver' in window) {
+        const imageObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    const wrap = img.parentElement;
+                    if (img.dataset.src) {
+                        img.src = img.dataset.src;
+                        img.onload = () => { wrap.classList.add('loaded'); };
+                    }
+                    observer.unobserve(img);
+                }
+            });
+        }, { rootMargin: "0px 0px 300px 0px" });
+
+        const imgs = document.querySelectorAll('.img-wrap img');
+        imgs.forEach(img => imageObserver.observe(img));
+    } else {
+        const imgs = document.querySelectorAll('.img-wrap img');
+        imgs.forEach(img => {
+            img.src = img.dataset.src;
+            img.onload = () => img.parentElement.classList.add('loaded');
+        });
+    }
+    const titleEl = document.querySelector('.title');
+    if (titleEl) {
+        const match = titleEl.innerText.match(/\d+/);
+        if (match) {
+            const currentNo = parseInt(match[0]);
+            const prevNo = currentNo - 1;
+            const prevLink = document.getElementById('prev-link');
+            if (prevLink) {
+                prevLink.href = `https://setutime.com/zrsetu/${prevNo}`;
+            }
+            const downloadUrl = `https://dl.setutime.com/support?id=zrsetu_${currentNo}`;
+            const topSaveBtn = document.querySelector('.save-blue');
+            if (topSaveBtn) {
+                topSaveBtn.href = downloadUrl;
+            }
+            const bottomSaveBtn = document.querySelector('.preserve');
+            if (bottomSaveBtn) {
+                bottomSaveBtn.href = downloadUrl;
+            }
+        }
+    }
+
+
+    const fixedBtn = document.querySelector('.fixed-button');
+    let lastScrollY = window.scrollY;
+    let ticking = false;
+
+    function updateButtonVisibility() {
+        const currentScrollY = window.scrollY;
+        if (currentScrollY > lastScrollY && currentScrollY > 10) {
+            fixedBtn.classList.add('hidden');
+        } else {
+            fixedBtn.classList.remove('hidden');
+        }
+        lastScrollY = currentScrollY;
+        ticking = false;
+    }
+
+    window.addEventListener('scroll', () => {
+        if (!ticking) {
+            // 优化滚动性能
+            window.requestAnimationFrame(updateButtonVisibility);
+            ticking = true;
+        }
+    });
+});
+</script>
+</body>
+</html>

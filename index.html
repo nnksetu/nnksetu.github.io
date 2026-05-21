@@ -177,109 +177,105 @@
 </div>
 
 <script>
-const rootUrl = './'; [cite: 34]
-const ITEMS_PER_PAGE = 10; [cite: 35]
-const header = document.getElementById('header'); [cite: 35]
-let lastScrollY = 0; [cite: 35]
-let ticking = false; [cite: 35]
-let allZrsetuItems = []; [cite: 35]
+const rootUrl = './';
+const ITEMS_PER_PAGE = 10;
+const header = document.getElementById('header');
+let lastScrollY = 0;
+let ticking = false;
+let allZrsetuItems = [];
 
 function updateHeader() {
-  const currentScrollY = window.scrollY; [cite: 36]
+  const currentScrollY = window.scrollY;
   if (currentScrollY > lastScrollY && currentScrollY > 10) {
-    header.classList.add('hidden'); [cite: 36]
+    header.classList.add('hidden');
   } else if (currentScrollY < lastScrollY || currentScrollY <= 10) {
-    header.classList.remove('hidden'); [cite: 37]
+    header.classList.remove('hidden');
   }
-  lastScrollY = currentScrollY; [cite: 37]
-  ticking = false; [cite: 37]
+  lastScrollY = currentScrollY;
+  ticking = false;
 }
 
 window.addEventListener('scroll', () => {
-  if (!ticking) { window.requestAnimationFrame(updateHeader); ticking = true; } [cite: 38]
-}, { passive: true }); // 增加 passive 优化移动端滚动性能
+  if (!ticking) { window.requestAnimationFrame(updateHeader); ticking = true; }
+}, { passive: true });
 
 async function loadData() {
   try {
-    const res = await fetch(`${rootUrl}data.json?t=${Date.now()}`); [cite: 39]
-    if (!res.ok) throw new Error('Failed'); [cite: 39]
-    return await res.json(); [cite: 40]
+    const res = await fetch(`${rootUrl}data.json?t=${Date.now()}`);
+    if (!res.ok) throw new Error('Failed');
+    return await res.json();
   } catch (e) {
-    document.body.innerHTML = '<div style="text-align:center;margin-top:8rem;color:#e74c3c;">加载失败，请刷新重试</div>'; [cite: 40]
-    throw e; [cite: 40]
+    document.body.innerHTML = '<div style="text-align:center;margin-top:8rem;color:#e74c3c;">加载失败，请刷新重试</div>';
+    throw e;
   }
 }
 
-// 优化后的分页渲染逻辑（不改变DOM结构与UI，仅改为文档片段批量处理）
 function renderPage(items, containerId, paginationId, page = 1) {
-  const container = document.getElementById(containerId); [cite: 41]
-  const pagination = document.getElementById(paginationId); [cite: 41]
-  const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE); [cite: 42]
-  const start = (page - 1) * ITEMS_PER_PAGE; [cite: 42]
-  const pageItems = items.slice(start, start + ITEMS_PER_PAGE); [cite: 43]
+  const container = document.getElementById(containerId);
+  const pagination = document.getElementById(paginationId);
+  const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
+  const start = (page - 1) * ITEMS_PER_PAGE;
+  const pageItems = items.slice(start, start + ITEMS_PER_PAGE);
 
-  container.innerHTML = ''; [cite: 43]
-  
-  // 使用 Fragment 容器减少回流
+  container.innerHTML = '';
   const fragment = document.createDocumentFragment();
   
   pageItems.forEach(item => {
-    const li = document.createElement('li'); [cite: 44]
-    const num = item.file.match(/\d+/)?.[0] || '?'; [cite: 44]
-    li.innerHTML = `<span class="num">第${num}期</span>${item.caption ? `<span class="caption">${item.caption}</span>` : ''}`; [cite: 44]
-    li.onclick = () => window.location.href = `${rootUrl}${containerId === 'setu-list' ? 'setu' : 'zrsetu'}/${item.file}`; [cite: 44]
+    const li = document.createElement('li');
+    const num = item.file.match(/\d+/)?.[0] || '?';
+    li.innerHTML = `<span class="num">第${num}期</span>${item.caption ? `<span class="caption">${item.caption}</span>` : ''}`;
+    li.onclick = () => window.location.href = `${rootUrl}${containerId === 'setu-list' ? 'setu' : 'zrsetu'}/${item.file}`;
     fragment.appendChild(li);
   });
-  container.appendChild(fragment); [cite: 44]
+  container.appendChild(fragment);
 
-  pagination.innerHTML = ''; [cite: 45]
-  const prev = document.createElement('button'); [cite: 45]
-  prev.textContent = '←'; [cite: 45]
-  prev.disabled = page === 1; [cite: 45]
-  prev.onclick = () => page > 1 && renderPage(items, containerId, paginationId, page - 1); [cite: 46]
-  pagination.appendChild(prev); [cite: 46]
+  pagination.innerHTML = '';
+  const prev = document.createElement('button');
+  prev.textContent = '←';
+  prev.disabled = page === 1;
+  prev.onclick = () => page > 1 && renderPage(items, containerId, paginationId, page - 1);
+  pagination.appendChild(prev);
 
-  const maxBtns = 5; [cite: 46]
-  let startPage = Math.max(1, page - 2); [cite: 47]
-  let endPage = Math.min(totalPages, startPage + maxBtns - 1); [cite: 47]
-  if (endPage - startPage + 1 < maxBtns) startPage = Math.max(1, endPage - maxBtns + 1); [cite: 48]
+  const maxBtns = 5;
+  let startPage = Math.max(1, page - 2);
+  let endPage = Math.min(totalPages, startPage + maxBtns - 1);
+  if (endPage - startPage + 1 < maxBtns) startPage = Math.max(1, endPage - maxBtns + 1);
   
   const pgFragment = document.createDocumentFragment();
   for (let i = startPage; i <= endPage; i++) {
-    const btn = document.createElement('button'); [cite: 49]
-    btn.textContent = i; [cite: 49]
-    if (i === page) btn.classList.add('active'); [cite: 50]
-    btn.onclick = () => renderPage(items, containerId, paginationId, i); [cite: 50]
+    const btn = document.createElement('button');
+    btn.textContent = i;
+    if (i === page) btn.classList.add('active');
+    btn.onclick = () => renderPage(items, containerId, paginationId, i);
     pgFragment.appendChild(btn);
   }
   pagination.appendChild(pgFragment);
 
-  const next = document.createElement('button'); [cite: 50]
-  next.textContent = '→'; [cite: 51]
-  next.disabled = page === totalPages; [cite: 51]
-  next.onclick = () => page < totalPages && renderPage(items, containerId, paginationId, page + 1); [cite: 51]
-  pagination.appendChild(next); [cite: 52]
+  const next = document.createElement('button');
+  next.textContent = '→';
+  next.disabled = page === totalPages;
+  next.onclick = () => page < totalPages && renderPage(items, containerId, paginationId, page + 1);
+  pagination.appendChild(next);
 }
 
 function toggleSearch(show) {
-  const overlay = document.getElementById('searchOverlay'); [cite: 52]
-  const input = document.getElementById('searchInput'); [cite: 52]
+  const overlay = document.getElementById('searchOverlay');
+  const input = document.getElementById('searchInput');
   if (show) {
-    overlay.style.display = 'flex'; [cite: 53]
-    window.requestAnimationFrame(() => overlay.classList.add('active')); [cite: 53]
-    input.focus(); [cite: 53]
+    overlay.style.display = 'flex';
+    window.requestAnimationFrame(() => overlay.classList.add('active'));
+    input.focus();
   } else {
-    overlay.classList.add('closing'); [cite: 54]
+    overlay.classList.add('closing');
     setTimeout(() => {
-      overlay.classList.remove('active', 'closing'); [cite: 54]
-      overlay.style.display = 'none'; [cite: 54]
-      input.value = ''; [cite: 54]
-      document.getElementById('searchResults').innerHTML = ''; [cite: 54]
-    }, 110); [cite: 54]
+      overlay.classList.remove('active', 'closing');
+      overlay.style.display = 'none';
+      input.value = '';
+      document.getElementById('searchResults').innerHTML = '';
+    }, 110);
   }
 }
 
-// 简单的防抖函数，避免连续输入时卡顿
 function debounce(fn, delay) {
   let timer = null;
   return function(...args) {
@@ -288,38 +284,47 @@ function debounce(fn, delay) {
   };
 }
 
-// 优化后的搜索事件，加入 150ms 防抖
 document.getElementById('searchInput').oninput = debounce(function(e) {
-  const val = e.target.value.toLowerCase().trim(); [cite: 55]
-  const resultsDiv = document.getElementById('searchResults'); [cite: 55]
-  if (!val) { resultsDiv.innerHTML = ''; return; } [cite: 55, 56]
+  const val = e.target.value.toLowerCase().trim();
+  const resultsDiv = document.getElementById('searchResults');
+  if (!val) { resultsDiv.innerHTML = ''; return; }
   
-  const matched = allZrsetuItems.filter(item => item.caption && item.caption.toLowerCase().includes(val)); [cite: 56]
+  const matched = allZrsetuItems.filter(item => item.caption && item.caption.toLowerCase().includes(val));
   resultsDiv.innerHTML = matched.map(item => `
     <div class="item" onclick="window.open('${rootUrl}zrsetu/${item.file}', '_blank')">
       <div class="title">第${item.file.match(/\d+/)?.[0] || '?'}期</div>
       <div class="sub">${item.caption}</div>
     </div>
-  `).join(''); [cite: 57]
+  `).join('');
 }, 150);
 
 window.onkeydown = (e) => {
-  if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); toggleSearch(true); } [cite: 58, 59]
-  if (e.key === 'Escape') toggleSearch(false); [cite: 59]
+  if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); toggleSearch(true); }
+  if (e.key === 'Escape') toggleSearch(false);
 };
 
-window.onload = async () => {
-  const data = await loadData(); [cite: 59]
-  if (data.updated) document.getElementById('update-time').textContent = `最后更新：${data.updated}`; [cite: 60]
-  const sortDesc = arr => arr.sort((a,b) => (parseInt(b.file)||0) - (parseInt(a.file)||0)); [cite: 60]
-  const setuItems = sortDesc(data.setu || []); [cite: 61]
-  allZrsetuItems = sortDesc(data.zrsetu || []); [cite: 61]
+// 【核心改动】抛弃 window.onload，页面DOM一加载完立刻无缝执行
+async function initPage() {
+  const data = await loadData();
+  if (data.updated) document.getElementById('update-time').textContent = `最后更新：${data.updated}`;
+  const sortDesc = arr => arr.sort((a,b) => (parseInt(b.file)||0) - (parseInt(a.file)||0));
+  const setuItems = sortDesc(data.setu || []);
+  allZrsetuItems = sortDesc(data.zrsetu || []);
   
-  renderPage(setuItems, 'setu-list', 'setu-pagination', 1); [cite: 61]
-  renderPage(allZrsetuItems, 'zrsetu-list', 'zrsetu-pagination', 1); [cite: 61]
-  document.getElementById('page-info').innerHTML = `二次元 <b>${setuItems.length}</b> 期　　Cos写真 <b>${allZrsetuItems.length}</b> 期`; [cite: 62]
-  document.body.classList.add('loaded'); [cite: 62]
-};
+  renderPage(setuItems, 'setu-list', 'setu-pagination', 1);
+  renderPage(allZrsetuItems, 'zrsetu-list', 'zrsetu-pagination', 1);
+  document.getElementById('page-info').innerHTML = `二次元 <b>${setuItems.length}</b> 期　　Cos写真 <b>${allZrsetuItems.length}</b> 期`;
+  
+  // 渲染完成后立刻去掉透明度，防止白屏
+  document.body.classList.add('loaded');
+}
+
+// 触发初始化
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initPage);
+} else {
+  initPage();
+}
 </script>
 </body>
 </html>

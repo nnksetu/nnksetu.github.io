@@ -33,11 +33,7 @@
     margin: 0;
     display: inline-flex;
     align-items: center;
-<<<<<<< HEAD
     padding: 8px 80px 8px 12px;
-=======
-    padding: 8px 80px 8px 12px; 
->>>>>>> a509eb06d787adbbe9d2fc5567c8b90876a952f3
     background: linear-gradient(to right, rgba(59, 130, 246, 0.12) 0%, rgba(59, 130, 246, 0.04) 30%, transparent 100%);
     border-radius: 4px;
     border-left: 3px solid #3b82f6;
@@ -46,11 +42,7 @@
   }
   
   .search-trigger-right {
-<<<<<<< HEAD
     display: flex;
-=======
-    display: flex; 
->>>>>>> a509eb06d787adbbe9d2fc5567c8b90876a952f3
     align-items: center; 
     background: #f0f4ff; 
     padding: 7px 18px; 
@@ -58,11 +50,7 @@
     border: 1px solid #d1d5db; 
     cursor: pointer; 
     transition: 0.2s; 
-<<<<<<< HEAD
     min-width: 220px;
-=======
-    min-width: 220px; 
->>>>>>> a509eb06d787adbbe9d2fc5567c8b90876a952f3
     justify-content: space-between;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   }
@@ -97,11 +85,7 @@
   .cos-theme .search-trigger-right:hover { background: #ffeef3; border-color: #fb7299; }
   
   .cos-theme .qq-button a { 
-<<<<<<< HEAD
     background: linear-gradient(135deg, #ff85ad, #fb7299);
-=======
-    background: linear-gradient(135deg, #ff85ad, #fb7299); 
->>>>>>> a509eb06d787adbbe9d2fc5567c8b90876a952f3
     box-shadow: 0 4px 12px rgba(251, 114, 153, 0.35); 
   }
   .cos-theme .qq-button a:hover { background: linear-gradient(135deg, #fb7299, #fa5a87); }
@@ -109,22 +93,14 @@
   .cos-theme ul.list li .num { color: #fb7299; }
   .cos-theme ul.list li:hover { 
     border-color: #ffb3c9; 
-<<<<<<< HEAD
     box-shadow: 0 8px 20px rgba(251, 114, 153, 0.15);
-=======
-    box-shadow: 0 8px 20px rgba(251, 114, 153, 0.15); 
->>>>>>> a509eb06d787adbbe9d2fc5567c8b90876a952f3
     background: #fffcfd; 
   }
   
   .cos-theme .pagination button { color: #fb7299; }
   .cos-theme .pagination button.active { 
     background: linear-gradient(135deg, #ffb3c9, #ffccd9); 
-<<<<<<< HEAD
     color: #fb7299;
-=======
-    color: #fb7299; 
->>>>>>> a509eb06d787adbbe9d2fc5567c8b90876a952f3
     box-shadow: 0 0 0 3px rgba(251, 114, 153, 0.2); 
   }
 
@@ -218,11 +194,7 @@ function updateHeader() {
 // 增加 passive: true 标记，彻底解放手机端滚动时的渲染线程堵塞
 window.addEventListener('scroll', () => {
   if (!ticking) { requestAnimationFrame(updateHeader); ticking = true; }
-<<<<<<< HEAD
 }, { passive: true });
-=======
-});
->>>>>>> a509eb06d787adbbe9d2fc5567c8b90876a952f3
 
 async function loadData() {
   try {
@@ -263,10 +235,7 @@ function renderPage(items, containerId, paginationId, page = 1) {
   let startPage = Math.max(1, page - 2);
   let endPage = Math.min(totalPages, startPage + maxBtns - 1);
   if (endPage - startPage + 1 < maxBtns) startPage = Math.max(1, endPage - maxBtns + 1);
-<<<<<<< HEAD
   
-=======
->>>>>>> a509eb06d787adbbe9d2fc5567c8b90876a952f3
   for (let i = startPage; i <= endPage; i++) {
     const btn = document.createElement('button');
     btn.textContent = i;
@@ -318,22 +287,18 @@ window.onkeydown = (e) => {
   if (e.key === 'Escape') toggleSearch(false);
 };
 
-<<<<<<< HEAD
 // 【终极提速控制核】完全剔除容易导致手机浏览器卡死死锁的 window.onload 事件
 // 采用自执行异步流，确保 HTML 骨架解析完毕的同时，无缝拉取数据并立刻解封页面，绝不白屏等待！
 async function startAppNow() {
-=======
-window.onload = async () => {
->>>>>>> a509eb06d787adbbe9d2fc5567c8b90876a952f3
   const data = await loadData();
   if (data.updated) document.getElementById('update-time').textContent = `最后更新：${data.updated}`;
   const sortDesc = arr => arr.sort((a,b) => (parseInt(b.file)||0) - (parseInt(a.file)||0));
   const setuItems = sortDesc(data.setu || []);
   allZrsetuItems = sortDesc(data.zrsetu || []);
+  
   renderPage(setuItems, 'setu-list', 'setu-pagination', 1);
   renderPage(allZrsetuItems, 'zrsetu-list', 'zrsetu-pagination', 1);
   document.getElementById('page-info').innerHTML = `二次元 <b>${setuItems.length}</b> 期　　Cos写真 <b>${allZrsetuItems.length}</b> 期`;
-<<<<<<< HEAD
   
   // 渲染完毕，立刻向 body 添加 .loaded 类，以最快速度触发完美无缝的淡入过渡动画
   document.body.classList.add('loaded');
@@ -345,10 +310,6 @@ if (document.readyState === 'loading') {
 } else {
   startAppNow();
 }
-=======
-  document.body.classList.add('loaded');
-};
->>>>>>> a509eb06d787adbbe9d2fc5567c8b90876a952f3
 </script>
 </body>
 </html>

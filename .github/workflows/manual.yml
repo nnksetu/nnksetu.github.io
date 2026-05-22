@@ -28,7 +28,7 @@ jobs:
               let match = regex.exec(content);
 
               if (!match || !match[1]) {
-                regex = /<p[^>]*style\s*=\s*[\"'][^\"']*?\btext-align\s*:\s*left[^\"']*?font-size\s*:\s*16px[^>]*>([\s\S]*?)<\/p>/gi;
+                regex = /<p[^>]*style\s*=\s*[\"'][^\"']*?\\btext-align\s*:\s*left[^\"']*?font-size\s*:\s*16px[^>]*>([\s\S]*?)<\/p>/gi;
                 match = regex.exec(content);
               }
 
@@ -57,7 +57,7 @@ jobs:
           const zrsetuItems = getItems('zrsetu');
           const updatedTime = new Date().toLocaleString('zh-CN',{timeZone:'Asia/Shanghai'}).replace(/\//g,'-');
 
-          // 2. 依然保留原始全量 data.json，防止旧缓存或其他地方报错
+          // 2. 保留原始全量 data.json 用于全量搜索
           const allData = {
             updated: updatedTime,
             setu: setuItems,
@@ -65,28 +65,27 @@ jobs:
           };
           fs.writeFileSync('data.json', JSON.stringify(allData, null, 2));
 
-          // 3. 【核心优化】自动动态切分成独立的分页文件
-          const PAGESIZE = 10;
+          // 3. 【优化调整】改为每页 50 条数据进行动态切分
+          const PAGESIZE = 50;
           const pageDir = path.join(__dirname, 'data_pages');
           if (!fs.existsSync(pageDir)) {
             fs.mkdirSync(pageDir);
           }
 
-          // 计算总页数（以数据量较多的分类为准，或独立计算）
           const totalPages = Math.max(Math.ceil(setuItems.length / PAGESIZE), Math.ceil(zrsetuItems.length / PAGESIZE));
 
           for (let p = 1; p <= totalPages; p++) {
             const start = (p - 1) * PAGESIZE;
             const pageData = {
               updated: updatedTime,
-              // 只切分当前页需要的 10 条数据
+              // 每个 json 切入 50 条数据
               setu: setuItems.slice(start, start + PAGESIZE),
               zrsetu: zrsetuItems.slice(start, start + PAGESIZE)
             };
             fs.writeFileSync(path.join(pageDir, `${p}.json`), JSON.stringify(pageData, null, 2));
           }
 
-          // 4. 创建一个极小的骨架索引文件，供主页秒开时使用（只包含总数和更新时间，不含400条列表）
+          // 4. 索引小骨架
           const metaData = {
             updated: updatedTime,
             setuCount: setuItems.length,
@@ -94,7 +93,7 @@ jobs:
           };
           fs.writeFileSync('data_meta.json', JSON.stringify(metaData, null, 2));
 
-          console.log(`自动化切分成功！共生成 ${totalPages} 个分页文件。`);
+          console.log(`自动化切分成功！每页 50 条，共生成 ${totalPages} 个分页文件。`);
           EOF
           node generate.js
       - name: 提交更新
@@ -102,5 +101,5 @@ jobs:
           git config user.name "AutoBot"
           git config user.email "bot@github.com"
           git add data.json data_meta.json data_pages/*.json
-          git diff --quiet && git diff --staged --quiet || git commit -m "自动化更新数据及分页包 [skip ci]"
+          git diff --quiet && git diff --staged --quiet || git commit -m "自动化更新 50 条分页数据 [skip ci]"
           git push origin main

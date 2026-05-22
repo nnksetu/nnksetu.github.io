@@ -22,7 +22,7 @@
   .capsule{display: inline-block;background:#ffffffcc;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-radius:999px;box-shadow:0 8px 32px rgba(0,0,0,0.12);border:1px solid rgba(255,255,255,0.6);max-width: 90vw;width: fit-content;min-width: 260px;margin:12px auto;padding:0.8rem 1.5rem;font-size:1.7rem;font-weight:700;color:#3b82f6;pointer-events: auto;box-sizing: border-box;transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1)}
   header.hidden .capsule {transform: translateY(-20px) scale(0.85);opacity: 0}
 
-  .container{max-width:860px;margin:1.5rem auto;padding:0 1rem}
+  .container{max-width:860px;margin:1.5rem auto;padding:0 1rem 3rem}
   .section-header-row {display: flex; align-items: center; justify-content: space-between; margin: 2rem 0 1rem;}
 
   .section-title {
@@ -121,9 +121,6 @@
   .search-results .item .title {font-weight: 700; color: #3b82f6; font-size: 0.95rem}
   .search-results .item .sub {font-size: 0.85rem; color: #4b5563; line-height: 1.4}
 
-  .page-info{color:#64748b;font-size:0.88rem;margin-top:1rem;text-align:center;font-weight:500}
-  .update-time{font-size:0.8rem;color:#94a3b8;text-align:center;margin:2rem 0 1rem}
-
   @media (max-width: 600px) {
     .search-trigger-right { min-width: 140px; padding: 6px 12px; }
     .search-trigger-right kbd { display: none; }
@@ -159,9 +156,6 @@
     <ul class="list" id="zrsetu-list">加载中...</ul>
     <div id="zrsetu-pagination" class="pagination"></div>
   </div>
-
-  <div class="page-info" id="page-info"></div>
-  <div class="update-time" id="update-time"></div>
 </div>
 
 <div id="searchOverlay" class="search-overlay" onclick="if(event.target==this)toggleSearch(false)">
@@ -177,18 +171,16 @@
 
 <script>
 const rootUrl = './';
-const DISPLAY_PER_PAGE = 10; // 界面 UI 依然死死保持 10 条一页
-const DATA_PER_JSON = 50;    // 后台每个 JSON 文件里包含 50 条数据
+const DISPLAY_PER_PAGE = 10; 
+const DATA_PER_JSON = 50;    
 const header = document.getElementById('header');
 let lastScrollY = 0;
 let ticking = false;
 
-// 全局状态变量
 let totalSetuCount = 0;
 let totalZrsetuCount = 0;
-let allZrsetuItems = []; // 用于搜索的 Cos 缓存
+let allZrsetuItems = []; 
 
-// 分页数据本地内存缓存，避免频繁请求服务器
 const cachePages = {}; 
 
 function updateHeader() {
@@ -203,7 +195,6 @@ window.addEventListener('scroll', () => {
   if (!ticking) { requestAnimationFrame(updateHeader); ticking = true; }
 }, { passive: true });
 
-// 基础网络请求器
 async function fetchJson(url) {
   try {
     const res = await fetch(`${url}?t=${Date.now()}`);
@@ -215,23 +206,17 @@ async function fetchJson(url) {
   }
 }
 
-// 核心：智能计算并调度数据（UI页码 与 JSON包页码 的无缝转换）
 async function switchPage(uiPage, preferContainerId = null) {
-  // 计算当前 UI 页码对应的数据，属于第几个 JSON 文件包
   const jsonTargetPage = Math.ceil((uiPage * DISPLAY_PER_PAGE) / DATA_PER_JSON);
 
-  // 如果内存中没有这个大 JSON 包，则去服务器请求并缓存下来
   if (!cachePages[jsonTargetPage]) {
     cachePages[jsonTargetPage] = await fetchJson(`${rootUrl}data_pages/${jsonTargetPage}.json`);
   }
   
   const pageData = cachePages[jsonTargetPage];
-
-  // 计算当前 UI 页在 50 条大包内部的相对起始索引位置
   const relativeStart = ((uiPage - 1) * DISPLAY_PER_PAGE) % DATA_PER_JSON;
   const relativeEnd = relativeStart + DISPLAY_PER_PAGE;
 
-  // 100% 还原主页 10 条一页的 UI 渲染
   if (!preferContainerId || preferContainerId === 'setu-list') {
     const subset = (pageData.setu || []).slice(relativeStart, relativeEnd);
     renderListAndPagination(subset, totalSetuCount, 'setu-list', 'setu-pagination', uiPage);
@@ -242,13 +227,11 @@ async function switchPage(uiPage, preferContainerId = null) {
   }
 }
 
-// 恢复绝对原汁原味的传统 DOM 渲染与 10 条 UI 分页脚标生成
 function renderListAndPagination(pageItems, totalItemsCount, containerId, paginationId, currentPage) {
   const container = document.getElementById(containerId);
   const pagination = document.getElementById(paginationId);
   const totalPages = Math.ceil(totalItemsCount / DISPLAY_PER_PAGE);
 
-  // 1. 动态插入 10 条数据
   container.innerHTML = '';
   pageItems.forEach(item => {
     const li = document.createElement('li');
@@ -258,8 +241,9 @@ function renderListAndPagination(pageItems, totalItemsCount, containerId, pagina
     container.appendChild(li);
   });
 
-  // 2. 构建 10 条一页制下的分页按钮
   pagination.innerHTML = '';
+  if (totalPages <= 1) return;
+
   const prev = document.createElement('button');
   prev.textContent = '←';
   prev.disabled = currentPage === 1;
@@ -328,17 +312,20 @@ window.onkeydown = (e) => {
   if (e.key === 'Escape') toggleSearch(false);
 };
 
-// 极速群组载入控制器
 async function startAppNow() {
-  const meta = await fetchJson(`${rootUrl}data_meta.json`);
-  if (meta.updated) document.getElementById('update-time').textContent = `最后更新：${meta.updated}`;
+  const firstPageData = await fetchJson(`${rootUrl}data_pages/1.json`);
+  cachePages[1] = firstPageData;
   
-  totalSetuCount = meta.setuCount || 0;
-  totalZrsetuCount = meta.zrsetuCount || 0;
-  document.getElementById('page-info').innerHTML = `二次元 <b>${totalSetuCount}</b> 期　　Cos写真 <b>${totalZrsetuCount}</b> 期`;
+  const getCount = arr => (arr && arr.length > 0) ? (parseInt(arr[0].file) || arr.length) : 0;
+  totalSetuCount = getCount(firstPageData.setu);
+  totalZrsetuCount = getCount(firstPageData.zrsetu);
   
-  // 载入 UI 第 1 页
-  await switchPage(1);
+  const subsetSetu = (firstPageData.setu || []).slice(0, DISPLAY_PER_PAGE);
+  const subsetZrsetu = (firstPageData.zrsetu || []).slice(0, DISPLAY_PER_PAGE);
+  
+  renderListAndPagination(subsetSetu, totalSetuCount, 'setu-list', 'setu-pagination', 1);
+  renderListAndPagination(subsetZrsetu, totalZrsetuCount, 'zrsetu-list', 'zrsetu-pagination', 1);
+  
   document.body.classList.add('loaded');
 }
 

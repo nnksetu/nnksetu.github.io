@@ -181,7 +181,11 @@ const ITEMS_PER_PAGE = 10;
 const header = document.getElementById('header');
 let lastScrollY = 0;
 let ticking = false;
-let allZrsetuItems = [];
+
+// 全局状态变量
+let totalSetuCount = 0;
+let totalZrsetuCount = 0;
+let allZrsetuItems = []; // 用于搜索的 Cos 缓存
 
 function updateHeader() {
   const currentScrollY = window.scrollY;
@@ -191,14 +195,14 @@ function updateHeader() {
   ticking = false;
 }
 
-// 增加 passive: true 标记，彻底解放手机端滚动时的渲染线程堵塞
 window.addEventListener('scroll', () => {
   if (!ticking) { requestAnimationFrame(updateHeader); ticking = true; }
 }, { passive: true });
 
-async function loadData() {
+// 基础网络请求器
+async function fetchJson(url) {
   try {
-    const res = await fetch(`${rootUrl}data.json?t=${Date.now()}`);
+    const res = await fetch(`${url}?t=${Date.now()}`);
     if (!res.ok) throw new Error('Failed');
     return await res.json();
   } catch (e) {
@@ -207,14 +211,13 @@ async function loadData() {
   }
 }
 
-// 恢复绝对原汁原味的传统 DOM 渲染，100% 保持与原始样式和动效选择器的绝对兼容
-function renderPage(items, containerId, paginationId, page = 1) {
+// 渲染列表和生成分页脚标
+function renderListAndPagination(pageItems, totalItemsCount, containerId, paginationId, currentPage) {
   const container = document.getElementById(containerId);
   const pagination = document.getElementById(paginationId);
-  const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
-  const start = (page - 1) * ITEMS_PER_PAGE;
-  const pageItems = items.slice(start, start + ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(totalItemsCount / ITEMS_PER_PAGE);
 
+  // 1. 动态插入列表项
   container.innerHTML = '';
   pageItems.forEach(item => {
     const li = document.createElement('li');
@@ -224,31 +227,45 @@ function renderPage(items, containerId, paginationId, page = 1) {
     container.appendChild(li);
   });
 
+  // 2. 构建分页按钮
   pagination.innerHTML = '';
   const prev = document.createElement('button');
   prev.textContent = '←';
-  prev.disabled = page === 1;
-  prev.onclick = () => page > 1 && renderPage(items, containerId, paginationId, page - 1);
+  prev.disabled = currentPage === 1;
+  prev.onclick = () => currentPage > 1 && switchPage(currentPage - 1, containerId);
   pagination.appendChild(prev);
 
   const maxBtns = 5;
-  let startPage = Math.max(1, page - 2);
+  let startPage = Math.max(1, currentPage - 2);
   let endPage = Math.min(totalPages, startPage + maxBtns - 1);
   if (endPage - startPage + 1 < maxBtns) startPage = Math.max(1, endPage - maxBtns + 1);
   
   for (let i = startPage; i <= endPage; i++) {
     const btn = document.createElement('button');
     btn.textContent = i;
-    if (i === page) btn.classList.add('active');
-    btn.onclick = () => renderPage(items, containerId, paginationId, i);
+    if (i === currentPage) btn.classList.add('active');
+    btn.onclick = () => switchPage(i, containerId);
     pagination.appendChild(btn);
   }
 
   const next = document.createElement('button');
   next.textContent = '→';
-  next.disabled = page === totalPages;
-  next.onclick = () => page < totalPages && renderPage(items, containerId, paginationId, page + 1);
+  next.disabled = currentPage === totalPages;
+  next.onclick = () => currentPage < totalPages && switchPage(currentPage + 1, containerId);
   pagination.appendChild(next);
+}
+
+// 【核心：点击分页时按需加载对应的独立小 json】
+async function switchPage(targetPage, preferContainerId = null) {
+  const pageData = await fetchJson(`${rootUrl}data_pages/${targetPage}.json`);
+  
+  // 如果明确指明了更新哪一个，或者两侧同时更新
+  if (!preferContainerId || preferContainerId === 'setu-list') {
+    renderListAndPagination(pageData.setu || [], totalSetuCount, 'setu-list', 'setu-pagination', targetPage);
+  }
+  if (!preferContainerId || preferContainerId === 'zrsetu-list') {
+    renderListAndPagination(pageData.zrsetu || [], totalZrsetuCount, 'zrsetu-list', 'zrsetu-pagination', targetPage);
+  }
 }
 
 function toggleSearch(show) {
@@ -258,6 +275,13 @@ function toggleSearch(show) {
     overlay.style.display = 'flex';
     setTimeout(() => overlay.classList.add('active'), 10);
     input.focus();
+    // 惰性加载：只有当用户真正点击搜索框时，才在后台悄悄拉取全量旧 data.json 用于全量检索，绝不耽误首屏时间！
+    if (allZrsetuItems.length === 0) {
+      fetchJson(`${rootUrl}data.json`).then(allData => {
+        const sortDesc = arr => arr.sort((a,b) => (parseInt(b.file)||0) - (parseInt(a.file)||0));
+        allZrsetuItems = sortDesc(allData.zrsetu || []);
+      });
+    }
   } else {
     overlay.classList.add('closing');
     setTimeout(() => {
@@ -287,24 +311,21 @@ window.onkeydown = (e) => {
   if (e.key === 'Escape') toggleSearch(false);
 };
 
-// 【终极提速控制核】完全剔除容易导致手机浏览器卡死死锁的 window.onload 事件
-// 采用自执行异步流，确保 HTML 骨架解析完毕的同时，无缝拉取数据并立刻解封页面，绝不白屏等待！
+// 极速初始化引擎
 async function startAppNow() {
-  const data = await loadData();
-  if (data.updated) document.getElementById('update-time').textContent = `最后更新：${data.updated}`;
-  const sortDesc = arr => arr.sort((a,b) => (parseInt(b.file)||0) - (parseInt(a.file)||0));
-  const setuItems = sortDesc(data.setu || []);
-  allZrsetuItems = sortDesc(data.zrsetu || []);
+  // 1. 瞬间读取微小的 meta 骨架数据 (仅几百个字节)
+  const meta = await fetchJson(`${rootUrl}data_meta.json`);
+  if (meta.updated) document.getElementById('update-time').textContent = `最后更新：${meta.updated}`;
   
-  renderPage(setuItems, 'setu-list', 'setu-pagination', 1);
-  renderPage(allZrsetuItems, 'zrsetu-list', 'zrsetu-pagination', 1);
-  document.getElementById('page-info').innerHTML = `二次元 <b>${setuItems.length}</b> 期　　Cos写真 <b>${allZrsetuItems.length}</b> 期`;
+  totalSetuCount = meta.setuCount || 0;
+  totalZrsetuCount = meta.zrsetuCount || 0;
+  document.getElementById('page-info').innerHTML = `二次元 <b>${totalSetuCount}</b> 期　　Cos写真 <b>${totalZrsetuCount}</b> 期`;
   
-  // 渲染完毕，立刻向 body 添加 .loaded 类，以最快速度触发完美无缝的淡入过渡动画
+  // 2. 骨架确立后，立刻让网页渲染第一页，并瞬间解封白屏
+  await switchPage(1);
   document.body.classList.add('loaded');
 }
 
-// 智能生命周期判定：如果 DOM 还在加载则监听 DOMContentLoaded，否则直接执行，解决手机端线程排队卡死问题
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', startAppNow);
 } else {

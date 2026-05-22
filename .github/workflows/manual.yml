@@ -24,16 +24,24 @@ jobs:
           function extractCaption(filePath) {
             try {
               const content = fs.readFileSync(filePath, 'utf8');
+
+              // 优先匹配新的 <div id="setu-title" class="title-capsule"> 格式
               let regex = /<div[^>]*id=[\"']?setu-title[\"']?[^>]*class=[\"']?title-capsule[\"']?[^>]*>([\s\S]*?)<\/div>/i;
               let match = regex.exec(content);
 
+              // 如果没匹配到，再尝试兼容旧的 <p style="text-align:left; font-size:16px"> 格式（100%还原您的原版规则）
               if (!match || !match[1]) {
-                regex = /<p[^>]*style\s*=\s*[\"'][^\"']*?\\btext-align\s*:\s*left[^\"']*?font-size\s*:\s*16px[^>]*>([\s\S]*?)<\/p>/gi;
+                regex = /<p[^>]*style\s*=\s*[\"'][^\"']*?\btext-align\s*:\s*left[^\"']*?font-size\s*:\s*16px[^>]*>([\s\S]*?)<\/p>/gi;
                 match = regex.exec(content);
               }
 
               if (match && match[1]) {
-                return match[1].replace(/<[^>]+>/g, '').trim();
+                // 处理提取到的文本：只去掉HTML标签，保留开头的 #（100%还原您的原版逻辑）
+                let text = match[1]
+                  .replace(/<[^>]+>/g, '')     // 移除所有HTML标签
+                  .trim();
+
+                return text;
               }
             } catch (e) {
               console.log(`读取失败 ${filePath}: ${e.message}`);
@@ -65,7 +73,7 @@ jobs:
           };
           fs.writeFileSync('data.json', JSON.stringify(allData, null, 2));
 
-          // 3. 【优化调整】改为每页 50 条数据进行动态切分
+          // 3. 后台大包保持 50 条数据进行动态切分
           const PAGESIZE = 50;
           const pageDir = path.join(__dirname, 'data_pages');
           if (!fs.existsSync(pageDir)) {
@@ -78,7 +86,6 @@ jobs:
             const start = (p - 1) * PAGESIZE;
             const pageData = {
               updated: updatedTime,
-              // 每个 json 切入 50 条数据
               setu: setuItems.slice(start, start + PAGESIZE),
               zrsetu: zrsetuItems.slice(start, start + PAGESIZE)
             };
@@ -101,5 +108,5 @@ jobs:
           git config user.name "AutoBot"
           git config user.email "bot@github.com"
           git add data.json data_meta.json data_pages/*.json
-          git diff --quiet && git diff --staged --quiet || git commit -m "自动化更新 50 条分页数据 [skip ci]"
+          git diff --quiet && git diff --staged --quiet || git commit -m "修复标题提取规则并更新50条分页数据 [skip ci]"
           git push origin main

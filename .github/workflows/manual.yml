@@ -15,7 +15,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: 生成 data.json
+      - name: 生成 data.json 及分页数据
         run: |
           cat > generate.js << 'EOF'
           const fs = require('fs');
@@ -24,24 +24,16 @@ jobs:
           function extractCaption(filePath) {
             try {
               const content = fs.readFileSync(filePath, 'utf8');
-
-              // 优先匹配新的 <div id="setu-title" class="title-capsule"> 格式
-              let regex = /<div[^>]*id=["']?setu-title["']?[^>]*class=["']?title-capsule["']?[^>]*>([\s\S]*?)<\/div>/i;
+              let regex = /<div[^>]*id=[\"']?setu-title[\"']?[^>]*class=[\"']?title-capsule[\"']?[^>]*>([\s\S]*?)<\/div>/i;
               let match = regex.exec(content);
 
-              // 如果没匹配到，再尝试兼容旧的 <p style="text-align:left; font-size:16px"> 格式
               if (!match || !match[1]) {
-                regex = /<p[^>]*style\s*=\s*["'][^"']*?\btext-align\s*:\s*left[^"']*?font-size\s*:\s*16px[^>]*>([\s\S]*?)<\/p>/gi;
+                regex = /<p[^>]*style\s*=\s*[\"'][^\"']*?\btext-align\s*:\s*left[^\"']*?font-size\s*:\s*16px[^>]*>([\s\S]*?)<\/p>/gi;
                 match = regex.exec(content);
               }
 
               if (match && match[1]) {
-                // 处理提取到的文本：只去掉HTML标签，保留开头的 #
-                let text = match[1]
-                  .replace(/<[^>]+>/g, '')     // 移除所有HTML标签
-                  .trim();
-
-                return text;
+                return match[1].replace(/<[^>]+>/g, '').trim();
               }
             } catch (e) {
               console.log(`读取失败 ${filePath}: ${e.message}`);
@@ -60,19 +52,55 @@ jobs:
               .sort((a,b) => (parseInt(b.file)||0) - (parseInt(a.file)||0));
           }
 
-          const data = {
-            updated: new Date().toLocaleString('zh-CN',{timeZone:'Asia/Shanghai'}).replace(/\//g,'-'),
-            setu: getItems('setu'),
-            zrsetu: getItems('zrsetu')
-          };
+          // 1. 获取全量排序后的数据
+          const setuItems = getItems('setu');
+          const zrsetuItems = getItems('zrsetu');
+          const updatedTime = new Date().toLocaleString('zh-CN',{timeZone:'Asia/Shanghai'}).replace(/\//g,'-');
 
-          fs.writeFileSync('data.json', JSON.stringify(data, null, 2));
-          console.log(`成功！setu ${data.setu.length}期，zrsetu ${data.zrsetu.length}期`);
+          // 2. 依然保留原始全量 data.json，防止旧缓存或其他地方报错
+          const allData = {
+            updated: updatedTime,
+            setu: setuItems,
+            zrsetu: zrsetuItems
+          };
+          fs.writeFileSync('data.json', JSON.stringify(allData, null, 2));
+
+          // 3. 【核心优化】自动动态切分成独立的分页文件
+          const PAGESIZE = 10;
+          const pageDir = path.join(__dirname, 'data_pages');
+          if (!fs.existsSync(pageDir)) {
+            fs.mkdirSync(pageDir);
+          }
+
+          // 计算总页数（以数据量较多的分类为准，或独立计算）
+          const totalPages = Math.max(Math.ceil(setuItems.length / PAGESIZE), Math.ceil(zrsetuItems.length / PAGESIZE));
+
+          for (let p = 1; p <= totalPages; p++) {
+            const start = (p - 1) * PAGESIZE;
+            const pageData = {
+              updated: updatedTime,
+              // 只切分当前页需要的 10 条数据
+              setu: setuItems.slice(start, start + PAGESIZE),
+              zrsetu: zrsetuItems.slice(start, start + PAGESIZE)
+            };
+            fs.writeFileSync(path.join(pageDir, `${p}.json`), JSON.stringify(pageData, null, 2));
+          }
+
+          // 4. 创建一个极小的骨架索引文件，供主页秒开时使用（只包含总数和更新时间，不含400条列表）
+          const metaData = {
+            updated: updatedTime,
+            setuCount: setuItems.length,
+            zrsetuCount: zrsetuItems.length
+          };
+          fs.writeFileSync('data_meta.json', JSON.stringify(metaData, null, 2));
+
+          console.log(`自动化切分成功！共生成 ${totalPages} 个分页文件。`);
           EOF
           node generate.js
       - name: 提交更新
         run: |
           git config user.name "AutoBot"
           git config user.email "bot@github.com"
-          git add data.json
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto update data.json" && git push)
+          git add data.json data_meta.json data_pages/*.json
+          git diff --quiet && git diff --staged --quiet || git commit -m "自动化更新数据及分页包 [skip ci]"
+          git push origin main

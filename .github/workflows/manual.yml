@@ -29,18 +29,16 @@ jobs:
               let regex = /<div[^>]*id=[\"']?setu-title[\"']?[^>]*class=[\"']?title-capsule[\"']?[^>]*>([\s\S]*?)<\/div>/i;
               let match = regex.exec(content);
 
-              // 如果没匹配到，再尝试兼容旧的 <p style="text-align:left; font-size:16px"> 格式（100%还原您的原版规则）
+              // 如果没匹配到，再尝试兼容旧的 <p style="text-align:left; font-size:16px"> 格式
               if (!match || !match[1]) {
                 regex = /<p[^>]*style\s*=\s*[\"'][^\"']*?\btext-align\s*:\s*left[^\"']*?font-size\s*:\s*16px[^>]*>([\s\S]*?)<\/p>/gi;
                 match = regex.exec(content);
               }
 
               if (match && match[1]) {
-                // 处理提取到的文本：只去掉HTML标签，保留开头的 #（100%还原您的原版逻辑）
                 let text = match[1]
                   .replace(/<[^>]+>/g, '')     // 移除所有HTML标签
                   .trim();
-
                 return text;
               }
             } catch (e) {
@@ -65,7 +63,7 @@ jobs:
           const zrsetuItems = getItems('zrsetu');
           const updatedTime = new Date().toLocaleString('zh-CN',{timeZone:'Asia/Shanghai'}).replace(/\//g,'-');
 
-          // 2. 保留原始全量 data.json 用于全量搜索
+          // 2. 保留原始全量 data.json 用于全局检索
           const allData = {
             updated: updatedTime,
             setu: setuItems,
@@ -73,7 +71,7 @@ jobs:
           };
           fs.writeFileSync('data.json', JSON.stringify(allData, null, 2));
 
-          // 3. 后台大包保持 50 条数据进行动态切分
+          // 3. 将后台大包按 50 条数据进行动态切分
           const PAGESIZE = 50;
           const pageDir = path.join(__dirname, 'data_pages');
           if (!fs.existsSync(pageDir)) {
@@ -92,14 +90,6 @@ jobs:
             fs.writeFileSync(path.join(pageDir, `${p}.json`), JSON.stringify(pageData, null, 2));
           }
 
-          // 4. 索引小骨架
-          const metaData = {
-            updated: updatedTime,
-            setuCount: setuItems.length,
-            zrsetuCount: zrsetuItems.length
-          };
-          fs.writeFileSync('data_meta.json', JSON.stringify(metaData, null, 2));
-
           console.log(`自动化切分成功！每页 50 条，共生成 ${totalPages} 个分页文件。`);
           EOF
           node generate.js
@@ -107,6 +97,6 @@ jobs:
         run: |
           git config user.name "AutoBot"
           git config user.email "bot@github.com"
-          git add data.json data_meta.json data_pages/*.json
-          git diff --quiet && git diff --staged --quiet || git commit -m "修复标题提取规则并更新50条分页数据 [skip ci]"
+          git add data.json data_pages/*.json
+          git diff --quiet && git diff --staged --quiet || git commit -m "精简结构并自动切分50条数据 [skip ci]"
           git push origin main

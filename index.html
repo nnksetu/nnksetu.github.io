@@ -177,7 +177,8 @@
 
 <script>
 const rootUrl = './';
-const ITEMS_PER_PAGE = 50; // 改为每页展示 50 条，减少割裂感
+const DISPLAY_PER_PAGE = 10; // 界面 UI 依然死死保持 10 条一页
+const DATA_PER_JSON = 50;    // 后台每个 JSON 文件里包含 50 条数据
 const header = document.getElementById('header');
 let lastScrollY = 0;
 let ticking = false;
@@ -186,6 +187,9 @@ let ticking = false;
 let totalSetuCount = 0;
 let totalZrsetuCount = 0;
 let allZrsetuItems = []; // 用于搜索的 Cos 缓存
+
+// 分页数据本地内存缓存，避免频繁请求服务器
+const cachePages = {}; 
 
 function updateHeader() {
   const currentScrollY = window.scrollY;
@@ -211,13 +215,40 @@ async function fetchJson(url) {
   }
 }
 
-// 渲染列表和生成分页脚标
+// 核心：智能计算并调度数据（UI页码 与 JSON包页码 的无缝转换）
+async function switchPage(uiPage, preferContainerId = null) {
+  // 计算当前 UI 页码对应的数据，属于第几个 JSON 文件包
+  const jsonTargetPage = Math.ceil((uiPage * DISPLAY_PER_PAGE) / DATA_PER_JSON);
+
+  // 如果内存中没有这个大 JSON 包，则去服务器请求并缓存下来
+  if (!cachePages[jsonTargetPage]) {
+    cachePages[jsonTargetPage] = await fetchJson(`${rootUrl}data_pages/${jsonTargetPage}.json`);
+  }
+  
+  const pageData = cachePages[jsonTargetPage];
+
+  // 计算当前 UI 页在 50 条大包内部的相对起始索引位置
+  const relativeStart = ((uiPage - 1) * DISPLAY_PER_PAGE) % DATA_PER_JSON;
+  const relativeEnd = relativeStart + DISPLAY_PER_PAGE;
+
+  // 100% 还原主页 10 条一页的 UI 渲染
+  if (!preferContainerId || preferContainerId === 'setu-list') {
+    const subset = (pageData.setu || []).slice(relativeStart, relativeEnd);
+    renderListAndPagination(subset, totalSetuCount, 'setu-list', 'setu-pagination', uiPage);
+  }
+  if (!preferContainerId || preferContainerId === 'zrsetu-list') {
+    const subset = (pageData.zrsetu || []).slice(relativeStart, relativeEnd);
+    renderListAndPagination(subset, totalZrsetuCount, 'zrsetu-list', 'zrsetu-pagination', uiPage);
+  }
+}
+
+// 恢复绝对原汁原味的传统 DOM 渲染与 10 条 UI 分页脚标生成
 function renderListAndPagination(pageItems, totalItemsCount, containerId, paginationId, currentPage) {
   const container = document.getElementById(containerId);
   const pagination = document.getElementById(paginationId);
-  const totalPages = Math.ceil(totalItemsCount / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(totalItemsCount / DISPLAY_PER_PAGE);
 
-  // 1. 动态插入列表项
+  // 1. 动态插入 10 条数据
   container.innerHTML = '';
   pageItems.forEach(item => {
     const li = document.createElement('li');
@@ -227,10 +258,8 @@ function renderListAndPagination(pageItems, totalItemsCount, containerId, pagina
     container.appendChild(li);
   });
 
-  // 2. 构建分页按钮（如果总页数小于等于1，可以选择隐藏或只显示1页）
+  // 2. 构建 10 条一页制下的分页按钮
   pagination.innerHTML = '';
-  if (totalPages <= 1) return; // 如果只有 1 页，则不显示底部的分页按钮，界面更干净
-
   const prev = document.createElement('button');
   prev.textContent = '←';
   prev.disabled = currentPage === 1;
@@ -257,18 +286,6 @@ function renderListAndPagination(pageItems, totalItemsCount, containerId, pagina
   pagination.appendChild(next);
 }
 
-// 点击分页时按需加载对应的独立 50条 小 json
-async function switchPage(targetPage, preferContainerId = null) {
-  const pageData = await fetchJson(`${rootUrl}data_pages/${targetPage}.json`);
-  
-  if (!preferContainerId || preferContainerId === 'setu-list') {
-    renderListAndPagination(pageData.setu || [], totalSetuCount, 'setu-list', 'setu-pagination', targetPage);
-  }
-  if (!preferContainerId || preferContainerId === 'zrsetu-list') {
-    renderListAndPagination(pageData.zrsetu || [], totalZrsetuCount, 'zrsetu-list', 'zrsetu-pagination', targetPage);
-  }
-}
-
 function toggleSearch(show) {
   const overlay = document.getElementById('searchOverlay');
   const input = document.getElementById('searchInput');
@@ -276,7 +293,6 @@ function toggleSearch(show) {
     overlay.style.display = 'flex';
     setTimeout(() => overlay.classList.add('active'), 10);
     input.focus();
-    // 惰性加载：点击搜索时才去拉取全量 400 条旧 data.json 用于全局精确检索
     if (allZrsetuItems.length === 0) {
       fetchJson(`${rootUrl}data.json`).then(allData => {
         const sortDesc = arr => arr.sort((a,b) => (parseInt(b.file)||0) - (parseInt(a.file)||0));
@@ -321,6 +337,7 @@ async function startAppNow() {
   totalZrsetuCount = meta.zrsetuCount || 0;
   document.getElementById('page-info').innerHTML = `二次元 <b>${totalSetuCount}</b> 期　　Cos写真 <b>${totalZrsetuCount}</b> 期`;
   
+  // 载入 UI 第 1 页
   await switchPage(1);
   document.body.classList.add('loaded');
 }

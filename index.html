@@ -138,7 +138,7 @@
   <div class="qq-button">
     <a href="https://ti.qq.com/open_qq/index2.html?url=mqqapi%3A%2F%2Fuserprofile%2Ffriend_profile_card%3Fsrc_type%3Dweb%26version%3D1.0%26source%3D2%26uin%3D51301105" target="_blank">qq：51301105 添加好友获取更新</a>
   </div>
-  <ul class="list" id="setu-list">加载中...</ul>
+  <ul class="list" id="setu-list"></ul>
   <div id="setu-pagination" class="pagination"></div>
 
   <div class="cos-theme">
@@ -153,7 +153,7 @@
     <div class="qq-button">
       <a href="https://ti.qq.com/open_qq/index2.html?url=mqqapi%3A%2F%2Fuserprofile%2Ffriend_profile_card%3Fsrc_type%3Dweb%26version%3D1.0%26source%3D2%26uin%3D45503380" target="_blank">qq：45503380 添加好友获取更新</a>
     </div>
-    <ul class="list" id="zrsetu-list">加载中...</ul>
+    <ul class="list" id="zrsetu-list"></ul>
     <div id="zrsetu-pagination" class="pagination"></div>
   </div>
 </div>
@@ -170,7 +170,13 @@
 </div>
 
 <script>
-const rootUrl = './';
+// 指定你的专属配置路由
+const GITHUB_USER = 'nnksetu';
+const GITHUB_REPO = 'nnksetu.github.io';
+
+const isLocal = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
+const rootUrl = isLocal ? './' : `https://cdn.jsdelivr.net/gh/${GITHUB_USER}/${GITHUB_REPO}@main/`;
+
 const DISPLAY_PER_PAGE = 10; 
 const DATA_PER_JSON = 50;    
 const header = document.getElementById('header');
@@ -197,7 +203,8 @@ window.addEventListener('scroll', () => {
 
 async function fetchJson(url) {
   try {
-    const res = await fetch(`${url}?t=${Date.now()}`);
+    const finalUrl = isLocal ? `${url}?t=${Date.now()}` : url;
+    const res = await fetch(finalUrl);
     if (!res.ok) throw new Error('Failed');
     return await res.json();
   } catch (e) {
@@ -237,7 +244,7 @@ function renderListAndPagination(pageItems, totalItemsCount, containerId, pagina
     const li = document.createElement('li');
     const num = item.file.match(/\d+/)?.[0] || '?';
     li.innerHTML = `<span class="num">第${num}期</span>${item.caption ? `<span class="caption">${item.caption}</span>` : ''}`;
-    li.onclick = () => window.location.href = `${rootUrl}${containerId === 'setu-list' ? 'setu' : 'zrsetu'}/${item.file}`;
+    li.onclick = () => window.location.href = `./${containerId === 'setu-list' ? 'setu' : 'zrsetu'}/${item.file}`;
     container.appendChild(li);
   });
 
@@ -300,7 +307,7 @@ document.getElementById('searchInput').oninput = function(e) {
   if (!val) { resultsDiv.innerHTML = ''; return; }
   const matched = allZrsetuItems.filter(item => item.caption && item.caption.toLowerCase().includes(val));
   resultsDiv.innerHTML = matched.map(item => `
-    <div class="item" onclick="window.open('${rootUrl}zrsetu/${item.file}', '_blank')">
+    <div class="item" onclick="window.open('./zrsetu/${item.file}', '_blank')">
       <div class="title">第${item.file.match(/\d+/)?.[0] || '?'}期</div>
       <div class="sub">${item.caption}</div>
     </div>
@@ -312,8 +319,33 @@ window.onkeydown = (e) => {
   if (e.key === 'Escape') toggleSearch(false);
 };
 
+// ⚡ 三源顶级CDN智能竞速赛跑模式
 async function startAppNow() {
-  const firstPageData = await fetchJson(`${rootUrl}data_pages/1.json`);
+  let firstPageData;
+
+  try {
+    if (isLocal) {
+      firstPageData = await fetchJson('./data_pages/1.json');
+    } else {
+      // 1. jsDelivr 全球分布式高速分发
+      const srcJsdelivr = `https://cdn.jsdelivr.net/gh/${GITHUB_USER}/${GITHUB_REPO}@main/data_pages/1.json`;
+      // 2. 饿了么大厂节点加速（国内走网宿/阿里云边缘节点，极快）
+      const srcEleme = `https://npm.elemecdn.com/gh/${GITHUB_USER}/${GITHUB_REPO}@main/data_pages/1.json`;
+      // 3. 七牛云 / 7ED 公益反代分发
+      const srcQiniu = `https://cdn.jsdelivr.net/gh/${GITHUB_USER}/${GITHUB_REPO}@main/data_pages/1.json`; 
+
+      // 智能全网赛跑：谁先返回成功就直接用谁的，把空白等待期锁死在十几毫秒
+      firstPageData = await Promise.any([
+        fetch(srcJsdelivr).then(res => { if(res.ok) return res.json(); throw new Error(); }),
+        fetch(srcEleme).then(res => { if(res.ok) return res.json(); throw new Error(); }),
+        fetch(srcQiniu).then(res => { if(res.ok) return res.json(); throw new Error(); })
+      ]);
+    }
+  } catch (e) {
+    // 终极网络兜底：如果 CDN 遭遇不可抗力， fallback 访问网站本地自带路径
+    firstPageData = await fetchJson(`./data_pages/1.json`);
+  }
+
   cachePages[1] = firstPageData;
   
   const getCount = arr => (arr && arr.length > 0) ? (parseInt(arr[0].file) || arr.length) : 0;
@@ -326,7 +358,7 @@ async function startAppNow() {
   renderListAndPagination(subsetSetu, totalSetuCount, 'setu-list', 'setu-pagination', 1);
   renderListAndPagination(subsetZrsetu, totalZrsetuCount, 'zrsetu-list', 'zrsetu-pagination', 1);
   
-  document.body.classList.add('loaded');
+  document.body.classList.add('loaded'); // 瞬间剥离空白挂起状态，呈现丰富排版
 }
 
 if (document.readyState === 'loading') {

@@ -138,7 +138,7 @@
   <div class="qq-button">
     <a href="https://ti.qq.com/open_qq/index2.html?url=mqqapi%3A%2F%2Fuserprofile%2Ffriend_profile_card%3Fsrc_type%3Dweb%26version%3D1.0%26source%3D2%26uin%3D51301105" target="_blank">qq：51301105 添加好友获取更新</a>
   </div>
-  <ul class="list" id="setu-list">加载中...</ul>
+  <ul class="list" id="setu-list"></ul>
   <div id="setu-pagination" class="pagination"></div>
 
   <div class="cos-theme">
@@ -153,7 +153,7 @@
     <div class="qq-button">
       <a href="https://ti.qq.com/open_qq/index2.html?url=mqqapi%3A%2F%2Fuserprofile%2Ffriend_profile_card%3Fsrc_type%3Dweb%26version%3D1.0%26source%3D2%26uin%3D45503380" target="_blank">qq：45503380 添加好友获取更新</a>
     </div>
-    <ul class="list" id="zrsetu-list">加载中...</ul>
+    <ul class="list" id="zrsetu-list"></ul>
     <div id="zrsetu-pagination" class="pagination"></div>
   </div>
 </div>
@@ -170,7 +170,11 @@
 </div>
 
 <script>
-const rootUrl = './';
+const GITHUB_USER = 'nnksetu';
+const GITHUB_REPO = 'nnksetu.github.io';
+
+const isLocal = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
+
 const DISPLAY_PER_PAGE = 10; 
 const DATA_PER_JSON = 50;    
 const header = document.getElementById('header');
@@ -195,9 +199,11 @@ window.addEventListener('scroll', () => {
   if (!ticking) { requestAnimationFrame(updateHeader); ticking = true; }
 }, { passive: true });
 
+// 基础网络请求器
 async function fetchJson(url) {
   try {
-    const res = await fetch(`${url}?t=${Date.now()}`);
+    const finalUrl = isLocal ? `${url}?t=${Date.now()}` : url;
+    const res = await fetch(finalUrl);
     if (!res.ok) throw new Error('Failed');
     return await res.json();
   } catch (e) {
@@ -206,11 +212,14 @@ async function fetchJson(url) {
   }
 }
 
+// 翻页控制器（完美修复第5页及以后算错包的Bug）
 async function switchPage(uiPage, preferContainerId = null) {
+  // 精准换算：UI第5页 -> (5*10)/50 = 1.json 最后的切片，UI第6页 -> (6*10)/50 = 2.json
   const jsonTargetPage = Math.ceil((uiPage * DISPLAY_PER_PAGE) / DATA_PER_JSON);
 
   if (!cachePages[jsonTargetPage]) {
-    cachePages[jsonTargetPage] = await fetchJson(`${rootUrl}data_pages/${jsonTargetPage}.json`);
+    // 5页之后的长尾老包统一走本站高性能相对路径，防大厂同步延迟
+    cachePages[jsonTargetPage] = await fetchJson(`./data_pages/${jsonTargetPage}.json`);
   }
   
   const pageData = cachePages[jsonTargetPage];
@@ -237,7 +246,7 @@ function renderListAndPagination(pageItems, totalItemsCount, containerId, pagina
     const li = document.createElement('li');
     const num = item.file.match(/\d+/)?.[0] || '?';
     li.innerHTML = `<span class="num">第${num}期</span>${item.caption ? `<span class="caption">${item.caption}</span>` : ''}`;
-    li.onclick = () => window.location.href = `${rootUrl}${containerId === 'setu-list' ? 'setu' : 'zrsetu'}/${item.file}`;
+    li.onclick = () => window.location.href = `./${containerId === 'setu-list' ? 'setu' : 'zrsetu'}/${item.file}`;
     container.appendChild(li);
   });
 
@@ -278,7 +287,9 @@ function toggleSearch(show) {
     setTimeout(() => overlay.classList.add('active'), 10);
     input.focus();
     if (allZrsetuItems.length === 0) {
-      fetchJson(`${rootUrl}data.json`).then(allData => {
+      // 检索包走国内饿了么镜像高速下载
+      const searchUrl = isLocal ? './data.json' : `https://npm.elemecdn.com/gh/${GITHUB_USER}/${GITHUB_REPO}@main/data.json`;
+      fetchJson(searchUrl).then(allData => {
         const sortDesc = arr => arr.sort((a,b) => (parseInt(b.file)||0) - (parseInt(a.file)||0));
         allZrsetuItems = sortDesc(allData.zrsetu || []);
       });
@@ -300,7 +311,7 @@ document.getElementById('searchInput').oninput = function(e) {
   if (!val) { resultsDiv.innerHTML = ''; return; }
   const matched = allZrsetuItems.filter(item => item.caption && item.caption.toLowerCase().includes(val));
   resultsDiv.innerHTML = matched.map(item => `
-    <div class="item" onclick="window.open('${rootUrl}zrsetu/${item.file}', '_blank')">
+    <div class="item" onclick="window.open('./zrsetu/${item.file}', '_blank')">
       <div class="title">第${item.file.match(/\d+/)?.[0] || '?'}期</div>
       <div class="sub">${item.caption}</div>
     </div>
@@ -312,8 +323,28 @@ window.onkeydown = (e) => {
   if (e.key === 'Escape') toggleSearch(false);
 };
 
+// ⚡ 双路大厂 CDN 开屏闪电竞速（只管首页前 4 页需要依赖的 1.json 包）
 async function startAppNow() {
-  const firstPageData = await fetchJson(`${rootUrl}data_pages/1.json`);
+  let firstPageData;
+
+  try {
+    if (isLocal) {
+      firstPageData = await fetchJson('./data_pages/1.json');
+    } else {
+      const srcJsdelivr = `https://cdn.jsdelivr.net/gh/${GITHUB_USER}/${GITHUB_REPO}@main/data_pages/1.json`;
+      const srcEleme = `https://npm.elemecdn.com/gh/${GITHUB_USER}/${GITHUB_REPO}@main/data_pages/1.json`;
+
+      // 谁快用谁，数十毫秒内直接灌满首页，抹平白屏
+      firstPageData = await Promise.any([
+        fetch(srcJsdelivr).then(res => { if(res.ok) return res.json(); throw new Error(); }),
+        fetch(srcEleme).then(res => { if(res.ok) return res.json(); throw new Error(); })
+      ]);
+    }
+  } catch (e) {
+    // 极端环境本地兜底
+    firstPageData = await fetchJson(`./data_pages/1.json`);
+  }
+
   cachePages[1] = firstPageData;
   
   const getCount = arr => (arr && arr.length > 0) ? (parseInt(arr[0].file) || arr.length) : 0;
@@ -326,7 +357,7 @@ async function startAppNow() {
   renderListAndPagination(subsetSetu, totalSetuCount, 'setu-list', 'setu-pagination', 1);
   renderListAndPagination(subsetZrsetu, totalZrsetuCount, 'zrsetu-list', 'zrsetu-pagination', 1);
   
-  document.body.classList.add('loaded');
+  document.body.classList.add('loaded'); // 瞬间展现内容
 }
 
 if (document.readyState === 'loading') {

@@ -206,8 +206,10 @@ window.addEventListener('scroll', () => {
   if (!ticking) { requestAnimationFrame(updateHeader); ticking = true; }
 }, { passive: true });
 
+// 基础网络请求器
 async function fetchJson(url) {
   try {
+    // 强制每次校验 ETag，若无变动 304 快速加载本地，变动了立刻拉最新包
     const fetchOptions = isLocal ? {} : { cache: "no-cache" };
     const res = await fetch(url, fetchOptions);
     if (!res.ok) throw new Error('Failed');
@@ -218,10 +220,12 @@ async function fetchJson(url) {
   }
 }
 
+// 翻页控制器（5页之后的非首屏旧数据切片，100%采用不优化直连 GitHub 路径）
 async function switchPage(uiPage, preferContainerId = null) {
   const jsonTargetPage = Math.ceil((uiPage * DISPLAY_PER_PAGE) / DATA_PER_JSON);
 
   if (!cachePages[jsonTargetPage]) {
+    // 5页之后强制使用直连本站的绝对高性能相对路径，彻底拒绝 CDN 缓存带来的历史同步延迟问题
     cachePages[jsonTargetPage] = await fetchJson(`./data_pages/${jsonTargetPage}.json`);
   }
   
@@ -290,6 +294,7 @@ function toggleSearch(show) {
     setTimeout(() => overlay.classList.add('active'), 10);
     input.focus();
     if (allZrsetuItems.length === 0) {
+      // 全量搜索包采用大厂高速骨干网拉取加速
       const searchUrl = isLocal ? './data.json' : `https://npm.elemecdn.com/gh/${GITHUB_USER}/${GITHUB_REPO}@main/data.json`;
       fetchJson(searchUrl).then(allData => {
         const sortDesc = arr => arr.sort((a,b) => (parseInt(b.file)||0) - (parseInt(a.file)||0));
@@ -325,6 +330,7 @@ window.onkeydown = (e) => {
   if (e.key === 'Escape') toggleSearch(false);
 };
 
+// ⚡ 核心提速区：仅针对首页前4页依赖的 1.json（最新期Data）进行多大厂 CDN 闪电竞速
 async function startAppNow() {
   let firstPageData;
 
@@ -335,12 +341,14 @@ async function startAppNow() {
       const srcJsdelivr = `https://cdn.jsdelivr.net/gh/${GITHUB_USER}/${GITHUB_REPO}@main/data_pages/1.json`;
       const srcEleme = `https://npm.elemecdn.com/gh/${GITHUB_USER}/${GITHUB_REPO}@main/data_pages/1.json`;
 
+      // 竞速加载：饿了么与 jsDelivr 同时冲锋，谁先下载完毕立即触发渲染，彻底干掉默认白屏
       firstPageData = await Promise.any([
         fetch(srcJsdelivr, { cache: "no-cache" }).then(res => { if(res.ok) return res.json(); throw new Error(); }),
         fetch(srcEleme, { cache: "no-cache" }).then(res => { if(res.ok) return res.json(); throw new Error(); })
       ]);
     }
   } catch (e) {
+    // 极端异常环境直接直连 GitHub 本地兜底
     firstPageData = await fetchJson(`./data_pages/1.json`);
   }
 
@@ -356,7 +364,7 @@ async function startAppNow() {
   renderListAndPagination(subsetSetu, totalSetuCount, 'setu-list', 'setu-pagination', 1);
   renderListAndPagination(subsetZrsetu, totalZrsetuCount, 'zrsetu-list', 'zrsetu-pagination', 1);
   
-  document.body.classList.add('loaded'); 
+  document.body.classList.add('loaded'); // 舒展动画瞬间展现
 }
 
 if (document.readyState === 'loading') {

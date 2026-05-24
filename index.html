@@ -8,8 +8,15 @@
 <meta name="description" content="点击前往SetuTime~">
 <title>SetuTime 合集 - 奈奈</title>
 <style>
-  /* 基础全局样式 - 默认为蓝色调 */
-  body{margin:0;font-family:"Segoe UI","Helvetica Neue",Arial,sans-serif;background:#ffffff;color:#374151;min-height:100vh;font-size:15px;overflow-x:hidden}
+  /* 针对国内环境：利用饿了么大厂高速骨干网 CDN 引入苹方平替字体 */
+  @font-face {
+    font-family: "PingFang_Fallback";
+    src: url('https://npm.elemecdn.com/lxgw-wenkai-screen-webfont@1.1.0/style.css'); /* 大厂托管镜像，国内节点秒开 */
+    font-display: swap; /* 关键：下载期间先用系统字体垫底，防止任何白屏挂起 */
+  }
+
+  /* 基础全局样式 - 优先调用苹果原生苹方字体 */
+  body{margin:0;font-family:"PingFang SC", "Hiragino Sans GB", "PingFang_Fallback", "Microsoft YaHei", -apple-system, sans-serif;background:#ffffff;color:#374151;min-height:100vh;font-size:15px;overflow-x:hidden}
   header, .container {opacity: 0;transform: translateY(15px);transition: opacity 0.5s ease-out, transform 0.5s ease-out}
   .loaded header, .loaded .container {opacity: 1;transform: translateY(0)}
   ul.list li {opacity: 0;transform: translateY(20px);transition: opacity 0.6s ease-out, transform 0.6s cubic-bezier(0.2, 0.8, 0.4, 1)}
@@ -138,7 +145,7 @@
   <div class="qq-button">
     <a href="https://ti.qq.com/open_qq/index2.html?url=mqqapi%3A%2F%2Fuserprofile%2Ffriend_profile_card%3Fsrc_type%3Dweb%26version%3D1.0%26source%3D2%26uin%3D51301105" target="_blank">qq：51301105 添加好友获取更新</a>
   </div>
-  <ul class="list" id="setu-list">加载中...</ul>
+  <ul class="list" id="setu-list"></ul>
   <div id="setu-pagination" class="pagination"></div>
 
   <div class="cos-theme">
@@ -153,7 +160,7 @@
     <div class="qq-button">
       <a href="https://ti.qq.com/open_qq/index2.html?url=mqqapi%3A%2F%2Fuserprofile%2Ffriend_profile_card%3Fsrc_type%3Dweb%26version%3D1.0%26source%3D2%26uin%3D45503380" target="_blank">qq：45503380 添加好友获取更新</a>
     </div>
-    <ul class="list" id="zrsetu-list">加载中...</ul>
+    <ul class="list" id="zrsetu-list"></ul>
     <div id="zrsetu-pagination" class="pagination"></div>
   </div>
 </div>
@@ -170,7 +177,11 @@
 </div>
 
 <script>
-const rootUrl = './';
+const GITHUB_USER = 'nnksetu';
+const GITHUB_REPO = 'nnksetu.github.io';
+
+const isLocal = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
+
 const DISPLAY_PER_PAGE = 10; 
 const DATA_PER_JSON = 50;    
 const header = document.getElementById('header');
@@ -197,7 +208,8 @@ window.addEventListener('scroll', () => {
 
 async function fetchJson(url) {
   try {
-    const res = await fetch(`${url}?t=${Date.now()}`);
+    const fetchOptions = isLocal ? {} : { cache: "no-cache" };
+    const res = await fetch(url, fetchOptions);
     if (!res.ok) throw new Error('Failed');
     return await res.json();
   } catch (e) {
@@ -210,7 +222,7 @@ async function switchPage(uiPage, preferContainerId = null) {
   const jsonTargetPage = Math.ceil((uiPage * DISPLAY_PER_PAGE) / DATA_PER_JSON);
 
   if (!cachePages[jsonTargetPage]) {
-    cachePages[jsonTargetPage] = await fetchJson(`${rootUrl}data_pages/${jsonTargetPage}.json`);
+    cachePages[jsonTargetPage] = await fetchJson(`./data_pages/${jsonTargetPage}.json`);
   }
   
   const pageData = cachePages[jsonTargetPage];
@@ -237,7 +249,7 @@ function renderListAndPagination(pageItems, totalItemsCount, containerId, pagina
     const li = document.createElement('li');
     const num = item.file.match(/\d+/)?.[0] || '?';
     li.innerHTML = `<span class="num">第${num}期</span>${item.caption ? `<span class="caption">${item.caption}</span>` : ''}`;
-    li.onclick = () => window.location.href = `${rootUrl}${containerId === 'setu-list' ? 'setu' : 'zrsetu'}/${item.file}`;
+    li.onclick = () => window.location.href = `./${containerId === 'setu-list' ? 'setu' : 'zrsetu'}/${item.file}`;
     container.appendChild(li);
   });
 
@@ -278,7 +290,8 @@ function toggleSearch(show) {
     setTimeout(() => overlay.classList.add('active'), 10);
     input.focus();
     if (allZrsetuItems.length === 0) {
-      fetchJson(`${rootUrl}data.json`).then(allData => {
+      const searchUrl = isLocal ? './data.json' : `https://npm.elemecdn.com/gh/${GITHUB_USER}/${GITHUB_REPO}@main/data.json`;
+      fetchJson(searchUrl).then(allData => {
         const sortDesc = arr => arr.sort((a,b) => (parseInt(b.file)||0) - (parseInt(a.file)||0));
         allZrsetuItems = sortDesc(allData.zrsetu || []);
       });
@@ -300,7 +313,7 @@ document.getElementById('searchInput').oninput = function(e) {
   if (!val) { resultsDiv.innerHTML = ''; return; }
   const matched = allZrsetuItems.filter(item => item.caption && item.caption.toLowerCase().includes(val));
   resultsDiv.innerHTML = matched.map(item => `
-    <div class="item" onclick="window.open('${rootUrl}zrsetu/${item.file}', '_blank')">
+    <div class="item" onclick="window.open('./zrsetu/${item.file}', '_blank')">
       <div class="title">第${item.file.match(/\d+/)?.[0] || '?'}期</div>
       <div class="sub">${item.caption}</div>
     </div>
@@ -313,7 +326,24 @@ window.onkeydown = (e) => {
 };
 
 async function startAppNow() {
-  const firstPageData = await fetchJson(`${rootUrl}data_pages/1.json`);
+  let firstPageData;
+
+  try {
+    if (isLocal) {
+      firstPageData = await fetchJson('./data_pages/1.json');
+    } else {
+      const srcJsdelivr = `https://cdn.jsdelivr.net/gh/${GITHUB_USER}/${GITHUB_REPO}@main/data_pages/1.json`;
+      const srcEleme = `https://npm.elemecdn.com/gh/${GITHUB_USER}/${GITHUB_REPO}@main/data_pages/1.json`;
+
+      firstPageData = await Promise.any([
+        fetch(srcJsdelivr, { cache: "no-cache" }).then(res => { if(res.ok) return res.json(); throw new Error(); }),
+        fetch(srcEleme, { cache: "no-cache" }).then(res => { if(res.ok) return res.json(); throw new Error(); })
+      ]);
+    }
+  } catch (e) {
+    firstPageData = await fetchJson(`./data_pages/1.json`);
+  }
+
   cachePages[1] = firstPageData;
   
   const getCount = arr => (arr && arr.length > 0) ? (parseInt(arr[0].file) || arr.length) : 0;
@@ -326,7 +356,7 @@ async function startAppNow() {
   renderListAndPagination(subsetSetu, totalSetuCount, 'setu-list', 'setu-pagination', 1);
   renderListAndPagination(subsetZrsetu, totalZrsetuCount, 'zrsetu-list', 'zrsetu-pagination', 1);
   
-  document.body.classList.add('loaded');
+  document.body.classList.add('loaded'); 
 }
 
 if (document.readyState === 'loading') {

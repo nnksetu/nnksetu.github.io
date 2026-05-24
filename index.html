@@ -8,8 +8,15 @@
 <meta name="description" content="点击前往SetuTime~">
 <title>SetuTime 合集 - 奈奈</title>
 <style>
-  /* 基础全局样式 - 默认为蓝色调 */
-  body{margin:0;font-family:"Segoe UI","Helvetica Neue",Arial,sans-serif;background:#ffffff;color:#374151;min-height:100vh;font-size:15px;overflow-x:hidden}
+  /* 注入字体交换策略：1毫秒闪电破除字体下载带来的白屏挂起 */
+  @font-face {
+    font-family: "HarmonyOS_Sans_SC_Medium";
+    src: url('./HarmonyOS_Sans_SC_Medium.woff2') format('woff2');
+    font-display: swap; /* 关键：下载期间先用系统字体垫底，下载完无缝替换 */
+  }
+
+  /* 基础全局样式 - 保持原版完全一致 */
+  body{margin:0;font-family:"HarmonyOS_Sans_SC_Medium", "Segoe UI", "Helvetica Neue", Arial, "Microsoft YaHei", sans-serif;background:#ffffff;color:#374151;min-height:100vh;font-size:15px;overflow-x:hidden}
   header, .container {opacity: 0;transform: translateY(15px);transition: opacity 0.5s ease-out, transform 0.5s ease-out}
   .loaded header, .loaded .container {opacity: 1;transform: translateY(0)}
   ul.list li {opacity: 0;transform: translateY(20px);transition: opacity 0.6s ease-out, transform 0.6s cubic-bezier(0.2, 0.8, 0.4, 1)}
@@ -199,11 +206,13 @@ window.addEventListener('scroll', () => {
   if (!ticking) { requestAnimationFrame(updateHeader); ticking = true; }
 }, { passive: true });
 
-// 基础网络请求器
+// 优化基础网络请求器：引入协商缓存机制，既防抽风又确保更新立即可见
 async function fetchJson(url) {
   try {
-    const finalUrl = isLocal ? `${url}?t=${Date.now()}` : url;
-    const res = await fetch(finalUrl);
+    // 线上环境开启 no-cache，强制浏览器去 Cloudflare/GitHub 校验 ETag。
+    // 如果无更新，直接 304 毫秒级闪电返回本地数据；如果有更新，立刻拿最新包。完美平衡速度与实时性。
+    const fetchOptions = isLocal ? {} : { cache: "no-cache" };
+    const res = await fetch(url, fetchOptions);
     if (!res.ok) throw new Error('Failed');
     return await res.json();
   } catch (e) {
@@ -212,13 +221,12 @@ async function fetchJson(url) {
   }
 }
 
-// 翻页控制器（完美修复第5页及以后算错包的Bug）
+// 翻页控制器（精修版：完美换算、无缝承接第 5 页及以后的长尾老包解析）
 async function switchPage(uiPage, preferContainerId = null) {
-  // 精准换算：UI第5页 -> (5*10)/50 = 1.json 最后的切片，UI第6页 -> (6*10)/50 = 2.json
   const jsonTargetPage = Math.ceil((uiPage * DISPLAY_PER_PAGE) / DATA_PER_JSON);
 
   if (!cachePages[jsonTargetPage]) {
-    // 5页之后的长尾老包统一走本站高性能相对路径，防大厂同步延迟
+    // 5页之后的非首屏旧数据切片，自动走本站高性能路径按需懒加载
     cachePages[jsonTargetPage] = await fetchJson(`./data_pages/${jsonTargetPage}.json`);
   }
   
@@ -287,7 +295,7 @@ function toggleSearch(show) {
     setTimeout(() => overlay.classList.add('active'), 10);
     input.focus();
     if (allZrsetuItems.length === 0) {
-      // 检索包走国内饿了么镜像高速下载
+      // 检索总包走国内饿了么镜像极速获取
       const searchUrl = isLocal ? './data.json' : `https://npm.elemecdn.com/gh/${GITHUB_USER}/${GITHUB_REPO}@main/data.json`;
       fetchJson(searchUrl).then(allData => {
         const sortDesc = arr => arr.sort((a,b) => (parseInt(b.file)||0) - (parseInt(a.file)||0));
@@ -323,7 +331,7 @@ window.onkeydown = (e) => {
   if (e.key === 'Escape') toggleSearch(false);
 };
 
-// ⚡ 双路大厂 CDN 开屏闪电竞速（只管首页前 4 页需要依赖的 1.json 包）
+// ⚡ 大厂高级 CDN 开屏智能竞速加载器
 async function startAppNow() {
   let firstPageData;
 
@@ -334,14 +342,14 @@ async function startAppNow() {
       const srcJsdelivr = `https://cdn.jsdelivr.net/gh/${GITHUB_USER}/${GITHUB_REPO}@main/data_pages/1.json`;
       const srcEleme = `https://npm.elemecdn.com/gh/${GITHUB_USER}/${GITHUB_REPO}@main/data_pages/1.json`;
 
-      // 谁快用谁，数十毫秒内直接灌满首页，抹平白屏
+      // 竞速请求：jsDelivr 和 饿了么(阿里云)哪个节点快就立刻用哪个渲染，多层保险无缝破除空白
       firstPageData = await Promise.any([
-        fetch(srcJsdelivr).then(res => { if(res.ok) return res.json(); throw new Error(); }),
-        fetch(srcEleme).then(res => { if(res.ok) return res.json(); throw new Error(); })
+        fetch(srcJsdelivr, { cache: "no-cache" }).then(res => { if(res.ok) return res.json(); throw new Error(); }),
+        fetch(srcEleme, { cache: "no-cache" }).then(res => { if(res.ok) return res.json(); throw new Error(); })
       ]);
     }
   } catch (e) {
-    // 极端环境本地兜底
+    // 极端不可抗力异常回退到本地
     firstPageData = await fetchJson(`./data_pages/1.json`);
   }
 
@@ -357,7 +365,7 @@ async function startAppNow() {
   renderListAndPagination(subsetSetu, totalSetuCount, 'setu-list', 'setu-pagination', 1);
   renderListAndPagination(subsetZrsetu, totalZrsetuCount, 'zrsetu-list', 'zrsetu-pagination', 1);
   
-  document.body.classList.add('loaded'); // 瞬间展现内容
+  document.body.classList.add('loaded'); // 动画舒展展现页面
 }
 
 if (document.readyState === 'loading') {

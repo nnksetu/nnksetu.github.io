@@ -193,22 +193,25 @@ window.addEventListener('scroll', () => {
   if (!ticking) { requestAnimationFrame(updateHeader); ticking = true; }
 }, { passive: true });
 
-async function fetchJson(url) {
+async function fetchJson(url, isFirstPage = false) {
   try {
-    const res = await fetch(`${url}?t=${Date.now()}`);
+    const fetchOptions = isFirstPage ? { cache: "no-store" } : {};
+    const res = await fetch(`${url}?t=${Date.now()}`, fetchOptions);
     if (!res.ok) throw new Error('Failed');
     return await res.json();
   } catch (e) {
-    document.body.innerHTML = '<div style="text-align:center;margin-top:8rem;color:#e74c3c;">加载失败，请刷新重试</div>';
+    if (!isFirstPage) {
+      document.body.innerHTML = '<div style="text-align:center;margin-top:8rem;color:#e74c3c;">加载失败，请刷新重试</div>';
+    }
     throw e;
   }
 }
 
 async function fetchFirstPageWithFallback() {
   try {
-    return await fetchJson(`https://cdn.jsdelivr.net/gh/setunnk/setunnk.github.io@master/data_pages/1.json`);
+    return await fetchJson(`https://cdn.jsdelivr.net/gh/setunnk/setunnk.github.io@master/data_pages/1.json`, true);
   } catch (e) {
-    return await fetchJson(`${rootUrl}data_pages/1.json`);
+    return await fetchJson(`${rootUrl}data_pages/1.json`, true);
   }
 }
 
@@ -323,20 +326,24 @@ window.onkeydown = (e) => {
 };
 
 async function startAppNow() {
-  const firstPageData = await fetchFirstPageWithFallback();
-  cachePages[1] = firstPageData;
-  
-  const getCount = arr => (arr && arr.length > 0) ? (parseInt(arr[0].file) || arr.length) : 0;
-  totalSetuCount = getCount(firstPageData.setu);
-  totalZrsetuCount = getCount(firstPageData.zrsetu);
-  
-  const subsetSetu = (firstPageData.setu || []).slice(0, DISPLAY_PER_PAGE);
-  const subsetZrsetu = (firstPageData.zrsetu || []).slice(0, DISPLAY_PER_PAGE);
-  
-  renderListAndPagination(subsetSetu, totalSetuCount, 'setu-list', 'setu-pagination', 1);
-  renderListAndPagination(subsetZrsetu, totalZrsetuCount, 'zrsetu-list', 'zrsetu-pagination', 1);
-  
-  document.body.classList.add('loaded');
+  try {
+    const firstPageData = await fetchFirstPageWithFallback();
+    cachePages[1] = firstPageData;
+    
+    const getCount = arr => (arr && arr.length > 0) ? (parseInt(arr[0].file) || arr.length) : 0;
+    totalSetuCount = getCount(firstPageData.setu);
+    totalZrsetuCount = getCount(firstPageData.zrsetu);
+    
+    const subsetSetu = (firstPageData.setu || []).slice(0, DISPLAY_PER_PAGE);
+    const subsetZrsetu = (firstPageData.zrsetu || []).slice(0, DISPLAY_PER_PAGE);
+    
+    renderListAndPagination(subsetSetu, totalSetuCount, 'setu-list', 'setu-pagination', 1);
+    renderListAndPagination(subsetZrsetu, totalZrsetuCount, 'zrsetu-list', 'zrsetu-pagination', 1);
+    
+    document.body.classList.add('loaded');
+  } catch (e) {
+    document.body.innerHTML = '<div style="text-align:center;margin-top:8rem;color:#e74c3c;">加载失败，请刷新重试</div>';
+  }
 }
 
 if (document.readyState === 'loading') {

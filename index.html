@@ -7,8 +7,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta name="description" content="点击前往SetuTime~">
 <title>SetuTime 合集 - 奈奈</title>
+<link rel="dns-prefetch" href="//cdn.jsdelivr.net">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <style>
-  /* 基础全局样式 - 默认为蓝色调 */
   body{margin:0;font-family:"Segoe UI","Helvetica Neue",Arial,sans-serif;background:#ffffff;color:#374151;min-height:100vh;font-size:15px;overflow-x:hidden}
   header, .container {opacity: 0;transform: translateY(15px);transition: opacity 0.5s ease-out, transform 0.5s ease-out}
   .loaded header, .loaded .container {opacity: 1;transform: translateY(0)}
@@ -58,7 +59,6 @@
   .search-trigger-right span {color: #6b7280; font-size: 0.9rem;}
   .search-trigger-right kbd {background: #fff; border: 1px solid #d1d5db; border-radius: 4px; padding: 1px 4px; font-size: 0.7rem; color: #9ca3af;}
 
-  /* 列表与通用组件样式 */
   ul.list{list-style:none;padding:0;margin:0}
   ul.list li{background:#fff;border:1px solid #cbd5e1;border-radius:12px;padding:0.85rem 1rem;margin-bottom:0.7rem;box-shadow:0 4px 12px rgba(0,0,0,0.04);cursor:pointer;transition:all .25s;display:flex;align-items:center;gap:0.7rem;font-size:0.98rem}
   ul.list li:hover,ul.list li:active{transform:translateY(-2px);box-shadow:0 8px 20px rgba(59,130,246,0.15);border-color:#93bbfc;background:#f8faff}
@@ -74,7 +74,6 @@
   .qq-button a{display: inline-block;width: calc(100% - 60px);max-width: 420px;background: linear-gradient(135deg, #60a5fa, #3b82f6);color: #fff;padding: 11px 0;border-radius: 999px;text-decoration: none;font-weight: 600;font-size: 0.98rem;box-shadow: 0 4px 12px rgba(92,168,230,.4);transition: .3s}
   .qq-button a:hover{background: linear-gradient(135deg, #4b96d8, #2563eb);transform: translateY(-2px)}
 
-  /* --- Cos写真分类：哔哩哔哩粉配色专区 --- */
   .cos-theme .section-title { 
     color: #fb7299; 
     border-left-color: #fb7299;
@@ -104,7 +103,6 @@
     box-shadow: 0 0 0 3px rgba(251, 114, 153, 0.2); 
   }
 
-  /* 搜索弹窗样式 */
   .search-overlay {display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.35); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); z-index: 1000; justify-content: center; align-items: flex-start; padding-top: 12vh; opacity: 0; transition: opacity 0.1s ease-out;}
   .search-overlay.active {display: flex; opacity: 1;}
   .search-modal {width: 95%; max-width: 600px; background: #fff; border-radius: 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.05); border: 1px solid #e5e7eb; transform: scale(0.9); transition: transform 0.1s ease-out;}
@@ -206,11 +204,23 @@ async function fetchJson(url) {
   }
 }
 
+async function fetchFirstPageWithFallback() {
+  try {
+    return await fetchJson(`https://cdn.jsdelivr.net/gh/setunnk/setunnk.github.io@master/data_pages/1.json`);
+  } catch (e) {
+    return await fetchJson(`${rootUrl}data_pages/1.json`);
+  }
+}
+
 async function switchPage(uiPage, preferContainerId = null) {
   const jsonTargetPage = Math.ceil((uiPage * DISPLAY_PER_PAGE) / DATA_PER_JSON);
 
   if (!cachePages[jsonTargetPage]) {
-    cachePages[jsonTargetPage] = await fetchJson(`${rootUrl}data_pages/${jsonTargetPage}.json`);
+    if (jsonTargetPage === 1) {
+      cachePages[jsonTargetPage] = await fetchFirstPageWithFallback();
+    } else {
+      cachePages[jsonTargetPage] = await fetchJson(`${rootUrl}data_pages/${jsonTargetPage}.json`);
+    }
   }
   
   const pageData = cachePages[jsonTargetPage];
@@ -313,7 +323,7 @@ window.onkeydown = (e) => {
 };
 
 async function startAppNow() {
-  const firstPageData = await fetchJson(`${rootUrl}data_pages/1.json`);
+  const firstPageData = await fetchFirstPageWithFallback();
   cachePages[1] = firstPageData;
   
   const getCount = arr => (arr && arr.length > 0) ? (parseInt(arr[0].file) || arr.length) : 0;

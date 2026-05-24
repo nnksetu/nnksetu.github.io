@@ -8,10 +8,10 @@
 <meta name="description" content="点击前往SetuTime~">
 <title>SetuTime 合集 - 奈奈</title>
 <style>
-  /* 针对国内环境：利用饿了么大厂高速骨干网 CDN 引入苹方平替字体 */
+  /* 针对国内与全球环境优化：采用高可用的 jsDelivr 骨干网引入苹方平替字体 */
   @font-face {
     font-family: "PingFang_Fallback";
-    src: url('https://npm.elemecdn.com/lxgw-wenkai-screen-webfont@1.1.0/style.css'); /* 大厂托管镜像，国内节点秒开 */
+    src: url('https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/style.css'); /* 大厂托管镜像，国内秒开 */
     font-display: swap; /* 关键：下载期间先用系统字体垫底，防止任何白屏挂起 */
   }
 
@@ -225,7 +225,7 @@ async function switchPage(uiPage, preferContainerId = null) {
   const jsonTargetPage = Math.ceil((uiPage * DISPLAY_PER_PAGE) / DATA_PER_JSON);
 
   if (!cachePages[jsonTargetPage]) {
-    // 5页之后强制使用直连本站的绝对高性能相对路径，彻底拒绝 CDN 缓存带来的历史同步延迟问题
+    // 5页之后强制使用直连本站的绝对相对路径，拒绝 CDN 缓存滞后问题
     cachePages[jsonTargetPage] = await fetchJson(`./data_pages/${jsonTargetPage}.json`);
   }
   
@@ -294,8 +294,8 @@ function toggleSearch(show) {
     setTimeout(() => overlay.classList.add('active'), 10);
     input.focus();
     if (allZrsetuItems.length === 0) {
-      // 全量搜索包采用大厂高速骨干网拉取加速
-      const searchUrl = isLocal ? './data.json' : `https://npm.elemecdn.com/gh/${GITHUB_USER}/${GITHUB_REPO}@main/data.json`;
+      // 移除饿了么，全量搜索索引包采用 jsDelivr 高速分发网拉取加速
+      const searchUrl = isLocal ? './data.json' : `https://cdn.jsdelivr.net/gh/${GITHUB_USER}/${GITHUB_REPO}@main/data.json`;
       fetchJson(searchUrl).then(allData => {
         const sortDesc = arr => arr.sort((a,b) => (parseInt(b.file)||0) - (parseInt(a.file)||0));
         allZrsetuItems = sortDesc(allData.zrsetu || []);
@@ -330,7 +330,7 @@ window.onkeydown = (e) => {
   if (e.key === 'Escape') toggleSearch(false);
 };
 
-// ⚡ 核心提速区：仅针对首页前4页依赖的 1.json（最新期Data）进行多大厂 CDN 闪电竞速
+// ⚡ 核心提速区：仅针对首页前4页依赖的 1.json 进行高速大厂 CDN 强力分发
 async function startAppNow() {
   let firstPageData;
 
@@ -338,17 +338,15 @@ async function startAppNow() {
     if (isLocal) {
       firstPageData = await fetchJson('./data_pages/1.json');
     } else {
+      // 仅由高可用、更稳定的 jsDelivr 提供一站式开屏分发，结合 ETag 机制，确保刷新立即可见最新期
       const srcJsdelivr = `https://cdn.jsdelivr.net/gh/${GITHUB_USER}/${GITHUB_REPO}@main/data_pages/1.json`;
-      const srcEleme = `https://npm.elemecdn.com/gh/${GITHUB_USER}/${GITHUB_REPO}@main/data_pages/1.json`;
-
-      // 竞速加载：饿了么与 jsDelivr 同时冲锋，谁先下载完毕立即触发渲染，彻底干掉默认白屏
-      firstPageData = await Promise.any([
-        fetch(srcJsdelivr, { cache: "no-cache" }).then(res => { if(res.ok) return res.json(); throw new Error(); }),
-        fetch(srcEleme, { cache: "no-cache" }).then(res => { if(res.ok) return res.json(); throw new Error(); })
-      ]);
+      
+      const res = await fetch(srcJsdelivr, { cache: "no-cache" });
+      if (!res.ok) throw new Error('CDN Fallback');
+      firstPageData = await res.json();
     }
   } catch (e) {
-    // 极端异常环境直接直连 GitHub 本地兜底
+    // 极端不可抗力异常或 CDN 挂点时，100% 自动降级采用直连本站 GitHub 本地兜底，确保绝对稳定
     firstPageData = await fetchJson(`./data_pages/1.json`);
   }
 
@@ -364,7 +362,7 @@ async function startAppNow() {
   renderListAndPagination(subsetSetu, totalSetuCount, 'setu-list', 'setu-pagination', 1);
   renderListAndPagination(subsetZrsetu, totalZrsetuCount, 'zrsetu-list', 'zrsetu-pagination', 1);
   
-  document.body.classList.add('loaded'); // 舒展动画瞬间展现
+  document.body.classList.add('loaded'); // 舒展动画载入页面
 }
 
 if (document.readyState === 'loading') {

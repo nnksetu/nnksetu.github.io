@@ -11,6 +11,7 @@
     button:hover { background-color: #e0e0e0; }
     #output { width: 100%; height: 250px; margin-top: 10px; font-size: 14px; }
     .section { margin-top: 40px; padding-top: 20px; border-top: 2px solid #eee; }
+    .sub-section { background-color: #f9f9f9; padding: 15px; margin: 15px 0; border-radius: 6px; border: 1px dashed #ddd; }
     input[type="text"], input[type="number"] { padding: 8px; margin: 8px 0; border: 1px solid #ccc; border-radius: 4px; }
     input[type="text"] { width: 280px; }
     input[type="number"] { width: 80px; }
@@ -19,37 +20,31 @@
 </head>
 <body>
 
-<h2>URL 转 HTML 代码生成器</h2>
-<p>在下面输入每行一个链接：</p>
-<textarea id="inputUrls" placeholder="在这里粘贴URL，每行一个"></textarea>
+<h2>媒体 HTML 代码生成器</h2>
+
+<p>在下面输入每行一个图片链接（留空则不生成图片代码）：</p>
+<textarea id="inputUrls" placeholder="在这里粘贴图片URL，每行一个"></textarea>
+
+<div class="sub-section">
+    <h3>批量生成视频链接配置</h3>
+    <p style="color: #666; margin-top: -5px;">固定域名：https://r2.setutime.com/zrsetu/</p>
+    <div>
+        <label>期号：</label>
+        <input type="text" id="videoIssue" onblur="saveSetting('videoIssue', this.value)" value="1">
+    </div>
+    <div>
+        <label>生成数量：</label>
+        <input type="number" id="videoCount" value="5" min="0" max="9999">
+    </div>
+</div>
+
 <br>
-<button onclick="generateHTML()">生成代码</button>
+<button onclick="generateCombinedHTML()">生成代码</button>
 <button onclick="copyResult()">复制结果</button>
-<button onclick="clearAll()">清空全部</button>
-<textarea id="output" placeholder="生成的HTML代码会显示在这里"></textarea>
+<button onclick="clearCombinedAll()">清空本区全部</button>
 
-<div class="section">
-<h2>批量生成视频链接</h2>
-<p>固定域名：https://r2.setutime.com/zrsetu/</p>
+<textarea id="output" placeholder="生成的HTML代码会显示在这里（视频会追加在图片后面）"></textarea>
 
-<div>
-    <label>期号：</label>
-    <input type="text" id="videoIssue" onblur="saveSetting('videoIssue', this.value)" value="1">
-</div>
-
-<div>
-    <label>生成数量：</label>
-    <input type="number" id="videoCount" value="5" min="1" max="9999">
-</div>
-
-<div style="margin-top:15px;">
-    <button onclick="generateVideoUrls()">生成链接</button>
-    <button onclick="copyVideoResult()">复制结果</button>
-    <button onclick="clearVideoBatch()">清空本区</button>
-</div>
-
-<textarea id="videoOutput" style="width: 100%; height: 250px; margin-top: 10px; font-size: 14px;" placeholder="批量生成的视频HTML代码会显示在这里"></textarea>
-</div>
 
 <div class="section">
 <h2>批量生成图片链接（r2.setutime.com）</h2>
@@ -102,42 +97,45 @@ function saveSetting(key, value) {
     localStorage.setItem(key, value);
 }
 
-// 1. 生成HTML功能
-function generateHTML() {
+// 核心整合：生成图片+视频的 HTML
+function generateCombinedHTML() {
+    const results = [];
+
+    // --- 处理图片部分 ---
     const input = document.getElementById("inputUrls").value.trim();
-    if (!input) return;
+    if (input) {
+        const urls = input.split("\n").map(u => u.trim()).filter(u => u !== "");
+        const imgHtml = urls
+            .map((url, index) => 
+                `<div class="image-item"><div class="img-wrap"><img data-src="${url}" alt="${index + 1}"></div></div>`
+            )
+            .join("\n");
+        results.push(imgHtml);
+    }
 
-    const urls = input.split("\n").map(u => u.trim()).filter(u => u !== "");
-    const result = urls
-        .map((url, index) => 
-            `<div class="image-item"><div class="img-wrap"><img data-src="${url}" alt="${index + 1}"></div></div>`
-        )
-        .join("\n");
-
-    document.getElementById("output").value = result;
-}
-
-// 视频生成功能
-function generateVideoUrls() {
+    // --- 处理视频部分 ---
     const issue = document.getElementById("videoIssue").value.trim() || "1";
-    saveSetting("videoIssue", issue); // 生成时自动保存
-    const count = parseInt(document.getElementById("videoCount").value) || 10;
+    saveSetting("videoIssue", issue); // 自动保存期号
+    const count = parseInt(document.getElementById("videoCount").value) || 0;
 
-    if (count < 1 || count > 9999) return;
-
-    const lines = [];
-    for(let i = 1; i <= count; i++) {
-        const item = `<div class="image-item">
+    if (count > 0 && count <= 9999) {
+        const videoLines = [];
+        for(let i = 1; i <= count; i++) {
+            const item = `<div class="image-item">
   <video class="responsive-video" controls preload="metadata" playsinline webkit-playsinline>
     <source src="https://r2.setutime.com/zrsetu/video-${issue}-${i}.mp4#t=0.1" type="video/mp4">
   </video>
 </div>`;
-        lines.push(item);
+            videoLines.push(item);
+        }
+        results.push(videoLines.join("\n"));
     }
-    document.getElementById("videoOutput").value = lines.join("\n");
+
+    // --- 输出合并后的结果 ---
+    document.getElementById("output").value = results.join("\n");
 }
 
-// 图片生成功能
+// 图片批量URL生成（保持独立功能）
 function generateBatchUrls() {
     const prefix = document.getElementById("prefix").value.trim() || "zrsetu";
     const number = document.getElementById("number").value.trim() || "1";
@@ -158,13 +156,26 @@ function generateBatchUrls() {
 
 // 复制功能
 function copyResult() { document.getElementById("output").select(); document.execCommand("copy"); }
-function copyVideoResult() { document.getElementById("videoOutput").select(); document.execCommand("copy"); }
 function copyBatchResult() { document.getElementById("batchOutput").select(); document.execCommand("copy"); }
 
-// 清空功能
-function clearAll() { document.getElementById("inputUrls").value = ""; document.getElementById("output").value = ""; }
-function clearVideoBatch() { document.getElementById("videoIssue").value = "1"; localStorage.removeItem("videoIssue"); document.getElementById("videoCount").value = "5"; document.getElementById("videoOutput").value = ""; }
-function clearBatch() { document.getElementById("prefix").value = "zrsetu"; document.getElementById("number").value = "3"; document.getElementById("baseName").value = "pic"; document.getElementById("suffix").value = "webp"; document.getElementById("count").value = "80"; document.getElementById("batchOutput").value = ""; }
+// 清空合并功能区
+function clearCombinedAll() { 
+    document.getElementById("inputUrls").value = ""; 
+    document.getElementById("videoIssue").value = "1"; 
+    localStorage.removeItem("videoIssue"); 
+    document.getElementById("videoCount").value = "5"; 
+    document.getElementById("output").value = ""; 
+}
+
+// 清空批量图片URL生成区
+function clearBatch() { 
+    document.getElementById("prefix").value = "zrsetu"; 
+    document.getElementById("number").value = "3"; 
+    document.getElementById("baseName").value = "pic"; 
+    document.getElementById("suffix").value = "webp"; 
+    document.getElementById("count").value = "80"; 
+    document.getElementById("batchOutput").value = ""; 
+}
 </script>
 </body>
 </html>

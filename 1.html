@@ -29,6 +29,29 @@
 <textarea id="output" placeholder="生成的HTML代码会显示在这里"></textarea>
 
 <div class="section">
+<h2>批量生成视频链接</h2>
+<p>固定域名：https://r2.setutime.com/zrsetu/</p>
+
+<div>
+    <label>期号：</label>
+    <input type="text" id="videoIssue" onblur="saveSetting('videoIssue', this.value)" value="1">
+</div>
+
+<div>
+    <label>生成数量：</label>
+    <input type="number" id="videoCount" value="5" min="1" max="9999">
+</div>
+
+<div style="margin-top:15px;">
+    <button onclick="generateVideoUrls()">生成链接</button>
+    <button onclick="copyVideoResult()">复制结果</button>
+    <button onclick="clearVideoBatch()">清空本区</button>
+</div>
+
+<textarea id="videoOutput" style="width: 100%; height: 250px; margin-top: 10px; font-size: 14px;" placeholder="批量生成的视频HTML代码会显示在这里"></textarea>
+</div>
+
+<div class="section">
 <h2>批量生成图片链接（r2.setutime.com）</h2>
 <p>固定域名：https://r2.setutime.com</p>
 
@@ -63,14 +86,26 @@
     <button onclick="clearBatch()">清空本区</button>
 </div>
 
-<textarea id="batchOutput" placeholder="批量生成的链接会显示在这里"></textarea>
+<textarea id="batchOutput" style="width: 100%; height: 250px; margin-top: 10px; font-size: 14px;" placeholder="批量生成的链接会显示在这里"></textarea>
 </div>
 
 <script>
+// 页面加载时恢复记忆
+window.onload = function() {
+    if(localStorage.getItem("videoIssue")) {
+        document.getElementById("videoIssue").value = localStorage.getItem("videoIssue");
+    }
+};
+
+// 保存设置
+function saveSetting(key, value) {
+    localStorage.setItem(key, value);
+}
+
 // 1. 生成HTML功能
 function generateHTML() {
     const input = document.getElementById("inputUrls").value.trim();
-    if (!input) return; // 静默退出，不弹窗
+    if (!input) return;
 
     const urls = input.split("\n").map(u => u.trim()).filter(u => u !== "");
     const result = urls
@@ -82,7 +117,27 @@ function generateHTML() {
     document.getElementById("output").value = result;
 }
 
-// 2. 批量生成链接功能
+// 视频生成功能
+function generateVideoUrls() {
+    const issue = document.getElementById("videoIssue").value.trim() || "1";
+    saveSetting("videoIssue", issue); // 生成时自动保存
+    const count = parseInt(document.getElementById("videoCount").value) || 10;
+
+    if (count < 1 || count > 9999) return;
+
+    const lines = [];
+    for(let i = 1; i <= count; i++) {
+        const item = `<div class="image-item">
+  <video class="responsive-video" controls preload="metadata" playsinline webkit-playsinline>
+    <source src="https://r2.setutime.com/zrsetu/video-${issue}-${i}.mp4#t=0.1" type="video/mp4">
+  </video>
+</div>`;
+        lines.push(item);
+    }
+    document.getElementById("videoOutput").value = lines.join("\n");
+}
+
+// 图片生成功能
 function generateBatchUrls() {
     const prefix = document.getElementById("prefix").value.trim() || "zrsetu";
     const number = document.getElementById("number").value.trim() || "1";
@@ -101,35 +156,15 @@ function generateBatchUrls() {
     document.getElementById("batchOutput").value = lines.join("\n");
 }
 
-// 3. 复制功能（已移除所有 alert）
-function copyResult() {
-    const output = document.getElementById("output");
-    output.select();
-    document.execCommand("copy");
-    // 不再弹窗
-}
+// 复制功能
+function copyResult() { document.getElementById("output").select(); document.execCommand("copy"); }
+function copyVideoResult() { document.getElementById("videoOutput").select(); document.execCommand("copy"); }
+function copyBatchResult() { document.getElementById("batchOutput").select(); document.execCommand("copy"); }
 
-function copyBatchResult() {
-    const output = document.getElementById("batchOutput");
-    output.select();
-    document.execCommand("copy");
-    // 不再弹窗
-}
-
-// 4. 清空功能（已移除所有 alert）
-function clearAll() {
-    document.getElementById("inputUrls").value = "";
-    document.getElementById("output").value = "";
-}
-
-function clearBatch() {
-    document.getElementById("prefix").value = "zrsetu";
-    document.getElementById("number").value = "3";
-    document.getElementById("baseName").value = "pic";
-    document.getElementById("suffix").value = "webp";
-    document.getElementById("count").value = "80";
-    document.getElementById("batchOutput").value = "";
-}
+// 清空功能
+function clearAll() { document.getElementById("inputUrls").value = ""; document.getElementById("output").value = ""; }
+function clearVideoBatch() { document.getElementById("videoIssue").value = "1"; localStorage.removeItem("videoIssue"); document.getElementById("videoCount").value = "5"; document.getElementById("videoOutput").value = ""; }
+function clearBatch() { document.getElementById("prefix").value = "zrsetu"; document.getElementById("number").value = "3"; document.getElementById("baseName").value = "pic"; document.getElementById("suffix").value = "webp"; document.getElementById("count").value = "80"; document.getElementById("batchOutput").value = ""; }
 </script>
 </body>
 </html>

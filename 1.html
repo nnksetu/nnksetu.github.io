@@ -11,11 +11,19 @@
     button:hover { background-color: #e0e0e0; }
     #output { width: 100%; height: 250px; margin-top: 10px; font-size: 14px; }
     .section { margin-top: 40px; padding-top: 20px; border-top: 2px solid #eee; }
-    .sub-section { background-color: #f9f9f9; padding: 15px; margin: 15px 0; border-radius: 6px; border: 1px dashed #ddd; }
-    input[type="text"], input[type="number"] { padding: 8px; margin: 8px 0; border: 1px solid #ccc; border-radius: 4px; }
-    input[type="text"] { width: 280px; }
-    input[type="number"] { width: 80px; }
-    label { display: inline-block; min-width: 110px; margin: 8px 0; }
+    
+    /* 紧凑型配置栏样式 */
+    .config-inline { margin: 12px 0; font-size: 14px; display: flex; flex-wrap: wrap; align-items: center; gap: 15px; }
+    .config-inline div { display: flex; align-items: center; }
+    
+    input[type="text"], input[type="number"] { padding: 6px 8px; border: 1px solid #ccc; border-radius: 4px; margin-left: 5px; }
+    input[type="text"] { width: 120px; }
+    input[type="number"] { width: 70px; }
+    
+    /* 大批量图片生成的输入框保持原样 */
+    .section input[type="text"] { width: 280px; margin: 8px 0; }
+    .section input[type="number"] { width: 80px; margin: 8px 0; }
+    .section label { display: inline-block; min-width: 110px; }
 </style>
 </head>
 <body>
@@ -25,25 +33,25 @@
 <p>在下面输入每行一个图片链接（留空则不生成图片代码）：</p>
 <textarea id="inputUrls" placeholder="在这里粘贴图片URL，每行一个"></textarea>
 
-<div class="sub-section">
-    <h3>批量生成视频链接配置</h3>
-    <p style="color: #666; margin-top: -5px;">固定域名：https://r2.setutime.com/zrsetu/</p>
+<div class="config-inline">
+    <strong>视频配置：</strong>
     <div>
-        <label>期号：</label>
+        <label>期号</label>
         <input type="text" id="videoIssue" onblur="saveSetting('videoIssue', this.value)" value="1">
     </div>
     <div>
-        <label>生成数量：</label>
-        <input type="number" id="videoCount" value="5" min="0" max="9999">
+        <label>生成数量</label>
+        <input type="number" id="videoCount" value="" min="0" max="9999" placeholder="留空不生成">
     </div>
 </div>
 
-<br>
-<button onclick="generateCombinedHTML()">生成代码</button>
-<button onclick="copyResult()">复制结果</button>
-<button onclick="clearCombinedAll()">清空本区全部</button>
+<div style="margin: 15px 0 10px 0;">
+    <button onclick="generateCombinedHTML()">生成代码</button>
+    <button onclick="copyResult()">复制结果</button>
+    <button onclick="clearCombinedAll()">清空本区全部</button>
+</div>
 
-<textarea id="output" placeholder="生成的HTML代码会显示在这里（视频会追加在图片后面）"></textarea>
+<textarea id="output" placeholder="生成的HTML代码会显示在这里（视频会追加在图片后面，中间隔两行）"></textarea>
 
 
 <div class="section">
@@ -116,7 +124,9 @@ function generateCombinedHTML() {
     // --- 处理视频部分 ---
     const issue = document.getElementById("videoIssue").value.trim() || "1";
     saveSetting("videoIssue", issue); // 自动保存期号
-    const count = parseInt(document.getElementById("videoCount").value) || 0;
+    
+    const countInput = document.getElementById("videoCount").value.trim();
+    const count = countInput === "" ? 0 : parseInt(countInput);
 
     if (count > 0 && count <= 9999) {
         const videoLines = [];
@@ -131,8 +141,8 @@ function generateCombinedHTML() {
         results.push(videoLines.join("\n"));
     }
 
-    // --- 输出合并后的结果 ---
-    document.getElementById("output").value = results.join("\n");
+    // --- 输出合并后的结果（如果两者都有，中间隔两行回车 '\n\n\n'） ---
+    document.getElementById("output").value = results.join("\n\n\n");
 }
 
 // 图片批量URL生成（保持独立功能）
@@ -163,7 +173,7 @@ function clearCombinedAll() {
     document.getElementById("inputUrls").value = ""; 
     document.getElementById("videoIssue").value = "1"; 
     localStorage.removeItem("videoIssue"); 
-    document.getElementById("videoCount").value = "5"; 
+    document.getElementById("videoCount").value = ""; // 清空也默认留空
     document.getElementById("output").value = ""; 
 }
 

@@ -10,28 +10,25 @@ jobs:
   backup-content:
     runs-on: ubuntu-latest
     steps:
+      # 1. 升级插件版本，同时 fetch-depth: 0 保留历史记录以便做增量同步
       - name: Checkout Source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
+          fetch-depth: 0
           persist-credentials: false
 
-      - name: Re-initialize and Push
+      # 2. 优雅的增量推送，不再炸毁 .git 目录
+      - name: Incremental Push to B Repo
         run: |
-         
-          rm -rf .git
-          
-         
-          git init
+          # 配置 Bot 信息
           git config user.name "Backup Bot"
           git config user.email "bot@example.com"
           
-           
-          git add .
-          git commit -m "Pure content backup $(date +'%Y-%m-%d %H:%M:%S')"
-          
-         
-          
+          # 动态拼接带 Token 的 B 仓库地址
           REMOTE_REPO="https://x-access-token:${{ secrets.B_TOKEN }}@github.com/setunnk/setunnk.github.io.git"
           
-         
-          git push --force "$REMOTE_REPO" HEAD:main
+          # 添加 B 仓库作为远程源，命名为 target
+          git remote add target "$REMOTE_REPO"
+          
+          # 将当前分支的安全、流畅地推送到 B 仓库的 main 分支（使用强制覆盖以确保内容完全一致，但保留 Git 轨迹）
+          git push --force target HEAD:main

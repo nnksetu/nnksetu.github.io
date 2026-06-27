@@ -1,0 +1,57 @@
+name: 一键批量添加 Favicon
+
+on:
+  workflow_dispatch: # 允许在 GitHub Actions 页面手动点击运行
+
+jobs:
+  add-favicon:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. 拉取代码
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        persist-credentials: true
+
+    # 2. 纯 Shell 命令批量修改（只处理 setu 和 zrsetu 目录）
+    - name: Batch insert favicon using sed
+      run: |
+        # 定义要插入的标签，注意末尾加个换行符 \n 保持和你的 627.html 排版一致
+        FAVICON='<link rel="icon" href="https://pixelsafari.neocities.org/favicon/object/clean/bath4.gif" type="image/png">\n'
+        TARGET='<title>涩图time</title>'
+        
+        # 遍历指定的两个文件夹
+        for dir in setu zrsetu; do
+          if [ -d "$dir" ]; then
+            echo "正在处理目录: $dir"
+            
+            # 查找该目录下所有 html
+            find "$dir" -type f -name "*.html" | while read -r file; do
+              # 检查文件是否已经包含该 favicon，防止重复添加
+              if ! grep -q "pixelsafari.neocities.org/favicon" "$file"; then
+                # 如果包含指定的 title 标签，就执行替换（在前面插入 favicon）
+                if grep -q "$TARGET" "$file"; then
+                  sed -i "s|$TARGET|$FAVICON$TARGET|g" "$file"
+                  echo "成功更新: $file"
+                fi
+              fi
+            done
+            
+          fi
+        done
+
+    # 3. 自动提交并推送到 GitHub
+    - name: Commit and push changes
+      run: |
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        
+        if [ -n "$(git status --porcelain)" ]; then
+          git add .
+          git commit -m "chore: 纯自动化脚本批量注入 favicon 图标"
+          git push
+          echo "所有文件更新成功并已推送到仓库！"
+        else
+          echo "没有检测到需要更新的 HTML 文件。"
+        fi

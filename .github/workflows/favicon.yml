@@ -1,0 +1,81 @@
+name: Update Favicon URL
+
+on:
+  push:
+    branches:
+      - main  # 或者你的默认分支名，比如 master
+  workflow_dispatch: # 允许你在 GitHub 页面上点击按钮手动触发
+
+jobs:
+  update-favicon:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      with:
+        persist-credentials: true
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+
+    - name: Run Favicon Replacement Script
+      run: |
+        python -c "
+        import os
+        import re
+
+        # 定义需要处理的目录
+        target_dirs = ['setu', 'zrsetu']
+        
+        # 新的 favicon URL
+        new_url = 'https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_4700_9lFpTYi119_srYPg_1782843137'
+        
+        # 正则表达式匹配 href 中的内容
+        # 匹配包含 rel=\"icon\" 或 rel=\"shortcut icon\" 的 link 标签
+        pattern = re.compile(r'(<link\s+[^>]*rel=[\"\'](?:shortcut\s+)?icon[\"\'][^>]*href=[\"\'])([^\"\']*)([\"\'][^>]*>)', re.IGNORECASE)
+
+        updated_count = 0
+
+        for folder in target_dirs:
+            if not os.path.exists(folder):
+                print(f'目录 {folder} 不存在，跳过。')
+                continue
+                
+            for root, dirs, files in os.walk(folder):
+                for file in files:
+                    if file.endswith('.html'):
+                        file_path = os.path.join(root, file)
+                        
+                        with open(file_path, 'r', encoding='utf-8') as f:
+                            content = f.read()
+                        
+                        # 检查是否匹配并替换
+                        if pattern.search(content):
+                            new_content = pattern.sub(rf'\1{new_url}\3', content)
+                            
+                            # 只有内容真正改变时才写入，防止无意义的修改
+                            if new_content != content:
+                                with open(file_path, 'w', encoding='utf-8') as f:
+                                    f.write(new_content)
+                                print(f'已更新: {file_path}')
+                                updated_count += 1
+
+        print(f'替换完成，共修改了 {updated_count} 个 HTML 文件。')
+        "
+
+    - name: Commit and Push Changes
+      run: |
+        git config --local user.name "github-actions[bot]"
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        
+        # 检查是否有文件被修改
+        if [ -n "$(git status --porcelain)" ]; then
+          git add setu/ zrsetu/
+          git commit -m "chore: 自动化更新 /setu 和 /zrsetu 目录下的 favicon URL"
+          git push
+        else
+          echo "没有检测到任何 Favicon URL 的变更，跳过提交。"
+        fi

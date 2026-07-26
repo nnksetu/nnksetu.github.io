@@ -11,6 +11,7 @@ document.addEventListener("DOMContentLoaded", function() {
         category = 'setu';
     }
 
+    // 提取页面期数 (例如 /zrsetu/757.html -> 757)
     let currentNo = null;
     const titleEl = document.querySelector('.title');
     if (titleEl) {
@@ -29,7 +30,7 @@ document.addEventListener("DOMContentLoaded", function() {
     function loadFastestImage(img, primarySrc, secondarySrc, wrap) {
         let isLoaded = false;
 
-        // 绑定异步解码
+        // 绑定异步解码，避免主线程卡顿
         img.decoding = 'async';
 
         // 尝试设置加载链接
@@ -49,7 +50,7 @@ document.addEventListener("DOMContentLoaded", function() {
             };
 
             tempImg.onerror = () => {
-                // 如果最快响应的图片失败了，尝试另一个源
+                // 如果最快响应的图片失败了，自动尝试另一个源
                 if (!isLoaded) {
                     const fallbackSrc = (src === primarySrc) ? secondarySrc : primarySrc;
                     if (fallbackSrc && img.src !== fallbackSrc) {
@@ -67,15 +68,15 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 
-    // 3. 图片懒加载 & 内存回收 (IntersectionObserver)
+    // 3. 激进预加载 (去除回收机制，一次加载，永久保留)
     if ('IntersectionObserver' in window) {
-        const imageObserver = new IntersectionObserver((entries) => {
+        const imageObserver = new IntersectionObserver((entries, observer) => {
             entries.forEach(entry => {
-                const img = entry.target;
-                const wrap = img.parentElement;
-
+                // 只有进入视口预加载范围时触发
                 if (entry.isIntersecting) {
-                    // 进入视口区域：开始竞速加载
+                    const img = entry.target;
+                    const wrap = img.parentElement;
+
                     if (!img.src || img.src === window.location.href || img.src.includes('about:blank')) {
                         const primarySrc = img.dataset.src;
                         const imgIndex = img.alt ? img.alt.trim() : '1';
@@ -88,15 +89,13 @@ document.addEventListener("DOMContentLoaded", function() {
 
                         loadFastestImage(img, primarySrc, secondarySrc, wrap);
                     }
-                } else {
-                    // 离开视口区域：回收显存，防止大量高清图片占用 GPU 导致崩溃
-                    if (img.src && wrap.classList.contains('loaded')) {
-                        img.removeAttribute('src');
-                    }
+
+                    // 核心修改：加载完后直接取消对该图片的监听，不再做滚动销毁/回收
+                    observer.unobserve(img);
                 }
             });
         }, { 
-            rootMargin: "1000px 0px 1000px 0px" // 预加载边界扩大至 1000px，提升顺畅度
+            rootMargin: "1000px 0px 1000px 0px" // 提前 1000px 预载，滑动极致流畅
         });
 
         const imgs = document.querySelectorAll('.img-wrap img');

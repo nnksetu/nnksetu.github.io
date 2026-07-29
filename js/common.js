@@ -26,39 +26,76 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 
-    // 2. 探测 r2 可用性 + 耗时（只做一次）
-    // 超时或延迟过高 → 降级到默认图床
-    const R2_PROBE_URL = 'https://r2.setutime.com/ping.txt';
-    const R2_TIMEOUT_MS = 1000;   // 超过此时间视为不可用
-    const R2_SLOW_MS = 700;       // 延迟超过此值主动降级
+    // 2. 前三张竞速，锁定更快渠道
+    const RACE_COUNT = 3;
+    let lockedSource = null; // 'r2' | 'default' | null
+    const raceWins = [];     // 记录前三张的胜出渠道
 
-    let useR2 = false; // 最终是否启用 r2 优先
+    function getR2Src(img) {
+        if (!currentNo) return null;
+        const imgIndex = img.alt ? img.alt.trim() : '1';
+        return `https://r2.setutime.com/${category}_pic/pic-${currentNo}-${imgIndex}.webp`;
+    }
 
-    function probeR2() {
-        return new Promise((resolve) => {
-            const controller = new AbortController();
-            const timer = setTimeout(() => controller.abort(), R2_TIMEOUT_MS);
-            const start = performance.now();
+    // 竞速单张：双发，谁先 onload 用谁，并记录胜出渠道
+    function raceImage(img, wrap) {
+        const defaultSrc = img.dataset.src;
+        const r2Src = getR2Src(img);
+        let settled = false;
 
-            fetch(R2_PROBE_URL + '?t=' + Date.now(), {
-                method: 'GET',
-                mode: 'no-cors',
-                cache: 'no-store',
-                signal: controller.signal
-            }).then(() => {
-                clearTimeout(timer);
-                const latency = performance.now() - start;
-                // 可达且不够慢才启用
-                resolve(latency < R2_SLOW_MS);
-            }).catch(() => {
-                clearTimeout(timer);
-                resolve(false);
-            });
-        });
+        function trySrc(src, type) {
+            if (!src) return;
+            const temp = new Image();
+            temp.decoding = 'async';
+            temp.src = src;
+            temp.onload = () => {
+                if (settled) return;
+                settled = true;
+                img.src = src;
+                wrap.classList.add('loaded');
+                raceWins.push(type);
+                tryLock();
+            };
+            // onerror 忽略，等另一条线
+        }
+
+        trySrc(defaultSrc, 'default');
+        if (r2Src) trySrc(r2Src, 'r2');
+    }
+
+    // 根据前三张结果锁定渠道（多数胜出）
+    function tryLock() {
+        if (lockedSource || raceWins.length < RACE_COUNT) return;
+        const r2Count = raceWins.filter(t => t === 'r2').length;
+        lockedSource = r2Count >= 2 ? 'r2' : 'default';
+    }
+
+    // 已锁定后的单线路加载（失败可回退另一条）
+    function loadLocked(img, wrap) {
+        const defaultSrc = img.dataset.src;
+        const r2Src = getR2Src(img);
+
+        let primarySrc, fallbackSrc;
+        if (lockedSource === 'r2' && r2Src) {
+            primarySrc = r2Src;
+            fallbackSrc = defaultSrc;
+        } else {
+            primarySrc = defaultSrc;
+            fallbackSrc = r2Src;
+        }
+
+        img.decoding = 'async';
+        img.src = primarySrc;
+        img.onload = () => wrap.classList.add('loaded');
+        img.onerror = () => {
+            if (fallbackSrc && img.src !== fallbackSrc) {
+                img.src = fallbackSrc;
+            }
+        };
     }
 
     // 3. 智能缓存管理（100P 以内不回收，超出 100P 回收最远端图片）
-    const MAX_ACTIVE_IMAGES = 100; // 安全阀值：100张
+    const MAX_ACTIVE_IMAGES = 100;
 
     function manageMemory() {
         const loadedWraps = Array.from(document.querySelectorAll('.img-wrap.loaded'));
@@ -68,7 +105,6 @@ document.addEventListener("DOMContentLoaded", function() {
 
         if (activeImgs.length > MAX_ACTIVE_IMAGES) {
             const countToRecycle = activeImgs.length - MAX_ACTIVE_IMAGES;
-
             for (let i = 0; i < countToRecycle; i++) {
                 const imgToRecycle = activeImgs[i];
                 const rect = imgToRecycle.getBoundingClientRect();
@@ -79,86 +115,49 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 
-    // 4. 图片加载（优先线路 + 失败回退，不双发）
-    function loadImage(img, primarySrc, fallbackSrc, wrap) {
-        if (!primarySrc) return;
+    // 4. 激进预加载 & 滚动观察
+    const allImgs = Array.from(document.querySelectorAll('.img-wrap img'));
 
-        img.decoding = 'async';
-        img.src = primarySrc;
+    if ('IntersectionObserver' in window) {
+        const imageObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const img = entry.target;
+                const wrap = img.parentElement;
 
-        img.onload = () => {
-            wrap.classList.add('loaded');
-        };
+                if (!entry.isIntersecting) return;
+                if (img.src && img.src !== window.location.href && !img.src.includes('about:blank')) return;
 
-        img.onerror = () => {
-            if (fallbackSrc && img.src !== fallbackSrc) {
-                img.src = fallbackSrc;
-                // onload 已绑定，成功后会加 loaded
-            }
-        };
-    }
+                const index = allImgs.indexOf(img);
 
-    // 5. 激进预加载 & 滚动观察（等探测结果后再启动）
-    function startImageObserver() {
-        if ('IntersectionObserver' in window) {
-            const imageObserver = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    const img = entry.target;
-                    const wrap = img.parentElement;
-
-                    if (entry.isIntersecting) {
-                        if (!img.src || img.src === window.location.href || img.src.includes('about:blank')) {
-                            const defaultSrc = img.dataset.src;
-                            const imgIndex = img.alt ? img.alt.trim() : '1';
-
-                            let primarySrc = defaultSrc;
-                            let fallbackSrc = null;
-
-                            if (useR2 && currentNo) {
-                                // r2 优先，默认图床作为回退
-                                primarySrc = `https://r2.setutime.com/${category}_pic/pic-${currentNo}-${imgIndex}.webp`;
-                                fallbackSrc = defaultSrc;
-                            }
-
-                            loadImage(img, primarySrc, fallbackSrc, wrap);
-                        }
-                    }
-                });
-
-                manageMemory();
-            }, {
-                rootMargin: "1500px 0px 1500px 0px"
-            });
-
-            const imgs = document.querySelectorAll('.img-wrap img');
-            imgs.forEach(img => imageObserver.observe(img));
-        } else {
-            // 降级兼容处理
-            const imgs = document.querySelectorAll('.img-wrap img');
-            imgs.forEach(img => {
-                const defaultSrc = img.dataset.src;
-                const imgIndex = img.alt ? img.alt.trim() : '1';
-
-                let primarySrc = defaultSrc;
-                let fallbackSrc = null;
-
-                if (useR2 && currentNo) {
-                    primarySrc = `https://r2.setutime.com/${category}_pic/pic-${currentNo}-${imgIndex}.webp`;
-                    fallbackSrc = defaultSrc;
+                if (lockedSource) {
+                    // 已锁定，只用胜出渠道
+                    loadLocked(img, wrap);
+                } else if (index < RACE_COUNT) {
+                    // 前三张：竞速
+                    raceImage(img, wrap);
+                } else {
+                    // 尚未锁定且不是前三张：先走默认
+                    img.decoding = 'async';
+                    img.src = img.dataset.src;
+                    img.onload = () => wrap.classList.add('loaded');
                 }
-
-                loadImage(img, primarySrc, fallbackSrc, img.parentElement);
             });
-        }
+
+            manageMemory();
+        }, {
+            rootMargin: "1500px 0px 1500px 0px"
+        });
+
+        allImgs.forEach(img => imageObserver.observe(img));
+    } else {
+        // 降级：全部用默认
+        allImgs.forEach(img => {
+            img.src = img.dataset.src;
+            img.onload = () => img.parentElement.classList.add('loaded');
+        });
     }
 
-    // 先探测，再启动图片观察
-    probeR2().then(ok => {
-        useR2 = ok;
-        startImageObserver();
-    });
-
-    // 6. 动态设置下一期/上一期与下载链接
+    // 5. 动态设置下一期/上一期与下载链接
     if (currentNo) {
         const prevNo = currentNo - 1;
 
@@ -178,7 +177,7 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 
-    // 7. 底部悬浮按钮滚动显隐控制
+    // 6. 底部悬浮按钮滚动显隐控制
     const fixedBtn = document.querySelector('.fixed-button');
     if (fixedBtn) {
         let lastScrollY = window.scrollY;

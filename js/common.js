@@ -26,44 +26,7 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 
-    // 2. 双图床竞速加载器 (Race Loader)
-    function loadFastestImage(img, primarySrc, secondarySrc, wrap) {
-        let isLoaded = false;
-        img.decoding = 'async'; // 异步解码，避免主线程卡顿
-
-        function trySource(src) {
-            if (!src || isLoaded) return;
-            
-            const tempImg = new Image();
-            tempImg.decoding = 'async';
-            tempImg.src = src;
-            
-            tempImg.onload = () => {
-                if (!isLoaded) {
-                    isLoaded = true;
-                    img.src = src;
-                    wrap.classList.add('loaded');
-                }
-            };
-
-            tempImg.onerror = () => {
-                if (!isLoaded) {
-                    const fallbackSrc = (src === primarySrc) ? secondarySrc : primarySrc;
-                    if (fallbackSrc && img.src !== fallbackSrc) {
-                        img.src = fallbackSrc;
-                        img.onload = () => { wrap.classList.add('loaded'); };
-                    }
-                }
-            };
-        }
-
-        trySource(primarySrc);
-        if (secondarySrc) {
-            trySource(secondarySrc);
-        }
-    }
-
-    // 3. 智能缓存管理（100P 以内不回收，超出 100P 回收最远端图片）
+    // 2. 智能缓存管理（100P 以内不回收，超出 100P 回收最远端图片）
     const MAX_ACTIVE_IMAGES = 100; // 安全阀值：100张
 
     function manageMemory() {
@@ -89,7 +52,7 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 
-    // 4. 激进预加载 & 滚动观察
+    // 3. 激进预加载 & 滚动观察
     if ('IntersectionObserver' in window) {
         const imageObserver = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
@@ -99,15 +62,9 @@ document.addEventListener("DOMContentLoaded", function() {
                 if (entry.isIntersecting) {
                     // 进入视口预加载范围（上下 1500px）
                     if (!img.src || img.src === window.location.href || img.src.includes('about:blank')) {
-                        const primarySrc = img.dataset.src;
-                        const imgIndex = img.alt ? img.alt.trim() : '1';
-                        
-                        let secondarySrc = '';
-                        if (currentNo) {
-                            secondarySrc = `https://r2.setutime.com/${category}_pic/pic-${currentNo}-${imgIndex}.webp`;
-                        }
-
-                        loadFastestImage(img, primarySrc, secondarySrc, wrap);
+                        img.decoding = 'async';
+                        img.src = img.dataset.src;
+                        img.onload = () => { wrap.classList.add('loaded'); };
                     }
                 }
             });
@@ -129,7 +86,7 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
-    // 5. 动态设置下一期/上一期与下载链接
+    // 4. 动态设置下一期/上一期与下载链接
     if (currentNo) {
         const prevNo = currentNo - 1;
         
@@ -149,7 +106,7 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 
-    // 6. 底部悬浮按钮滚动显隐控制
+    // 5. 底部悬浮按钮滚动显隐控制
     const fixedBtn = document.querySelector('.fixed-button');
     if (fixedBtn) {
         let lastScrollY = window.scrollY;

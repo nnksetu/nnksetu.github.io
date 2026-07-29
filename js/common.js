@@ -26,70 +26,142 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 
-    // 2. 智能缓存管理（100P 以内不回收，超出 100P 回收最远端图片）
+    // 2. 探测 r2 可用性 + 耗时（只做一次）
+    // 超时或延迟过高 → 降级到默认图床
+    const R2_PROBE_URL = 'https://r2.setutime.com/ping.txt';
+    const R2_TIMEOUT_MS = 1000;   // 超过此时间视为不可用
+    const R2_SLOW_MS = 700;       // 延迟超过此值主动降级
+
+    let useR2 = false; // 最终是否启用 r2 优先
+
+    function probeR2() {
+        return new Promise((resolve) => {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), R2_TIMEOUT_MS);
+            const start = performance.now();
+
+            fetch(R2_PROBE_URL + '?t=' + Date.now(), {
+                method: 'GET',
+                mode: 'no-cors',
+                cache: 'no-store',
+                signal: controller.signal
+            }).then(() => {
+                clearTimeout(timer);
+                const latency = performance.now() - start;
+                // 可达且不够慢才启用
+                resolve(latency < R2_SLOW_MS);
+            }).catch(() => {
+                clearTimeout(timer);
+                resolve(false);
+            });
+        });
+    }
+
+    // 3. 智能缓存管理（100P 以内不回收，超出 100P 回收最远端图片）
     const MAX_ACTIVE_IMAGES = 100; // 安全阀值：100张
 
     function manageMemory() {
-        // 获取所有已经加载（带 src）的图片
         const loadedWraps = Array.from(document.querySelectorAll('.img-wrap.loaded'));
         const activeImgs = loadedWraps
             .map(wrap => wrap.querySelector('img'))
             .filter(img => img && img.src && !img.src.includes('about:blank'));
 
-        // 如果已激活图片超过 100 张，回收距离当前视口顶部最远（最上方）的图片
         if (activeImgs.length > MAX_ACTIVE_IMAGES) {
             const countToRecycle = activeImgs.length - MAX_ACTIVE_IMAGES;
-            
-            // 按元素在 DOM 中的位置排序，优先清理排在最前面的（最上面的）
+
             for (let i = 0; i < countToRecycle; i++) {
                 const imgToRecycle = activeImgs[i];
-                // 确保回收的图片目前不在屏幕视口内（位于屏幕上方才回收）
                 const rect = imgToRecycle.getBoundingClientRect();
-                if (rect.bottom < -1000) { // 必须离开屏幕上方 1000px 以上
+                if (rect.bottom < -1000) {
                     imgToRecycle.removeAttribute('src');
                 }
             }
         }
     }
 
-    // 3. 激进预加载 & 滚动观察
-    if ('IntersectionObserver' in window) {
-        const imageObserver = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                const img = entry.target;
-                const wrap = img.parentElement;
+    // 4. 图片加载（优先线路 + 失败回退，不双发）
+    function loadImage(img, primarySrc, fallbackSrc, wrap) {
+        if (!primarySrc) return;
 
-                if (entry.isIntersecting) {
-                    // 进入视口预加载范围（上下 1500px）
-                    if (!img.src || img.src === window.location.href || img.src.includes('about:blank')) {
-                        img.decoding = 'async';
-                        img.src = img.dataset.src;
-                        img.onload = () => { wrap.classList.add('loaded'); };
-                    }
-                }
-            });
+        img.decoding = 'async';
+        img.src = primarySrc;
 
-            // 每次观察状态变动时检查全局内存
-            manageMemory();
-        }, { 
-            rootMargin: "1500px 0px 1500px 0px" // 上下扩大到 1500px 预加载，滑动极度丝滑
-        });
+        img.onload = () => {
+            wrap.classList.add('loaded');
+        };
 
-        const imgs = document.querySelectorAll('.img-wrap img');
-        imgs.forEach(img => imageObserver.observe(img));
-    } else {
-        // 降级兼容处理
-        const imgs = document.querySelectorAll('.img-wrap img');
-        imgs.forEach(img => {
-            img.src = img.dataset.src;
-            img.onload = () => img.parentElement.classList.add('loaded');
-        });
+        img.onerror = () => {
+            if (fallbackSrc && img.src !== fallbackSrc) {
+                img.src = fallbackSrc;
+                // onload 已绑定，成功后会加 loaded
+            }
+        };
     }
 
-    // 4. 动态设置下一期/上一期与下载链接
+    // 5. 激进预加载 & 滚动观察（等探测结果后再启动）
+    function startImageObserver() {
+        if ('IntersectionObserver' in window) {
+            const imageObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    const img = entry.target;
+                    const wrap = img.parentElement;
+
+                    if (entry.isIntersecting) {
+                        if (!img.src || img.src === window.location.href || img.src.includes('about:blank')) {
+                            const defaultSrc = img.dataset.src;
+                            const imgIndex = img.alt ? img.alt.trim() : '1';
+
+                            let primarySrc = defaultSrc;
+                            let fallbackSrc = null;
+
+                            if (useR2 && currentNo) {
+                                // r2 优先，默认图床作为回退
+                                primarySrc = `https://r2.setutime.com/${category}_pic/pic-${currentNo}-${imgIndex}.webp`;
+                                fallbackSrc = defaultSrc;
+                            }
+
+                            loadImage(img, primarySrc, fallbackSrc, wrap);
+                        }
+                    }
+                });
+
+                manageMemory();
+            }, {
+                rootMargin: "1500px 0px 1500px 0px"
+            });
+
+            const imgs = document.querySelectorAll('.img-wrap img');
+            imgs.forEach(img => imageObserver.observe(img));
+        } else {
+            // 降级兼容处理
+            const imgs = document.querySelectorAll('.img-wrap img');
+            imgs.forEach(img => {
+                const defaultSrc = img.dataset.src;
+                const imgIndex = img.alt ? img.alt.trim() : '1';
+
+                let primarySrc = defaultSrc;
+                let fallbackSrc = null;
+
+                if (useR2 && currentNo) {
+                    primarySrc = `https://r2.setutime.com/${category}_pic/pic-${currentNo}-${imgIndex}.webp`;
+                    fallbackSrc = defaultSrc;
+                }
+
+                loadImage(img, primarySrc, fallbackSrc, img.parentElement);
+            });
+        }
+    }
+
+    // 先探测，再启动图片观察
+    probeR2().then(ok => {
+        useR2 = ok;
+        startImageObserver();
+    });
+
+    // 6. 动态设置下一期/上一期与下载链接
     if (currentNo) {
         const prevNo = currentNo - 1;
-        
+
         const prevLink = document.getElementById('prev-link');
         if (prevLink) {
             prevLink.href = `https://www.setutime.com/${category}/${prevNo}`;
@@ -106,7 +178,7 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 
-    // 5. 底部悬浮按钮滚动显隐控制
+    // 7. 底部悬浮按钮滚动显隐控制
     const fixedBtn = document.querySelector('.fixed-button');
     if (fixedBtn) {
         let lastScrollY = window.scrollY;

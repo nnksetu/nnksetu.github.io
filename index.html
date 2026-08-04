@@ -309,7 +309,7 @@
 <script>
 // ===================== 配置 =====================
 const SECRET_KEY = '5130';
-const UNLOCK_DAYS = 7; // 解锁有效天数
+const UNLOCK_DAYS = 15; // 解锁有效天数
 // =================================================
 
 const ONE_DAY = 24 * 60 * 60 * 1000;
@@ -418,7 +418,7 @@ function initDarkMode() {
 }
 initDarkMode();
 
-// ===== 5秒内连续点击3次触发 =====
+// ===== 7秒内连续点击5次触发 =====
 function handleDarkModeClick(e) {
   e.preventDefault();
   e.stopPropagation();
@@ -428,12 +428,12 @@ function handleDarkModeClick(e) {
   if (darkClickTimer) clearTimeout(darkClickTimer);
   darkClickTimer = setTimeout(() => {
     darkClickCount = 0;
-  }, 5000);
+  }, 7000);
 
-  if (darkClickCount >= 3) {
+  if (darkClickCount >= 5) {
     darkClickCount = 0;
     if (unlocked) {
-      // 已经解锁，再点三次就锁定回去（可选）
+      // 已经解锁，再点五次就锁定回去（可选）
       if (confirm('当前已解锁完整版，是否重新锁定为隐藏版？')) {
         clearUnlockState();
         unlocked = false;

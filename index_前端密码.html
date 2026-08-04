@@ -308,7 +308,8 @@
 
 <script>
 // ===================== 配置 =====================
-const WORKER_API = 'https://dl.setutime.com'
+const SECRET_KEY = '5130';
+const UNLOCK_DAYS = 15; // 解锁有效天数
 // =================================================
 
 const ONE_DAY = 24 * 60 * 60 * 1000;
@@ -318,13 +319,14 @@ function getUnlockState() {
   try {
     const raw = localStorage.getItem('setutime_unlocked');
     if (!raw) return false;
-    // 兼容旧版纯 'true' 或旧结构
+    // 兼容旧版纯 'true'
     if (raw === 'true') {
+      // 旧数据视为已过期，清掉
       localStorage.removeItem('setutime_unlocked');
       return false;
     }
     const data = JSON.parse(raw);
-    if (!data || !data.token || !data.expireAt) {
+    if (!data || !data.expireAt) {
       localStorage.removeItem('setutime_unlocked');
       return false;
     }
@@ -339,23 +341,13 @@ function getUnlockState() {
   }
 }
 
-function setUnlockState(token, expireAt) {
-  localStorage.setItem('setutime_unlocked', JSON.stringify({ token, expireAt }));
+function setUnlockState() {
+  const expireAt = Date.now() + UNLOCK_DAYS * ONE_DAY;
+  localStorage.setItem('setutime_unlocked', JSON.stringify({ expireAt }));
 }
 
 function clearUnlockState() {
   localStorage.removeItem('setutime_unlocked');
-}
-
-function getStoredToken() {
-  try {
-    const raw = localStorage.getItem('setutime_unlocked');
-    if (!raw) return null;
-    const data = JSON.parse(raw);
-    return data?.token || null;
-  } catch {
-    return null;
-  }
 }
 
 let unlocked = getUnlockState();
@@ -468,34 +460,17 @@ function closeSecretModal() {
   document.getElementById('secretModal').classList.remove('show');
 }
 
-async function verifySecretKey() {
+function verifySecretKey() {
   const input = document.getElementById('secretKeyInput');
   const key = input.value.trim();
-  if (!key) return;
-
-  const confirmBtn = document.querySelector('#secretModal .btn-confirm');
-  if (confirmBtn) {
-    confirmBtn.disabled = true;
-    confirmBtn.textContent = '验证中...';
-  }
-
-  try {
-    const res = await fetch(`${WORKER_API}/api/unlock`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password: key }),
-    });
-    const data = await res.json();
-
-    if (data && data.ok && data.token) {
-      setUnlockState(data.token, data.expireAt);
-      unlocked = true;
-      closeSecretModal();
-      location.reload();
-      return;
-    }
-
-    // 密码错误
+  
+  if (key === SECRET_KEY) {
+    setUnlockState();
+    unlocked = true;
+    closeSecretModal();
+    // 刷新后进入完整模式
+    location.reload();
+  } else {
     input.value = '';
     input.placeholder = '密钥错误，请重试';
     input.style.borderColor = '#ef4444';
@@ -504,21 +479,6 @@ async function verifySecretKey() {
       input.style.borderColor = '';
       input.focus();
     }, 1200);
-  } catch (err) {
-    console.error('Unlock request failed:', err);
-    input.value = '';
-    input.placeholder = '网络错误，请重试';
-    input.style.borderColor = '#ef4444';
-    setTimeout(() => {
-      input.placeholder = '输入密钥...';
-      input.style.borderColor = '';
-      input.focus();
-    }, 1200);
-  } finally {
-    if (confirmBtn) {
-      confirmBtn.disabled = false;
-      confirmBtn.textContent = '确认';
-    }
   }
 }
 
@@ -903,36 +863,8 @@ function initTouchEvents() {
   }
 }
 
-async function validateStoredToken() {
-  const token = getStoredToken();
-  if (!token) {
-    unlocked = false;
-    return;
-  }
-  try {
-    const res = await fetch(`${WORKER_API}/api/check?token=${encodeURIComponent(token)}`);
-    const data = await res.json();
-    if (data && data.ok) {
-      unlocked = true;
-      // 同步最新过期时间
-      if (data.expireAt) {
-        setUnlockState(token, data.expireAt);
-      }
-    } else {
-      clearUnlockState();
-      unlocked = false;
-    }
-  } catch (err) {
-    // 网络失败时，仍信任本地未过期的 token（弱离线兼容）
-    console.warn('Token check failed, fallback to local state:', err);
-  }
-}
-
 async function startAppNow() {
   initTouchEvents();
-
-  // 向 Worker 校验本地 token 是否仍然有效
-  await validateStoredToken();
   
   let savedTab = localStorage.getItem('setutime_active_tab') || 'acg';
   if (!unlocked && savedTab === 'setu') savedTab = 'acg';

@@ -5,28 +5,23 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<meta name="theme-color" id="meta-theme-color" content="#50C878"> <!-- 默认修改为全年龄向薄荷绿 -->
+<meta name="theme-color" id="meta-theme-color" content="#50C878">
 <link rel="stylesheet" href="https://cdn.jsdmirror.com/gh/FrecklyComb1728/blog@main/public/fonts/xiaolai.css">
 <link rel="icon" href="https://r2.setutime.com/favicon.png" type="image/png">
 <meta name="description" content="点击前往SetuTime~">
 <title>SetuTime!</title>
 <style>
-  /* 核心基础背景 */
   html, body {
-    background: #50C878; /* 首页默认改为全年龄向：清爽薄荷绿 */
+    background: #50C878;
     margin: 0;
     padding: 0;
     min-height: 100vh;
     transition: background 0.3s cubic-bezier(0.25, 1, 0.5, 1);
   }
   
-  html.green-theme, body.green-theme {
-    background: #50C878; /* 全年龄向：清爽薄荷绿 */
-  }
-
-  html.pink-theme, body.pink-theme {
-    background: #f8b8c8; /* cos篇：浪漫樱花粉 */
-  }
+  html.green-theme, body.green-theme { background: #50C878; }
+  html.pink-theme, body.pink-theme { background: #f8b8c8; }
+  html.blue-theme, body.blue-theme { background: #428cca; }
 
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -36,18 +31,11 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  /* 顶部微动效流光进度条 & 标题呼吸动画 */
   .top-progress-bar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 0%;
-    height: 3px;
+    position: fixed; top: 0; left: 0; width: 0%; height: 3px;
     background: linear-gradient(90deg, rgba(255,255,255,0.4), rgba(255,255,255,1), rgba(255,255,255,0.4));
-    background-size: 200% 100%;
-    z-index: 10000;
-    box-shadow: 0 1px 6px rgba(255,255,255,0.6);
-    opacity: 1;
+    background-size: 200% 100%; z-index: 10000;
+    box-shadow: 0 1px 6px rgba(255,255,255,0.6); opacity: 1;
     transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease-out;
     animation: barShimmer 1.5s infinite linear;
   }
@@ -56,17 +44,14 @@
     100% { background-position: -200% 0; }
   }
 
-  header.app-loading {
-    animation: headerBreathe 1.6s ease-in-out infinite alternate;
-  }
+  header.app-loading { animation: headerBreathe 1.6s ease-in-out infinite alternate; }
   @keyframes headerBreathe {
     0% { opacity: 0.45; transform: scale(0.98); }
     100% { opacity: 0.9; transform: scale(1); }
   }
 
   header, .main-wrapper { 
-    opacity: 0; 
-    transform: translateY(20px); 
+    opacity: 0; transform: translateY(20px); 
     transition: opacity 0.5s cubic-bezier(0.25, 1, 0.5, 1), transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
   }
   header { opacity: 1; transform: translateY(0); }
@@ -78,33 +63,24 @@
   header { background: transparent; color: #ffffff; padding: 40px 20px 20px; text-align: center; position: relative; }
   header h1 { margin: 0; font-size: 37px; font-weight: 700; letter-spacing: 1px; text-shadow: 0 2px 4px rgba(0,0,0,0.05); }
   header p { 
-    margin: 8px 0 0; 
-    opacity: 0.9; 
-    font-size: 18px; 
-    font-weight: 400; 
-    font-family: 'xiaolai', -apple-system, BlinkMacSystemFont, sans-serif; 
-    letter-spacing: 0.5px; 
+    margin: 8px 0 0; opacity: 0.9; font-size: 18px; font-weight: 400; 
+    font-family: 'xiaolai', -apple-system, BlinkMacSystemFont, sans-serif; letter-spacing: 0.5px; 
   }
   
   .main-wrapper {
-    background: #ffffff;
-    border-radius: 30px 30px 0 0;
-    margin-top: 10px;
-    min-height: calc(100vh - 150px);
-    box-shadow: 0 -10px 30px rgba(0,0,0,0.03);
-    position: relative;
+    background: #ffffff; border-radius: 30px 30px 0 0; margin-top: 10px;
+    min-height: calc(100vh - 150px); box-shadow: 0 -10px 30px rgba(0,0,0,0.03); position: relative;
   }
 
   .container { max-width: 700px; margin: 0 auto; padding: 30px 20px 100px; box-sizing: border-box; }
   
-  /* 二等分胶囊切换条（隐藏二次元篇后变更为两列） */
   .tabs { display: flex; background: rgba(243,244,246,0.86); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 5px; border-radius: 30px; margin-bottom: 25px; position: relative; border: 1px solid #e5e7eb; touch-action: manipulation; }
   .tab-item { flex: 1; text-align: center; padding: 12px 0; font-weight: 600; font-size: 15px; color: #4b5563; cursor: pointer; z-index: 2; transition: color 0.2s, transform 0.1s; border-radius: 25px; -webkit-tap-highlight-color: transparent; user-select: none; }
   .tab-item:active { transform: scale(0.96); opacity: 0.9; }
   .tab-item.active { color: #ffffff; }
+  .tab-item.hidden-tab { display: none; }
   
-  /* 滑块计算修改为 50% 占比 */
-  .tab-slider { position: absolute; top: 5px; left: 5px; width: calc(50% - 5px); height: calc(100% - 10px); background: #50C878; border-radius: 25px; z-index: 1; transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), background 0.3s; box-shadow: 0 4px 12px rgba(80,200,120,0.3); transform: translateX(0%); }
+  .tab-slider { position: absolute; top: 5px; left: 5px; height: calc(100% - 10px); border-radius: 25px; z-index: 1; transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), background 0.3s, width 0.3s; box-shadow: 0 4px 12px rgba(80,200,120,0.3); }
   
   ul.list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; min-height: 400px; }
   ul.list li { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 18px; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: all 0.25s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.01); -webkit-tap-highlight-color: transparent; }
@@ -118,12 +94,10 @@
   .item-btn { background: #f3f4f6; color: #4b5563; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; transition: all 0.25s; flex-shrink: 0; user-select: none; }
   ul.list li:hover .item-btn { background: #50C878; color: #ffffff; }
   
-  /* 现代波浪式渐变骨架屏 */
   .skeleton-list { display: flex; flex-direction: column; gap: 14px; min-height: 400px; }
   .skeleton-item { height: 72px; background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 37%, #f3f4f6 63%); background-size: 400% 100%; animation: skeleton-loading 1.4s ease infinite; border-radius: 18px; }
   @keyframes skeleton-loading { 0% { background-position: 100% 0 } 100% { background-position: 0 0 } }
   
-  /* 分页整体控制栏 */
   .pagination-container { display: flex; align-items: center; justify-content: space-between; margin-top: 35px; gap: 10px; user-select: none; }
   .page-btn { flex: 1; max-width: 100px; text-align: center; padding: 11px 0; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 22px; color: #4b5563; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s; -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
   .page-btn:hover:not(.disabled) { border-color: #50C878; color: #50C878; background: rgba(80,200,120,0.02); }
@@ -135,13 +109,11 @@
   .page-current-input::-webkit-outer-spin-button, .page-current-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
   .page-current-input:focus { border-color: #50C878; box-shadow: 0 0 0 2px rgba(80,200,120,0.15); }
   
-  /* 悬浮搜索 */
   .search-trigger { position: fixed; bottom: 25px; right: 25px; width: 54px; height: 54px; background: #50C878; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 20px rgba(80,200,120,0.3); cursor: pointer; z-index: 99; transition: all 0.25s ease; -webkit-tap-highlight-color: transparent; }
   .search-trigger:hover { transform: scale(1.08) translateY(-2px); background: #62d387; box-shadow: 0 8px 24px rgba(80,200,120,0.4); }
   .search-trigger:active { transform: scale(0.95); }
   .search-trigger svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
   
-  /* 全屏搜索蒙层 */
   .search-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); z-index: 1000; display: flex; flex-direction: column; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
   .search-overlay.active { opacity: 1; pointer-events: auto; }
   .search-header { padding: 20px; display: flex; align-items: center; max-width: 600px; width: 100%; margin: 0 auto; box-sizing: border-box; gap: 15px; }
@@ -159,7 +131,7 @@
   .search-results .item .title { font-weight: 600; color: #111827; font-size: 15px; flex-shrink: 0; margin-right: 15px; }
   .search-results .item .sub { color: #6b7280 !important; font-size: 13px !important; line-height: 1.4 !important; white-space: normal !important; word-break: break-all !important; overflow: visible !important; flex: 1; text-align: right; }
   
-  /* Green Theme (全年龄向) 样式复写 */
+  /* Theme overrides */
   html.green-theme .tab-slider, body.green-theme .tab-slider { background: #50C878; box-shadow: 0 4px 12px rgba(80,200,120,0.3); }
   html.green-theme ul.list li:hover, body.green-theme ul.list li:hover { border-color: #50C878; box-shadow: 0 6px 16px rgba(80,200,120,0.1); }
   html.green-theme ul.list li:hover .item-btn, body.green-theme ul.list li:hover .item-btn { background: #50C878; color: #ffffff; }
@@ -170,7 +142,6 @@
   html.green-theme .search-results .item:hover, body.green-theme .search-results .item:hover { border-color: #50C878; background: rgba(80,200,120,0.02); }
   html.green-theme .page-current-input:focus, body.green-theme .page-current-input:focus { border-color: #50C878; box-shadow: 0 0 0 2px rgba(80,200,120,0.15); }
 
-  /* Pink Theme (Cosplay) 样式复写 */
   html.pink-theme .tab-slider, body.pink-theme .tab-slider { background: #f8b8c8; box-shadow: 0 4px 12px rgba(248,184,200,0.3); }
   html.pink-theme ul.list li:hover, body.pink-theme ul.list li:hover { border-color: #f8b8c8; box-shadow: 0 6px 16px rgba(248,184,200,0.1); }
   html.pink-theme ul.list li:hover .item-btn, body.pink-theme ul.list li:hover .item-btn { background: #f8b8c8; color: #ffffff; }
@@ -181,7 +152,16 @@
   html.pink-theme .search-results .item:hover, body.pink-theme .search-results .item:hover { border-color: #f8b8c8; background: rgba(248,184,200,0.02); }
   html.pink-theme .page-current-input:focus, body.pink-theme .page-current-input:focus { border-color: #f8b8c8; box-shadow: 0 0 0 2px rgba(248,184,200,0.15); }
 
-  /* 深色模式全局样式 */
+  html.blue-theme .tab-slider, body.blue-theme .tab-slider { background: #428cca; box-shadow: 0 4px 12px rgba(66,140,202,0.3); }
+  html.blue-theme ul.list li:hover, body.blue-theme ul.list li:hover { border-color: #428cca; box-shadow: 0 6px 16px rgba(66,140,202,0.1); }
+  html.blue-theme ul.list li:hover .item-btn, body.blue-theme ul.list li:hover .item-btn { background: #428cca; color: #ffffff; }
+  html.blue-theme .page-btn:hover:not(.disabled), body.blue-theme .page-btn:hover:not(.disabled) { border-color: #428cca; color: #428cca; background: rgba(66,140,202,0.03); }
+  html.blue-theme .search-trigger, body.blue-theme .search-trigger { background: #428cca; box-shadow: 0 6px 20px rgba(66,140,202,0.4); }
+  html.blue-theme .search-trigger:hover, body.blue-theme .search-trigger:hover { background: #53a3e6; box-shadow: 0 8px 24px rgba(66,140,202,0.5); }
+  html.blue-theme .search-input:focus, body.blue-theme .search-input:focus { border-color: #428cca; box-shadow: 0 0 0 3px rgba(66,140,202,0.15); }
+  html.blue-theme .search-results .item:hover, body.blue-theme .search-results .item:hover { border-color: #428cca; background: rgba(66,140,202,0.02); }
+  html.blue-theme .page-current-input:focus, body.blue-theme .page-current-input:focus { border-color: #428cca; box-shadow: 0 0 0 2px rgba(66,140,202,0.15); }
+
   .dark-mode-toggle { position: absolute; top: 20px; right: 20px; width: 40px; height: 40px; background: rgba(255,255,255,0.15); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: white; border: 1px solid rgba(255,255,255,0.2); transition: all 0.25s; z-index: 101; -webkit-tap-highlight-color: transparent; }
   .dark-mode-toggle:hover { background: rgba(255,255,255,0.3); transform: scale(1.05); }
   .dark-mode-toggle svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
@@ -212,6 +192,44 @@
   html.dark-theme .search-results .item { background: #1f2937; border-color: #374151; }
   html.dark-theme .search-results .item .title { color: #f9fafb; }
   html.dark-theme .search-results .item .sub { color: #9ca3af !important; }
+
+  /* 密钥弹窗 */
+  .secret-modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    z-index: 20000; display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity 0.25s ease;
+  }
+  .secret-modal-overlay.show { opacity: 1; pointer-events: auto; }
+  .secret-modal {
+    background: #ffffff; border-radius: 20px; padding: 28px 24px;
+    width: 90%; max-width: 340px; box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+    transform: scale(0.9) translateY(20px); transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+  .secret-modal-overlay.show .secret-modal { transform: scale(1) translateY(0); }
+  .secret-modal h3 { margin: 0 0 8px; font-size: 18px; font-weight: 700; color: #111827; text-align: center; }
+  .secret-modal p { margin: 0 0 18px; font-size: 13px; color: #6b7280; text-align: center; }
+  .secret-modal input {
+    width: 100%; height: 46px; border: 1px solid #e5e7eb; border-radius: 12px;
+    padding: 0 16px; font-size: 16px; color: #111827; outline: none; box-sizing: border-box;
+    transition: border-color 0.2s, box-shadow 0.2s; margin-bottom: 16px;
+  }
+  .secret-modal input:focus { border-color: #50C878; box-shadow: 0 0 0 3px rgba(80,200,120,0.15); }
+  .secret-modal-btns { display: flex; gap: 10px; }
+  .secret-modal-btns button {
+    flex: 1; height: 42px; border: none; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+  }
+  .secret-modal-btns .btn-cancel { background: #f3f4f6; color: #4b5563; }
+  .secret-modal-btns .btn-cancel:hover { background: #e5e7eb; }
+  .secret-modal-btns .btn-confirm { background: #50C878; color: #ffffff; }
+  .secret-modal-btns .btn-confirm:hover { background: #45b56c; }
+  html.dark-theme .secret-modal { background: #1f2937; }
+  html.dark-theme .secret-modal h3 { color: #f9fafb; }
+  html.dark-theme .secret-modal p { color: #9ca3af; }
+  html.dark-theme .secret-modal input { background: #374151; border-color: #4b5563; color: #f9fafb; }
+  html.dark-theme .secret-modal input:focus { border-color: #50C878; }
+  html.dark-theme .secret-modal-btns .btn-cancel { background: #374151; color: #d1d5db; }
+  html.dark-theme .secret-modal-btns .btn-cancel:hover { background: #4b5563; }
 </style>
 </head>
 <body>
@@ -219,7 +237,7 @@
 <div class="top-progress-bar" id="topProgressBar"></div>
 
 <header class="app-loading" id="appHeader">
-  <div class="dark-mode-toggle" onclick="toggleDarkMode()" title="切换主题">
+  <div class="dark-mode-toggle" id="darkModeToggle" title="切换主题">
     <svg class="sun-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
     <svg class="moon-icon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
   </div>
@@ -229,10 +247,10 @@
 
 <div class="main-wrapper">
   <div class="container">
-    <!-- 【修改点】Tabs移除了二次元篇，变为两列切换 -->
-    <div class="tabs">
-      <div class="tab-item active" id="tab-acg">全年龄向</div>
-      <div class="tab-item" id="tab-zrsetu">cos篇</div>
+    <div class="tabs" id="tabsContainer">
+      <div class="tab-item active" id="tab-acg" data-type="acg">全年龄向</div>
+      <div class="tab-item" id="tab-setu" data-type="setu">二次元篇</div>
+      <div class="tab-item" id="tab-zrsetu" data-type="zrsetu">cos篇</div>
       <div class="tab-slider" id="tabSlider"></div>
     </div>
 
@@ -248,13 +266,11 @@
     
     <div class="pagination-container" id="paginationCtrl" style="display:none;">
       <div class="page-btn" id="prevPageBtn" onclick="changePage(-1)">上一页</div>
-      
       <div class="page-info-wrap">
         <input type="number" class="page-current-input" id="pageCurrentInput" min="1" value="1" onkeyup="if(event.keyCode===13)handleInputJump(this.value)" onblur="handleInputJump(this.value)">
         <span>/</span>
         <span id="pageTotalLabel">1</span>
       </div>
-      
       <div class="page-btn" id="nextPageBtn" onclick="changePage(1)">下一页</div>
     </div>
   </div>
@@ -277,10 +293,68 @@
   <div class="search-results" id="searchResults"></div>
 </div>
 
+<!-- 密钥输入弹窗 -->
+<div class="secret-modal-overlay" id="secretModal">
+  <div class="secret-modal">
+    <h3>🔒 隐藏入口</h3>
+    <p>请输入密码以解锁完整版</p>
+    <input type="password" id="secretKeyInput" placeholder="输入密钥..." autocomplete="off">
+    <div class="secret-modal-btns">
+      <button class="btn-cancel" onclick="closeSecretModal()">取消</button>
+      <button class="btn-confirm" onclick="verifySecretKey()">确认</button>
+    </div>
+  </div>
+</div>
+
 <script>
-// 【修改点】默认激活分类重置为全年龄向 'acg'
-let currentTab = 'acg'; 
+// ===================== 配置 =====================
+const SECRET_KEY = 'nainai5130';
+const UNLOCK_DAYS = 7; // 解锁有效天数
+// =================================================
+
+const ONE_DAY = 24 * 60 * 60 * 1000;
 const ONE_HOUR = 60 * 60 * 1000;
+
+function getUnlockState() {
+  try {
+    const raw = localStorage.getItem('setutime_unlocked');
+    if (!raw) return false;
+    // 兼容旧版纯 'true'
+    if (raw === 'true') {
+      // 旧数据视为已过期，清掉
+      localStorage.removeItem('setutime_unlocked');
+      return false;
+    }
+    const data = JSON.parse(raw);
+    if (!data || !data.expireAt) {
+      localStorage.removeItem('setutime_unlocked');
+      return false;
+    }
+    if (Date.now() > data.expireAt) {
+      localStorage.removeItem('setutime_unlocked');
+      return false;
+    }
+    return true;
+  } catch (e) {
+    localStorage.removeItem('setutime_unlocked');
+    return false;
+  }
+}
+
+function setUnlockState() {
+  const expireAt = Date.now() + UNLOCK_DAYS * ONE_DAY;
+  localStorage.setItem('setutime_unlocked', JSON.stringify({ expireAt }));
+}
+
+function clearUnlockState() {
+  localStorage.removeItem('setutime_unlocked');
+}
+
+let unlocked = getUnlockState();
+let currentTab = 'acg';
+
+let darkClickCount = 0;
+let darkClickTimer = null;
 
 function getSavedPage(tabType) {
   try {
@@ -303,7 +377,7 @@ function savePage(tabType, pageNum) {
 
 let currentPage = { 
   acg: getSavedPage('acg'),
-  setu: 1, // 二次元篇停用
+  setu: getSavedPage('setu'), 
   zrsetu: getSavedPage('zrsetu') 
 };
 
@@ -317,7 +391,6 @@ let totalZrsetuCount = 0;
 
 const ITEMS_PER_PAGE = 10;
 const SERVER_ITEMS_PER_FILE = 50;
-
 const rootUrl = `${window.location.protocol}//${window.location.host}/`;
 
 function toggleDarkMode() {
@@ -328,10 +401,12 @@ function toggleDarkMode() {
     if (isDark) {
       metaTheme.setAttribute('content', '#111827');
     } else {
-      metaTheme.setAttribute('content', currentTab === 'zrsetu' ? '#f8b8c8' : '#50C878');
+      const color = currentTab === 'setu' ? '#428cca' : (currentTab === 'zrsetu' ? '#f8b8c8' : '#50C878');
+      metaTheme.setAttribute('content', color);
     }
   }
 }
+
 function initDarkMode() {
   const savedDark = localStorage.getItem('setutime_dark_mode');
   const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -342,6 +417,204 @@ function initDarkMode() {
   }
 }
 initDarkMode();
+
+// ===== 5秒内连续点击3次触发 =====
+function handleDarkModeClick(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  
+  darkClickCount++;
+  
+  if (darkClickTimer) clearTimeout(darkClickTimer);
+  darkClickTimer = setTimeout(() => {
+    darkClickCount = 0;
+  }, 5000);
+
+  if (darkClickCount >= 3) {
+    darkClickCount = 0;
+    if (unlocked) {
+      // 已经解锁，再点三次就锁定回去（可选）
+      if (confirm('当前已解锁完整版，是否重新锁定为隐藏版？')) {
+        clearUnlockState();
+        unlocked = false;
+        location.reload();
+      }
+    } else {
+      openSecretModal();
+    }
+    return;
+  }
+  
+  toggleDarkMode();
+}
+
+function openSecretModal() {
+  const modal = document.getElementById('secretModal');
+  const input = document.getElementById('secretKeyInput');
+  modal.classList.add('show');
+  input.value = '';
+  setTimeout(() => input.focus(), 80);
+}
+
+function closeSecretModal() {
+  document.getElementById('secretModal').classList.remove('show');
+}
+
+function verifySecretKey() {
+  const input = document.getElementById('secretKeyInput');
+  const key = input.value.trim();
+  
+  if (key === SECRET_KEY) {
+    setUnlockState();
+    unlocked = true;
+    closeSecretModal();
+    // 刷新后进入完整模式
+    location.reload();
+  } else {
+    input.value = '';
+    input.placeholder = '密钥错误，请重试';
+    input.style.borderColor = '#ef4444';
+    setTimeout(() => {
+      input.placeholder = '输入密钥...';
+      input.style.borderColor = '';
+      input.focus();
+    }, 1200);
+  }
+}
+
+// ===== 根据解锁状态初始化 Tabs =====
+function updateTabsVisibility() {
+  const tabSetu = document.getElementById('tab-setu');
+  const slider = document.getElementById('tabSlider');
+  const items = document.querySelectorAll('.tab-item:not(.hidden-tab)');
+  
+  if (unlocked) {
+    // 完整版：三列
+    tabSetu.classList.remove('hidden-tab');
+    slider.style.width = 'calc(33.3333% - 5px)';
+  } else {
+    // 隐藏版：两列，隐藏二次元
+    tabSetu.classList.add('hidden-tab');
+    slider.style.width = 'calc(50% - 5px)';
+    
+    // 如果当前在二次元，强制切回全年龄
+    if (currentTab === 'setu') {
+      currentTab = 'acg';
+      localStorage.setItem('setutime_active_tab', 'acg');
+    }
+  }
+}
+
+function getVisibleTabIndex(type) {
+  if (!unlocked) {
+    // 隐藏版只有 acg(0) 和 zrsetu(1)
+    return type === 'zrsetu' ? 1 : 0;
+  }
+  // 完整版
+  if (type === 'acg') return 0;
+  if (type === 'setu') return 1;
+  return 2;
+}
+
+function handleTabClick(type) {
+  if (currentTab === type) return;
+  if (!unlocked && type === 'setu') return; // 未解锁不允许
+  
+  currentTab = type;
+  localStorage.setItem('setutime_active_tab', type);
+  document.getElementById('searchInput').value = '';
+  document.getElementById('searchResults').innerHTML = '';
+  
+  const slider = document.getElementById('tabSlider');
+  const index = getVisibleTabIndex(type);
+  slider.style.transform = `translateX(${index * 100}%)`;
+  
+  document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
+  const activeEl = document.getElementById('tab-' + type);
+  if (activeEl) activeEl.classList.add('active');
+  
+  const mainTitle = document.getElementById('main-title');
+  const subTitle = document.getElementById('sub-title');
+  const metaTheme = document.getElementById('meta-theme-color');
+  
+  document.documentElement.classList.remove('blue-theme', 'pink-theme', 'green-theme');
+  document.body.classList.remove('blue-theme', 'pink-theme', 'green-theme');
+  
+  if (type === 'setu') {
+    document.documentElement.classList.add('blue-theme');
+    document.body.classList.add('blue-theme');
+    mainTitle.innerText = "SetuTime!";
+    subTitle.innerText = "ACGエッチ画像まとめ";
+    slider.style.background = '#428cca';
+    if (metaTheme && !document.documentElement.classList.contains('dark-theme')) metaTheme.setAttribute('content', '#428cca');
+  } else if (type === 'zrsetu') {
+    document.documentElement.classList.add('pink-theme');
+    document.body.classList.add('pink-theme');
+    mainTitle.innerText = "SetuTime!";
+    subTitle.innerText = "Cosplayエッチ画像まとめ";
+    slider.style.background = '#f8b8c8';
+    if (metaTheme && !document.documentElement.classList.contains('dark-theme')) metaTheme.setAttribute('content', '#f8b8c8');
+  } else {
+    document.documentElement.classList.add('green-theme');
+    document.body.classList.add('green-theme');
+    mainTitle.innerText = "SetuTime!";
+    subTitle.innerText = "全年龄向ACGイラストまとめ";
+    slider.style.background = '#50C878';
+    if (metaTheme && !document.documentElement.classList.contains('dark-theme')) metaTheme.setAttribute('content', '#50C878');
+  }
+  
+  renderCurrentList(true);
+}
+
+function initTabSliderSilent(type) {
+  // 未解锁时强制不让选 setu
+  if (!unlocked && type === 'setu') type = 'acg';
+  
+  updateTabsVisibility();
+  
+  const slider = document.getElementById('tabSlider');
+  const mainTitle = document.getElementById('main-title');
+  const subTitle = document.getElementById('sub-title');
+  const metaTheme = document.getElementById('meta-theme-color');
+  
+  slider.style.transition = 'none';
+  document.documentElement.classList.remove('blue-theme', 'pink-theme', 'green-theme');
+  document.body.classList.remove('blue-theme', 'pink-theme', 'green-theme');
+  document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
+  
+  currentTab = type;
+  const index = getVisibleTabIndex(type);
+  slider.style.transform = `translateX(${index * 100}%)`;
+  
+  const activeEl = document.getElementById('tab-' + type);
+  if (activeEl) activeEl.classList.add('active');
+  
+  if (type === 'setu') {
+    document.documentElement.classList.add('blue-theme');
+    document.body.classList.add('blue-theme');
+    mainTitle.innerText = "SetuTime!";
+    subTitle.innerText = "ACGエッチ画像まとめ";
+    slider.style.background = '#428cca';
+    if (metaTheme && !document.documentElement.classList.contains('dark-theme')) metaTheme.setAttribute('content', '#428cca');
+  } else if (type === 'zrsetu') {
+    document.documentElement.classList.add('pink-theme');
+    document.body.classList.add('pink-theme');
+    mainTitle.innerText = "SetuTime!";
+    subTitle.innerText = "Cosplayエッチ画像まとめ";
+    slider.style.background = '#f8b8c8';
+    if (metaTheme && !document.documentElement.classList.contains('dark-theme')) metaTheme.setAttribute('content', '#f8b8c8');
+  } else {
+    document.documentElement.classList.add('green-theme');
+    document.body.classList.add('green-theme');
+    mainTitle.innerText = "SetuTime!";
+    subTitle.innerText = "全年龄向ACGイラストまとめ";
+    slider.style.background = '#50C878';
+    if (metaTheme && !document.documentElement.classList.contains('dark-theme')) metaTheme.setAttribute('content', '#50C878');
+  }
+  
+  slider.offsetHeight;
+  slider.style.transition = 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), background 0.3s, width 0.3s';
+}
 
 async function fetchJson(url) {
   try {
@@ -356,86 +629,6 @@ async function fetchJson(url) {
   }
 }
 
-// 【修改点】重新适配二等分下的滑块移动距离计算(index * 100%)
-function handleTabClick(type, index) {
-  if (currentTab === type) return;
-  currentTab = type;
-  
-  localStorage.setItem('setutime_active_tab', type);
-  document.getElementById('searchInput').value = '';
-  document.getElementById('searchResults').innerHTML = '';
-  
-  const slider = document.getElementById('tabSlider');
-  slider.style.transform = `translateX(${index * 100}%)`;
-  
-  const items = document.querySelectorAll('.tab-item');
-  items.forEach((item, i) => i === index ? item.classList.add('active') : item.classList.remove('active'));
-  
-  const mainTitle = document.getElementById('main-title');
-  const subTitle = document.getElementById('sub-title');
-  const metaTheme = document.getElementById('meta-theme-color');
-  
-  document.documentElement.classList.remove('blue-theme', 'pink-theme', 'green-theme');
-  document.body.classList.remove('blue-theme', 'pink-theme', 'green-theme');
-  
-  if (type === 'zrsetu') {
-    document.documentElement.classList.add('pink-theme');
-    document.body.classList.add('pink-theme');
-    mainTitle.innerText = "SetuTime!";
-    subTitle.innerText = "Cosplayエッチ画像まとめ";
-    slider.style.background = '#f8b8c8';
-    if(metaTheme && !document.documentElement.classList.contains('dark-theme')) metaTheme.setAttribute('content', '#f8b8c8');
-  } else {
-    document.documentElement.classList.add('green-theme');
-    document.body.classList.add('green-theme');
-    mainTitle.innerText = "SetuTime!";
-    subTitle.innerText = "全年龄向ACGイラストまとめ";
-    slider.style.background = '#50C878';
-    if(metaTheme && !document.documentElement.classList.contains('dark-theme')) metaTheme.setAttribute('content', '#50C878');
-  }
-  
-  renderCurrentList(true);
-}
-
-// 【修改点】静默初始化同样剥离 setu 的定位支持
-function initTabSliderSilent(type) {
-  const slider = document.getElementById('tabSlider');
-  const items = document.querySelectorAll('.tab-item');
-  const mainTitle = document.getElementById('main-title');
-  const subTitle = document.getElementById('sub-title');
-  const metaTheme = document.getElementById('meta-theme-color');
-  
-  slider.style.transition = 'none';
-  document.documentElement.classList.remove('blue-theme', 'pink-theme', 'green-theme');
-  document.body.classList.remove('blue-theme', 'pink-theme', 'green-theme');
-  items.forEach(el => el.classList.remove('active'));
-  
-  if (type === 'zrsetu') {
-    currentTab = 'zrsetu';
-    slider.style.transform = 'translateX(100%)';
-    items[1].classList.add('active');
-    document.documentElement.classList.add('pink-theme');
-    document.body.classList.add('pink-theme');
-    mainTitle.innerText = "SetuTime!";
-    subTitle.innerText = "Cosplayエッチ画像まとめ";
-    slider.style.background = '#f8b8c8';
-    if(metaTheme && !document.documentElement.classList.contains('dark-theme')) metaTheme.setAttribute('content', '#f8b8c8');
-  } else {
-    currentTab = 'acg';
-    slider.style.transform = 'translateX(0%)';
-    items[0].classList.add('active');
-    document.documentElement.classList.add('green-theme');
-    document.body.classList.add('green-theme');
-    mainTitle.innerText = "SetuTime!";
-    subTitle.innerText = "全年龄向ACGイラストまとめ";
-    slider.style.background = '#50C878';
-    if(metaTheme && !document.documentElement.classList.contains('dark-theme')) metaTheme.setAttribute('content', '#50C878');
-  }
-  
-  slider.offsetHeight; 
-  slider.style.transition = 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), background 0.3s';
-}
-
 async function renderCurrentList(isTabSwitch = false) {
   const listDiv = document.getElementById('contentList');
   const paginationCtrl = document.getElementById('paginationCtrl');
@@ -448,7 +641,6 @@ async function renderCurrentList(isTabSwitch = false) {
   }
   
   const activePage = currentPage[currentTab];
-  const totalCount = currentTab === 'acg' ? totalAcgCount : (currentTab === 'setu' ? totalSetuCount : totalZrsetuCount);
   
   const startIdx = (activePage - 1) * ITEMS_PER_PAGE;
   const endIdx = activePage * ITEMS_PER_PAGE;
@@ -482,7 +674,7 @@ async function renderCurrentList(isTabSwitch = false) {
   }
   
   listDiv.style.opacity = '1';
-  const currentPool = currentTab === 'acg' ? allAcgItems : (currentTab === 'setu' ? allSetuItems : allZrsetuItems);
+  let currentPool = currentTab === 'acg' ? allAcgItems : (currentTab === 'setu' ? allSetuItems : allZrsetuItems);
   
   currentPool.sort((a, b) => {
     const numA = parseInt(a.file.match(/\d+/)?.[0] || 0);
@@ -490,9 +682,9 @@ async function renderCurrentList(isTabSwitch = false) {
     return numB - numA;
   });
 
-  // 【核心修改点】针对保留的 cos篇(zrsetu)，过滤掉带 🔞 的期号
+  // 未解锁时：过滤掉标题含 🔞 的
   let filteredPool = currentPool;
-  if (currentTab === 'zrsetu') {
+  if (!unlocked) {
     filteredPool = currentPool.filter(item => !item.caption || !item.caption.includes('🔞'));
   }
 
@@ -536,12 +728,11 @@ async function renderCurrentList(isTabSwitch = false) {
 }
 
 function handleInputJump(val) {
-  const currentPool = currentTab === 'acg' ? allAcgItems : (currentTab === 'setu' ? allSetuItems : allZrsetuItems);
-  let filteredPool = currentPool;
-  if (currentTab === 'zrsetu') {
-    filteredPool = currentPool.filter(item => !item.caption || !item.caption.includes('🔞'));
+  let currentPool = currentTab === 'acg' ? allAcgItems : (currentTab === 'setu' ? allSetuItems : allZrsetuItems);
+  if (!unlocked) {
+    currentPool = currentPool.filter(item => !item.caption || !item.caption.includes('🔞'));
   }
-  const totalPages = Math.ceil(filteredPool.length / ITEMS_PER_PAGE) || 1;
+  const totalPages = Math.ceil(currentPool.length / ITEMS_PER_PAGE) || 1;
   let pageNum = parseInt(val);
   
   if (isNaN(pageNum)) {
@@ -563,12 +754,11 @@ function handleInputJump(val) {
 
 function changePage(direction) {
   const activePage = currentPage[currentTab];
-  const currentPool = currentTab === 'acg' ? allAcgItems : (currentTab === 'setu' ? allSetuItems : allZrsetuItems);
-  let filteredPool = currentPool;
-  if (currentTab === 'zrsetu') {
-    filteredPool = currentPool.filter(item => !item.caption || !item.caption.includes('🔞'));
+  let currentPool = currentTab === 'acg' ? allAcgItems : (currentTab === 'setu' ? allSetuItems : allZrsetuItems);
+  if (!unlocked) {
+    currentPool = currentPool.filter(item => !item.caption || !item.caption.includes('🔞'));
   }
-  const totalPages = Math.ceil(filteredPool.length / ITEMS_PER_PAGE) || 1;
+  const totalPages = Math.ceil(currentPool.length / ITEMS_PER_PAGE) || 1;
   
   const newPage = activePage + direction;
   if (newPage < 1 || newPage > totalPages) return;
@@ -624,12 +814,12 @@ function doSearch() {
   const resultsDiv = document.getElementById('searchResults');
   if (!val) { resultsDiv.innerHTML = ''; return; }
   
-  const currentPool = currentTab === 'acg' ? allAcgItems : (currentTab === 'setu' ? allSetuItems : allZrsetuItems);
+  let currentPool = currentTab === 'acg' ? allAcgItems : (currentTab === 'setu' ? allSetuItems : allZrsetuItems);
+  
   const matched = currentPool.filter(item => {
-    // 【核心修改点】如果在 cos篇 搜索时，带有 🔞 的结果直接剔除
-    if (currentTab === 'zrsetu' && item.caption && item.caption.includes('🔞')) {
-      return false;
-    }
+    // 未解锁时过滤 🔞
+    if (!unlocked && item.caption && item.caption.includes('🔞')) return false;
+    
     const isCaptionMatch = item.caption && item.caption.toLowerCase().includes(val);
     const issueNum = item.file.match(/\d+/)?.[0] || '';
     const isNumMatch = issueNum && issueNum.includes(val);
@@ -646,24 +836,38 @@ function doSearch() {
 
 window.onkeydown = (e) => {
   if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); toggleSearch(true); }
-  if (e.key === 'Escape') toggleSearch(false);
+  if (e.key === 'Escape') {
+    toggleSearch(false);
+    closeSecretModal();
+  }
 };
 
-// 【修改点】移除了 tab-setu 节点的绑定事件
 function initTouchEvents() {
-  const tabAcg = document.getElementById('tab-acg');
-  const tabZrsetu = document.getElementById('tab-zrsetu');
+  document.getElementById('tab-acg').addEventListener('click', (e) => { e.preventDefault(); handleTabClick('acg'); });
+  document.getElementById('tab-setu').addEventListener('click', (e) => { e.preventDefault(); handleTabClick('setu'); });
+  document.getElementById('tab-zrsetu').addEventListener('click', (e) => { e.preventDefault(); handleTabClick('zrsetu'); });
   
-  tabAcg.addEventListener('click', (e) => { e.preventDefault(); handleTabClick('acg', 0); });
-  tabZrsetu.addEventListener('click', (e) => { e.preventDefault(); handleTabClick('zrsetu', 1); });
+  // 关键：直接绑定黑暗模式按钮
+  const darkBtn = document.getElementById('darkModeToggle');
+  if (darkBtn) {
+    darkBtn.addEventListener('click', handleDarkModeClick);
+  }
+  
+  // 密钥输入框回车
+  const input = document.getElementById('secretKeyInput');
+  if (input) {
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') verifySecretKey();
+      if (e.key === 'Escape') closeSecretModal();
+    });
+  }
 }
 
 async function startAppNow() {
   initTouchEvents();
   
-  // 【修改点】若未存储缓存，默认定位到 'acg' 分类
-  let savedTab = localStorage.getItem('setutime_active_tab') || 'acg'; 
-  if (savedTab === 'setu') savedTab = 'acg'; // 兼容历史选择脏数据
+  let savedTab = localStorage.getItem('setutime_active_tab') || 'acg';
+  if (!unlocked && savedTab === 'setu') savedTab = 'acg';
   initTabSliderSilent(savedTab);
   
   const pBar = document.getElementById('topProgressBar');
@@ -689,12 +893,12 @@ async function startAppNow() {
   
   await renderCurrentList();
   
-  const currentPool = currentTab === 'acg' ? allAcgItems : (currentTab === 'setu' ? allSetuItems : allZrsetuItems);
-  let filteredPool = currentPool;
-  if (currentTab === 'zrsetu') {
-    filteredPool = currentPool.filter(item => !item.caption || !item.caption.includes('🔞'));
+  // 校正页码
+  let currentPool = currentTab === 'acg' ? allAcgItems : (currentTab === 'setu' ? allSetuItems : allZrsetuItems);
+  if (!unlocked) {
+    currentPool = currentPool.filter(item => !item.caption || !item.caption.includes('🔞'));
   }
-  const maxPages = Math.ceil(filteredPool.length / ITEMS_PER_PAGE) || 1;
+  const maxPages = Math.ceil(currentPool.length / ITEMS_PER_PAGE) || 1;
   if (currentPage[currentTab] > maxPages) currentPage[currentTab] = maxPages;
   
   if (pBar) {

@@ -5,7 +5,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<meta name="theme-color" id="meta-theme-color" content="#50C878">
+<meta name="theme-color" id="meta-theme-color" content="#50C878"> <!-- 默认修改为全年龄向薄荷绿 -->
 <link rel="stylesheet" href="https://cdn.jsdmirror.com/gh/FrecklyComb1728/blog@main/public/fonts/xiaolai.css">
 <link rel="icon" href="https://r2.setutime.com/favicon.png" type="image/png">
 <meta name="description" content="点击前往SetuTime~">
@@ -13,7 +13,7 @@
 <style>
   /* 核心基础背景 */
   html, body {
-    background: #50C878;
+    background: #50C878; /* 首页默认改为全年龄向：清爽薄荷绿 */
     margin: 0;
     padding: 0;
     min-height: 100vh;
@@ -21,11 +21,11 @@
   }
   
   html.green-theme, body.green-theme {
-    background: #50C878;
+    background: #50C878; /* 全年龄向：清爽薄荷绿 */
   }
 
   html.pink-theme, body.pink-theme {
-    background: #f8b8c8;
+    background: #f8b8c8; /* cos篇：浪漫樱花粉 */
   }
 
   body {
@@ -97,12 +97,13 @@
 
   .container { max-width: 700px; margin: 0 auto; padding: 30px 20px 100px; box-sizing: border-box; }
   
-  /* 二等分胶囊切换条 */
+  /* 二等分胶囊切换条（隐藏二次元篇后变更为两列） */
   .tabs { display: flex; background: rgba(243,244,246,0.86); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 5px; border-radius: 30px; margin-bottom: 25px; position: relative; border: 1px solid #e5e7eb; touch-action: manipulation; }
   .tab-item { flex: 1; text-align: center; padding: 12px 0; font-weight: 600; font-size: 15px; color: #4b5563; cursor: pointer; z-index: 2; transition: color 0.2s, transform 0.1s; border-radius: 25px; -webkit-tap-highlight-color: transparent; user-select: none; }
   .tab-item:active { transform: scale(0.96); opacity: 0.9; }
   .tab-item.active { color: #ffffff; }
   
+  /* 滑块计算修改为 50% 占比 */
   .tab-slider { position: absolute; top: 5px; left: 5px; width: calc(50% - 5px); height: calc(100% - 10px); background: #50C878; border-radius: 25px; z-index: 1; transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), background 0.3s; box-shadow: 0 4px 12px rgba(80,200,120,0.3); transform: translateX(0%); }
   
   ul.list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; min-height: 400px; }
@@ -211,121 +212,6 @@
   html.dark-theme .search-results .item { background: #1f2937; border-color: #374151; }
   html.dark-theme .search-results .item .title { color: #f9fafb; }
   html.dark-theme .search-results .item .sub { color: #9ca3af !important; }
-
-  /* 密钥输入弹窗样式 */
-  .secret-modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.55);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    z-index: 20000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.25s ease;
-  }
-  .secret-modal-overlay.show {
-    opacity: 1;
-    pointer-events: auto;
-  }
-  .secret-modal {
-    background: #ffffff;
-    border-radius: 20px;
-    padding: 28px 24px;
-    width: 90%;
-    max-width: 340px;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.25);
-    transform: scale(0.9) translateY(20px);
-    transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1);
-  }
-  .secret-modal-overlay.show .secret-modal {
-    transform: scale(1) translateY(0);
-  }
-  .secret-modal h3 {
-    margin: 0 0 8px;
-    font-size: 18px;
-    font-weight: 700;
-    color: #111827;
-    text-align: center;
-  }
-  .secret-modal p {
-    margin: 0 0 18px;
-    font-size: 13px;
-    color: #6b7280;
-    text-align: center;
-  }
-  .secret-modal input {
-    width: 100%;
-    height: 46px;
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
-    padding: 0 16px;
-    font-size: 16px;
-    color: #111827;
-    outline: none;
-    box-sizing: border-box;
-    transition: border-color 0.2s, box-shadow 0.2s;
-    margin-bottom: 16px;
-  }
-  .secret-modal input:focus {
-    border-color: #50C878;
-    box-shadow: 0 0 0 3px rgba(80,200,120,0.15);
-  }
-  .secret-modal-btns {
-    display: flex;
-    gap: 10px;
-  }
-  .secret-modal-btns button {
-    flex: 1;
-    height: 42px;
-    border: none;
-    border-radius: 12px;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .secret-modal-btns .btn-cancel {
-    background: #f3f4f6;
-    color: #4b5563;
-  }
-  .secret-modal-btns .btn-cancel:hover {
-    background: #e5e7eb;
-  }
-  .secret-modal-btns .btn-confirm {
-    background: #50C878;
-    color: #ffffff;
-  }
-  .secret-modal-btns .btn-confirm:hover {
-    background: #45b56c;
-  }
-  html.dark-theme .secret-modal {
-    background: #1f2937;
-  }
-  html.dark-theme .secret-modal h3 {
-    color: #f9fafb;
-  }
-  html.dark-theme .secret-modal p {
-    color: #9ca3af;
-  }
-  html.dark-theme .secret-modal input {
-    background: #374151;
-    border-color: #4b5563;
-    color: #f9fafb;
-  }
-  html.dark-theme .secret-modal input:focus {
-    border-color: #50C878;
-  }
-  html.dark-theme .secret-modal-btns .btn-cancel {
-    background: #374151;
-    color: #d1d5db;
-  }
-  html.dark-theme .secret-modal-btns .btn-cancel:hover {
-    background: #4b5563;
-  }
 </style>
 </head>
 <body>
@@ -333,8 +219,7 @@
 <div class="top-progress-bar" id="topProgressBar"></div>
 
 <header class="app-loading" id="appHeader">
-  <!-- 黑暗模式按钮：5秒内连续点击3次触发密钥弹窗 -->
-  <div class="dark-mode-toggle" id="darkModeToggle" title="切换主题">
+  <div class="dark-mode-toggle" onclick="toggleDarkMode()" title="切换主题">
     <svg class="sun-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
     <svg class="moon-icon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
   </div>
@@ -344,6 +229,7 @@
 
 <div class="main-wrapper">
   <div class="container">
+    <!-- 【修改点】Tabs移除了二次元篇，变为两列切换 -->
     <div class="tabs">
       <div class="tab-item active" id="tab-acg">全年龄向</div>
       <div class="tab-item" id="tab-zrsetu">cos篇</div>
@@ -391,31 +277,10 @@
   <div class="search-results" id="searchResults"></div>
 </div>
 
-<!-- 密钥输入弹窗 -->
-<div class="secret-modal-overlay" id="secretModal">
-  <div class="secret-modal">
-    <h3>🔒 隐藏入口</h3>
-    <p>请输入密钥以继续</p>
-    <input type="password" id="secretKeyInput" placeholder="输入密钥..." autocomplete="off">
-    <div class="secret-modal-btns">
-      <button class="btn-cancel" onclick="closeSecretModal()">取消</button>
-      <button class="btn-confirm" onclick="verifySecretKey()">确认</button>
-    </div>
-  </div>
-</div>
-
 <script>
-// ===================== 隐藏功能配置 =====================
-const SECRET_KEY = 'nainai5130';                                    // 密钥
-const SECRET_REDIRECT_URL = 'https://www.setutime.com/index_r.html'; // 跳转目标
-// ========================================================
-
+// 【修改点】默认激活分类重置为全年龄向 'acg'
 let currentTab = 'acg'; 
 const ONE_HOUR = 60 * 60 * 1000;
-
-// 黑暗模式按钮连续点击计数（5秒内有效）
-let darkClickCount = 0;
-let darkClickTimer = null;
 
 function getSavedPage(tabType) {
   try {
@@ -438,7 +303,7 @@ function savePage(tabType, pageNum) {
 
 let currentPage = { 
   acg: getSavedPage('acg'),
-  setu: 1,
+  setu: 1, // 二次元篇停用
   zrsetu: getSavedPage('zrsetu') 
 };
 
@@ -467,7 +332,6 @@ function toggleDarkMode() {
     }
   }
 }
-
 function initDarkMode() {
   const savedDark = localStorage.getItem('setutime_dark_mode');
   const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -478,76 +342,6 @@ function initDarkMode() {
   }
 }
 initDarkMode();
-
-// ===== 隐藏功能：5秒内连续点击黑暗模式按钮 3 次 =====
-function handleDarkModeClick() {
-  darkClickCount++;
-  
-  // 5 秒内未继续点击则重置计数
-  if (darkClickTimer) clearTimeout(darkClickTimer);
-  darkClickTimer = setTimeout(() => {
-    darkClickCount = 0;
-  }, 5000);
-
-  if (darkClickCount >= 3) {
-    darkClickCount = 0;
-    openSecretModal();
-    return; // 不执行主题切换
-  }
-  
-  // 正常切换主题
-  toggleDarkMode();
-}
-
-function openSecretModal() {
-  const modal = document.getElementById('secretModal');
-  const input = document.getElementById('secretKeyInput');
-  modal.classList.add('show');
-  input.value = '';
-  setTimeout(() => input.focus(), 100);
-}
-
-function closeSecretModal() {
-  document.getElementById('secretModal').classList.remove('show');
-}
-
-function verifySecretKey() {
-  const input = document.getElementById('secretKeyInput');
-  const key = input.value.trim();
-  
-  if (key === SECRET_KEY) {
-    // 密钥正确 → 跳转
-    window.location.href = SECRET_REDIRECT_URL;
-  } else {
-    // 密钥错误
-    input.value = '';
-    input.placeholder = '密钥错误，请重试';
-    input.style.borderColor = '#ef4444';
-    setTimeout(() => {
-      input.placeholder = '输入密钥...';
-      input.style.borderColor = '';
-      input.focus();
-    }, 1200);
-  }
-}
-
-// 回车确认
-document.addEventListener('DOMContentLoaded', () => {
-  const input = document.getElementById('secretKeyInput');
-  if (input) {
-    input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') verifySecretKey();
-      if (e.key === 'Escape') closeSecretModal();
-    });
-  }
-  
-  // 绑定黑暗模式按钮
-  const darkBtn = document.getElementById('darkModeToggle');
-  if (darkBtn) {
-    darkBtn.addEventListener('click', handleDarkModeClick);
-  }
-});
-// =================================================
 
 async function fetchJson(url) {
   try {
@@ -562,6 +356,7 @@ async function fetchJson(url) {
   }
 }
 
+// 【修改点】重新适配二等分下的滑块移动距离计算(index * 100%)
 function handleTabClick(type, index) {
   if (currentTab === type) return;
   currentTab = type;
@@ -602,6 +397,7 @@ function handleTabClick(type, index) {
   renderCurrentList(true);
 }
 
+// 【修改点】静默初始化同样剥离 setu 的定位支持
 function initTabSliderSilent(type) {
   const slider = document.getElementById('tabSlider');
   const items = document.querySelectorAll('.tab-item');
@@ -694,7 +490,7 @@ async function renderCurrentList(isTabSwitch = false) {
     return numB - numA;
   });
 
-  // 针对 cos篇(zrsetu)，过滤掉带 🔞 的期号
+  // 【核心修改点】针对保留的 cos篇(zrsetu)，过滤掉带 🔞 的期号
   let filteredPool = currentPool;
   if (currentTab === 'zrsetu') {
     filteredPool = currentPool.filter(item => !item.caption || !item.caption.includes('🔞'));
@@ -830,6 +626,7 @@ function doSearch() {
   
   const currentPool = currentTab === 'acg' ? allAcgItems : (currentTab === 'setu' ? allSetuItems : allZrsetuItems);
   const matched = currentPool.filter(item => {
+    // 【核心修改点】如果在 cos篇 搜索时，带有 🔞 的结果直接剔除
     if (currentTab === 'zrsetu' && item.caption && item.caption.includes('🔞')) {
       return false;
     }
@@ -849,12 +646,10 @@ function doSearch() {
 
 window.onkeydown = (e) => {
   if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); toggleSearch(true); }
-  if (e.key === 'Escape') {
-    toggleSearch(false);
-    closeSecretModal();
-  }
+  if (e.key === 'Escape') toggleSearch(false);
 };
 
+// 【修改点】移除了 tab-setu 节点的绑定事件
 function initTouchEvents() {
   const tabAcg = document.getElementById('tab-acg');
   const tabZrsetu = document.getElementById('tab-zrsetu');
@@ -866,8 +661,9 @@ function initTouchEvents() {
 async function startAppNow() {
   initTouchEvents();
   
+  // 【修改点】若未存储缓存，默认定位到 'acg' 分类
   let savedTab = localStorage.getItem('setutime_active_tab') || 'acg'; 
-  if (savedTab === 'setu') savedTab = 'acg';
+  if (savedTab === 'setu') savedTab = 'acg'; // 兼容历史选择脏数据
   initTabSliderSilent(savedTab);
   
   const pBar = document.getElementById('topProgressBar');

@@ -308,8 +308,8 @@
 
 <script>
 // ===================== 配置 =====================
-const SECRET_KEY = '5130'; //没错，这就是密码。
-const UNLOCK_DAYS = 14; // Ciallo～(∠・ω< )⌒☆
+const SECRET_KEY = '3021'; //没错，这就是密码。
+const UNLOCK_DAYS = 1; // Ciallo～(∠・ω< )⌒☆
 // =================================================
 
 const ONE_DAY = 24 * 60 * 60 * 1000;
@@ -418,7 +418,7 @@ function initDarkMode() {
 }
 initDarkMode();
 
-// ===== 7秒内连续点击5次触发 =====
+
 function handleDarkModeClick(e) {
   e.preventDefault();
   e.stopPropagation();
@@ -433,7 +433,7 @@ function handleDarkModeClick(e) {
   if (darkClickCount >= 5) {
     darkClickCount = 0;
     if (unlocked) {
-      // 已经解锁，再点五次就锁定回去（可选）
+
       if (confirm('当前已解锁完整版，是否重新锁定为隐藏版？')) {
         clearUnlockState();
         unlocked = false;
@@ -468,7 +468,7 @@ function verifySecretKey() {
     setUnlockState();
     unlocked = true;
     closeSecretModal();
-    // 刷新后进入完整模式
+
     location.reload();
   } else {
     input.value = '';
@@ -482,22 +482,22 @@ function verifySecretKey() {
   }
 }
 
-// ===== 根据解锁状态初始化 Tabs =====
+
 function updateTabsVisibility() {
   const tabSetu = document.getElementById('tab-setu');
   const slider = document.getElementById('tabSlider');
   const items = document.querySelectorAll('.tab-item:not(.hidden-tab)');
   
   if (unlocked) {
-    // 完整版：三列
+
     tabSetu.classList.remove('hidden-tab');
     slider.style.width = 'calc(33.3333% - 5px)';
   } else {
-    // 隐藏版：两列，隐藏二次元
+
     tabSetu.classList.add('hidden-tab');
     slider.style.width = 'calc(50% - 5px)';
     
-    // 如果当前在二次元，强制切回全年龄
+  
     if (currentTab === 'setu') {
       currentTab = 'acg';
       localStorage.setItem('setutime_active_tab', 'acg');
@@ -507,10 +507,10 @@ function updateTabsVisibility() {
 
 function getVisibleTabIndex(type) {
   if (!unlocked) {
-    // 隐藏版只有 acg(0) 和 zrsetu(1)
+
     return type === 'zrsetu' ? 1 : 0;
   }
-  // 完整版
+
   if (type === 'acg') return 0;
   if (type === 'setu') return 1;
   return 2;
@@ -518,7 +518,7 @@ function getVisibleTabIndex(type) {
 
 function handleTabClick(type) {
   if (currentTab === type) return;
-  if (!unlocked && type === 'setu') return; // 未解锁不允许
+  if (!unlocked && type === 'setu') return; 
   
   currentTab = type;
   localStorage.setItem('setutime_active_tab', type);
@@ -567,7 +567,7 @@ function handleTabClick(type) {
 }
 
 function initTabSliderSilent(type) {
-  // 未解锁时强制不让选 setu
+
   if (!unlocked && type === 'setu') type = 'acg';
   
   updateTabsVisibility();
@@ -682,7 +682,7 @@ async function renderCurrentList(isTabSwitch = false) {
     return numB - numA;
   });
 
-  // 未解锁时：过滤掉标题含 🔞 的
+
   let filteredPool = currentPool;
   if (!unlocked) {
     filteredPool = currentPool.filter(item => !item.caption || !item.caption.includes('🔞'));
@@ -817,7 +817,7 @@ function doSearch() {
   let currentPool = currentTab === 'acg' ? allAcgItems : (currentTab === 'setu' ? allSetuItems : allZrsetuItems);
   
   const matched = currentPool.filter(item => {
-    // 未解锁时过滤 🔞
+
     if (!unlocked && item.caption && item.caption.includes('🔞')) return false;
     
     const isCaptionMatch = item.caption && item.caption.toLowerCase().includes(val);
@@ -847,13 +847,13 @@ function initTouchEvents() {
   document.getElementById('tab-setu').addEventListener('click', (e) => { e.preventDefault(); handleTabClick('setu'); });
   document.getElementById('tab-zrsetu').addEventListener('click', (e) => { e.preventDefault(); handleTabClick('zrsetu'); });
   
-  // 关键：直接绑定黑暗模式按钮
+
   const darkBtn = document.getElementById('darkModeToggle');
   if (darkBtn) {
     darkBtn.addEventListener('click', handleDarkModeClick);
   }
   
-  // 密钥输入框回车
+
   const input = document.getElementById('secretKeyInput');
   if (input) {
     input.addEventListener('keydown', (e) => {
@@ -893,7 +893,7 @@ async function startAppNow() {
   
   await renderCurrentList();
   
-  // 校正页码
+
   let currentPool = currentTab === 'acg' ? allAcgItems : (currentTab === 'setu' ? allSetuItems : allZrsetuItems);
   if (!unlocked) {
     currentPool = currentPool.filter(item => !item.caption || !item.caption.includes('🔞'));

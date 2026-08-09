@@ -319,7 +319,6 @@ function getUnlockState() {
   try {
     const raw = localStorage.getItem('setutime_unlocked');
     if (!raw) return false;
-    // 兼容旧版纯 'true'
     if (raw === 'true') {
       localStorage.removeItem('setutime_unlocked');
       return false;
@@ -380,21 +379,29 @@ let currentPage = {
   zrsetu: getSavedPage('zrsetu') 
 };
 
-// 每个分类独立缓存分页数据
+// 每个分类独立缓存：服务端分页文件
 let cachePages = {
   acg: {},
   setu: {},
   zrsetu: {}
 };
 
+// 累计已加载的条目（用于搜索 + 前端分页）
 let allItems = {
   acg: [],
   setu: [],
   zrsetu: []
 };
 
-const ITEMS_PER_PAGE = 10;
-const SERVER_ITEMS_PER_FILE = 50;
+// 各分类总条数（从任意一页 JSON 的 total 字段获取）
+let totalCount = {
+  acg: 0,
+  setu: 0,
+  zrsetu: 0
+};
+
+const ITEMS_PER_PAGE = 10;          // 前端每页显示条数
+const SERVER_ITEMS_PER_FILE = 50;   // 服务端每个 json 文件条数
 const rootUrl = `${window.location.protocol}//${window.location.host}/`;
 
 function toggleDarkMode() {
@@ -560,6 +567,8 @@ function handleTabClick(type) {
   }
   
   renderCurrentList(true);
+  // 后台预加载该分类其余分页，方便搜索
+  preloadAllSearchData();
 }
 
 function initTabSliderSilent(type) {
@@ -624,14 +633,28 @@ async function fetchJson(url) {
   }
 }
 
-// 把分页数据合并进 allItems
+// 合并分页数据到 allItems，并更新 totalCount
 function mergePageData(tab, pageData) {
   if (!pageData || !pageData.items) return;
+  if (typeof pageData.total === 'number') {
+    totalCount[tab] = pageData.total;
+  }
   pageData.items.forEach(item => {
     if (!allItems[tab].some(x => x.file === item.file)) {
       allItems[tab].push(item);
     }
   });
+}
+
+// 确保某服务端分页文件已加载
+async function ensureServerPage(tab, serverPage) {
+  if (cachePages[tab][serverPage]) return cachePages[tab][serverPage];
+  const pageData = await fetchJson(`${rootUrl}data/${tab}/${serverPage}.json`);
+  if (pageData) {
+    cachePages[tab][serverPage] = pageData;
+    mergePageData(tab, pageData);
+  }
+  return pageData;
 }
 
 async function renderCurrentList(isTabSwitch = false) {
@@ -649,25 +672,20 @@ async function renderCurrentList(isTabSwitch = false) {
   const startIdx = (activePage - 1) * ITEMS_PER_PAGE;
   const endIdx = activePage * ITEMS_PER_PAGE;
   
-  // 计算需要加载的服务端分页文件
+  // 计算需要的服务端分页文件
   const neededFileIndexStart = Math.floor(startIdx / SERVER_ITEMS_PER_FILE) + 1;
   const neededFileIndexEnd = Math.floor((endIdx - 1) / SERVER_ITEMS_PER_FILE) + 1;
   
   for (let p = neededFileIndexStart; p <= neededFileIndexEnd; p++) {
     if (!cachePages[currentTab][p]) {
       if (listDiv.style.display !== 'none') listDiv.style.opacity = '0.4';
-      // 新路径：data_pages/分类名/页码.json
-      const pageData = await fetchJson(`${rootUrl}data_pages/${currentTab}/${p}.json`);
-      if (pageData) {
-        cachePages[currentTab][p] = pageData;
-        mergePageData(currentTab, pageData);
-      }
+      await ensureServerPage(currentTab, p);
     }
   }
   
   listDiv.style.opacity = '1';
   
-  // 排序
+  // 排序（保证顺序）
   allItems[currentTab].sort((a, b) => {
     const numA = parseInt(a.file.match(/\d+/)?.[0] || 0);
     const numB = parseInt(b.file.match(/\d+/)?.[0] || 0);
@@ -679,7 +697,11 @@ async function renderCurrentList(isTabSwitch = false) {
     filteredPool = filteredPool.filter(item => !item.caption || !item.caption.includes('🔞'));
   }
 
-  const totalPages = Math.ceil(filteredPool.length / ITEMS_PER_PAGE) || 1;
+  // 优先用服务端 total，过滤后可能变少
+  const rawTotal = totalCount[currentTab] || filteredPool.length;
+  // 未解锁时用已加载+过滤后的长度估算，已解锁用服务端 total
+  const displayTotal = unlocked ? rawTotal : filteredPool.length;
+  const totalPages = Math.ceil(displayTotal / ITEMS_PER_PAGE) || 1;
   const pageItems = filteredPool.slice(startIdx, endIdx);
   
   if (pageItems.length === 0) {
@@ -718,12 +740,17 @@ async function renderCurrentList(isTabSwitch = false) {
   paginationCtrl.style.display = 'flex';
 }
 
-function handleInputJump(val) {
-  let currentPool = allItems[currentTab];
+function getDisplayTotal() {
+  let pool = allItems[currentTab];
   if (!unlocked) {
-    currentPool = currentPool.filter(item => !item.caption || !item.caption.includes('🔞'));
+    pool = pool.filter(item => !item.caption || !item.caption.includes('🔞'));
+    return pool.length;
   }
-  const totalPages = Math.ceil(currentPool.length / ITEMS_PER_PAGE) || 1;
+  return totalCount[currentTab] || pool.length;
+}
+
+function handleInputJump(val) {
+  const totalPages = Math.ceil(getDisplayTotal() / ITEMS_PER_PAGE) || 1;
   let pageNum = parseInt(val);
   
   if (isNaN(pageNum)) {
@@ -745,11 +772,7 @@ function handleInputJump(val) {
 
 function changePage(direction) {
   const activePage = currentPage[currentTab];
-  let currentPool = allItems[currentTab];
-  if (!unlocked) {
-    currentPool = currentPool.filter(item => !item.caption || !item.caption.includes('🔞'));
-  }
-  const totalPages = Math.ceil(currentPool.length / ITEMS_PER_PAGE) || 1;
+  const totalPages = Math.ceil(getDisplayTotal() / ITEMS_PER_PAGE) || 1;
   
   const newPage = activePage + direction;
   if (newPage < 1 || newPage > totalPages) return;
@@ -765,6 +788,8 @@ function toggleSearch(show) {
   if (show) {
     overlay.classList.add('active');
     setTimeout(() => input.focus(), 100);
+    // 打开搜索时确保尽量加载完当前分类
+    preloadAllSearchData();
   } else {
     overlay.classList.remove('active');
     input.value = '';
@@ -772,17 +797,17 @@ function toggleSearch(show) {
   }
 }
 
-// 预加载当前分类的后续分页（用于搜索）
+// 后台预加载当前分类的所有服务端分页（用于搜索）
 async function preloadAllSearchData() {
-  let p = 2;
-  while (true) {
+  // 先确保第 1 页已加载以拿到 totalPages
+  const first = await ensureServerPage(currentTab, 1);
+  if (!first) return;
+  const totalServerPages = first.totalPages || 1;
+  
+  for (let p = 2; p <= totalServerPages; p++) {
     if (!cachePages[currentTab][p]) {
-      const data = await fetchJson(`${rootUrl}data_pages/${currentTab}/${p}.json`);
-      if (!data) break;
-      cachePages[currentTab][p] = data;
-      mergePageData(currentTab, data);
+      await ensureServerPage(currentTab, p);
     }
-    p++;
   }
 }
 
@@ -845,35 +870,30 @@ async function startAppNow() {
   initTabSliderSilent(savedTab);
   
   const pBar = document.getElementById('topProgressBar');
-  if (pBar) pBar.style.width = '35%';
+  if (pBar) pBar.style.width = '30%';
   
-  // 新结构：分别加载三个分类的全量数据
-  const [acgData, setuData, zrsetuData] = await Promise.all([
-    fetchJson(`${rootUrl}data/acg.json`),
-    fetchJson(`${rootUrl}data/setu.json`),
-    fetchJson(`${rootUrl}data/zrsetu.json`)
-  ]);
+  // 只加载当前分类、当前页所需的服务端分页（按需加载，不一次拉全量）
+  const activePage = currentPage[currentTab];
+  const startIdx = (activePage - 1) * ITEMS_PER_PAGE;
+  const serverPage = Math.floor(startIdx / SERVER_ITEMS_PER_FILE) + 1;
   
-  if (!acgData && !setuData && !zrsetuData) {
-    document.getElementById('skeleton').innerText = "数据加载失败，请刷新重试";
-    if (pBar) pBar.style.opacity = '0';
-    return;
+  // 至少加载第 1 页拿 total，以及当前需要的页
+  await ensureServerPage(currentTab, 1);
+  if (pBar) pBar.style.width = '60%';
+  
+  if (serverPage !== 1) {
+    await ensureServerPage(currentTab, serverPage);
   }
   
-  if (pBar) pBar.style.width = '70%';
+  if (pBar) pBar.style.width = '85%';
   
-  allItems.acg = (acgData && acgData.items) ? acgData.items : [];
-  allItems.setu = (setuData && setuData.items) ? setuData.items : [];
-  allItems.zrsetu = (zrsetuData && zrsetuData.items) ? zrsetuData.items : [];
+  // 若本地记录的页码超出实际总页，纠正
+  const maxPages = Math.ceil((totalCount[currentTab] || allItems[currentTab].length) / ITEMS_PER_PAGE) || 1;
+  if (currentPage[currentTab] > maxPages) {
+    currentPage[currentTab] = maxPages;
+  }
   
   await renderCurrentList();
-  
-  let currentPool = allItems[currentTab];
-  if (!unlocked) {
-    currentPool = currentPool.filter(item => !item.caption || !item.caption.includes('🔞'));
-  }
-  const maxPages = Math.ceil(currentPool.length / ITEMS_PER_PAGE) || 1;
-  if (currentPage[currentTab] > maxPages) currentPage[currentTab] = maxPages;
   
   if (pBar) {
     pBar.style.width = '100%';
@@ -885,6 +905,7 @@ async function startAppNow() {
   
   document.body.classList.add('loaded');
   
+  // 后台慢慢预加载当前分类其余页，方便搜索
   preloadAllSearchData();
 }
 

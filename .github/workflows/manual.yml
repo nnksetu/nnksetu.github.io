@@ -12,15 +12,13 @@ jobs:
   update:
     runs-on: ubuntu-latest
     steps:
-      # 1. 升级拉取仓库代码的插件版本以消除内部 Node 20 的警告
       - uses: actions/checkout@v6
       
-      # 2. 升级安装 Node 环境的插件版本，并将 node-version 指定为 24
       - uses: actions/setup-node@v6
         with:
           node-version: '24'
           
-      - name: 生成 data.json 及分页数据
+      - name: 生成分类 JSON 及分页数据
         run: |
           cat > generate.js << 'EOF'
           const fs = require('fs');
@@ -62,54 +60,63 @@ jobs:
               .sort((a,b) => (parseInt(b.file)||0) - (parseInt(a.file)||0));
           }
 
-          // 1. 获取全量排序后的三个分类数据
-          const acgItems = getItems('acg');
-          const setuItems = getItems('setu');
-          const zrsetuItems = getItems('zrsetu');
           const updatedTime = new Date().toLocaleString('zh-CN',{timeZone:'Asia/Shanghai'}).replace(/\//g,'-');
-
-          // 2. 保留原始全量 data.json 用于全局检索
-          const allData = {
-            updated: updatedTime,
-            acg: acgItems,
-            setu: setuItems,
-            zrsetu: zrsetuItems
-          };
-          fs.writeFileSync('data.json', JSON.stringify(allData, null, 2));
-
-          // 3. 将后台大包按 50 条数据进行动态切分
           const PAGESIZE = 50;
+
+          // 三个分类
+          const categories = [
+            { name: 'acg', folder: 'acg' },      // 全年龄
+            { name: 'setu', folder: 'setu' },
+            { name: 'zrsetu', folder: 'zrsetu' }
+          ];
+
+          // 创建目录
+          const dataDir = path.join(__dirname, 'data');
           const pageDir = path.join(__dirname, 'data_pages');
-          if (!fs.existsSync(pageDir)) {
-            fs.mkdirSync(pageDir);
-          }
+          if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir);
+          if (!fs.existsSync(pageDir)) fs.mkdirSync(pageDir);
 
-          // 同时对比三个分类的数据量，得出最大总页数
-          const totalPages = Math.max(
-            Math.ceil(acgItems.length / PAGESIZE), 
-            Math.ceil(setuItems.length / PAGESIZE), 
-            Math.ceil(zrsetuItems.length / PAGESIZE)
-          );
-          
-          for (let p = 1; p <= totalPages; p++) {
-            const start = (p - 1) * PAGESIZE;
-            const pageData = {
+          categories.forEach(({ name, folder }) => {
+            const items = getItems(folder);
+
+            // 1. 生成该分类的全量 JSON
+            const fullData = {
               updated: updatedTime,
-              acg: acgItems.slice(start, start + PAGESIZE),
-              setu: setuItems.slice(start, start + PAGESIZE),
-              zrsetu: zrsetuItems.slice(start, start + PAGESIZE)
+              total: items.length,
+              items: items
             };
-            fs.writeFileSync(path.join(pageDir, `${p}.json`), JSON.stringify(pageData, null, 2));
-          }
+            fs.writeFileSync(path.join(dataDir, `${name}.json`), JSON.stringify(fullData, null, 2));
 
-          console.log(`自动化切分成功！每页 50 条，共生成 ${totalPages} 个分页文件。`);
+            // 2. 生成该分类的分页 JSON
+            const catPageDir = path.join(pageDir, name);
+            if (!fs.existsSync(catPageDir)) fs.mkdirSync(catPageDir);
+
+            const totalPages = Math.ceil(items.length / PAGESIZE) || 1;
+
+            for (let p = 1; p <= totalPages; p++) {
+              const start = (p - 1) * PAGESIZE;
+              const pageData = {
+                updated: updatedTime,
+                page: p,
+                totalPages: totalPages,
+                total: items.length,
+                items: items.slice(start, start + PAGESIZE)
+              };
+              fs.writeFileSync(path.join(catPageDir, `${p}.json`), JSON.stringify(pageData, null, 2));
+            }
+
+            console.log(`[${name}] 共 ${items.length} 条，生成全量 + ${totalPages} 个分页文件`);
+          });
+
+          console.log('全部完成！');
           EOF
           node generate.js
+
       - name: 提交更新
         run: |
           git config user.name "AutoBot"
           git config user.email "bot@github.com"
-          git add data.json data_pages/*.json
+          git add data/*.json data_pages/**/*.json
           git diff --quiet && git diff --staged --quiet ||
-          git commit -m "精简结构并自动切分50条数据（含全年龄向） [skip ci]"
+          git commit -m "按分类生成独立 JSON 并切分分页数据 [skip ci]"
           git push origin main

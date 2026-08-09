@@ -321,7 +321,6 @@ function getUnlockState() {
     if (!raw) return false;
     // 兼容旧版纯 'true'
     if (raw === 'true') {
-      // 旧数据视为已过期，清掉
       localStorage.removeItem('setutime_unlocked');
       return false;
     }
@@ -381,13 +380,18 @@ let currentPage = {
   zrsetu: getSavedPage('zrsetu') 
 };
 
-let cachePages = {}; 
-let allAcgItems = [];
-let allSetuItems = [];
-let allZrsetuItems = [];
-let totalAcgCount = 0;
-let totalSetuCount = 0;
-let totalZrsetuCount = 0;
+// 每个分类独立缓存分页数据
+let cachePages = {
+  acg: {},
+  setu: {},
+  zrsetu: {}
+};
+
+let allItems = {
+  acg: [],
+  setu: [],
+  zrsetu: []
+};
 
 const ITEMS_PER_PAGE = 10;
 const SERVER_ITEMS_PER_FILE = 50;
@@ -433,7 +437,6 @@ function handleDarkModeClick(e) {
   if (darkClickCount >= 5) {
     darkClickCount = 0;
     if (unlocked) {
-
       if (confirm('当前已解锁完整版，是否重新锁定为隐藏版？')) {
         clearUnlockState();
         unlocked = false;
@@ -468,7 +471,6 @@ function verifySecretKey() {
     setUnlockState();
     unlocked = true;
     closeSecretModal();
-
     location.reload();
   } else {
     input.value = '';
@@ -486,18 +488,14 @@ function verifySecretKey() {
 function updateTabsVisibility() {
   const tabSetu = document.getElementById('tab-setu');
   const slider = document.getElementById('tabSlider');
-  const items = document.querySelectorAll('.tab-item:not(.hidden-tab)');
   
   if (unlocked) {
-
     tabSetu.classList.remove('hidden-tab');
     slider.style.width = 'calc(33.3333% - 5px)';
   } else {
-
     tabSetu.classList.add('hidden-tab');
     slider.style.width = 'calc(50% - 5px)';
     
-  
     if (currentTab === 'setu') {
       currentTab = 'acg';
       localStorage.setItem('setutime_active_tab', 'acg');
@@ -507,10 +505,8 @@ function updateTabsVisibility() {
 
 function getVisibleTabIndex(type) {
   if (!unlocked) {
-
     return type === 'zrsetu' ? 1 : 0;
   }
-
   if (type === 'acg') return 0;
   if (type === 'setu') return 1;
   return 2;
@@ -567,7 +563,6 @@ function handleTabClick(type) {
 }
 
 function initTabSliderSilent(type) {
-
   if (!unlocked && type === 'setu') type = 'acg';
   
   updateTabsVisibility();
@@ -629,6 +624,16 @@ async function fetchJson(url) {
   }
 }
 
+// 把分页数据合并进 allItems
+function mergePageData(tab, pageData) {
+  if (!pageData || !pageData.items) return;
+  pageData.items.forEach(item => {
+    if (!allItems[tab].some(x => x.file === item.file)) {
+      allItems[tab].push(item);
+    }
+  });
+}
+
 async function renderCurrentList(isTabSwitch = false) {
   const listDiv = document.getElementById('contentList');
   const paginationCtrl = document.getElementById('paginationCtrl');
@@ -641,51 +646,37 @@ async function renderCurrentList(isTabSwitch = false) {
   }
   
   const activePage = currentPage[currentTab];
-  
   const startIdx = (activePage - 1) * ITEMS_PER_PAGE;
   const endIdx = activePage * ITEMS_PER_PAGE;
   
+  // 计算需要加载的服务端分页文件
   const neededFileIndexStart = Math.floor(startIdx / SERVER_ITEMS_PER_FILE) + 1;
   const neededFileIndexEnd = Math.floor((endIdx - 1) / SERVER_ITEMS_PER_FILE) + 1;
   
   for (let p = neededFileIndexStart; p <= neededFileIndexEnd; p++) {
-    if (!cachePages[p]) {
+    if (!cachePages[currentTab][p]) {
       if (listDiv.style.display !== 'none') listDiv.style.opacity = '0.4';
-      const pageData = await fetchJson(`${rootUrl}data_pages/${p}.json`);
+      // 新路径：data_pages/分类名/页码.json
+      const pageData = await fetchJson(`${rootUrl}data_pages/${currentTab}/${p}.json`);
       if (pageData) {
-        cachePages[p] = pageData;
-        if (pageData.acg) {
-          pageData.acg.forEach(item => {
-            if (!allAcgItems.some(x => x.file === item.file)) allAcgItems.push(item);
-          });
-        }
-        if (pageData.setu) {
-          pageData.setu.forEach(item => {
-            if (!allSetuItems.some(x => x.file === item.file)) allSetuItems.push(item);
-          });
-        }
-        if (pageData.zrsetu) {
-          pageData.zrsetu.forEach(item => {
-            if (!allZrsetuItems.some(x => x.file === item.file)) allZrsetuItems.push(item);
-          });
-        }
+        cachePages[currentTab][p] = pageData;
+        mergePageData(currentTab, pageData);
       }
     }
   }
   
   listDiv.style.opacity = '1';
-  let currentPool = currentTab === 'acg' ? allAcgItems : (currentTab === 'setu' ? allSetuItems : allZrsetuItems);
   
-  currentPool.sort((a, b) => {
+  // 排序
+  allItems[currentTab].sort((a, b) => {
     const numA = parseInt(a.file.match(/\d+/)?.[0] || 0);
     const numB = parseInt(b.file.match(/\d+/)?.[0] || 0);
     return numB - numA;
   });
 
-
-  let filteredPool = currentPool;
+  let filteredPool = allItems[currentTab];
   if (!unlocked) {
-    filteredPool = currentPool.filter(item => !item.caption || !item.caption.includes('🔞'));
+    filteredPool = filteredPool.filter(item => !item.caption || !item.caption.includes('🔞'));
   }
 
   const totalPages = Math.ceil(filteredPool.length / ITEMS_PER_PAGE) || 1;
@@ -728,7 +719,7 @@ async function renderCurrentList(isTabSwitch = false) {
 }
 
 function handleInputJump(val) {
-  let currentPool = currentTab === 'acg' ? allAcgItems : (currentTab === 'setu' ? allSetuItems : allZrsetuItems);
+  let currentPool = allItems[currentTab];
   if (!unlocked) {
     currentPool = currentPool.filter(item => !item.caption || !item.caption.includes('🔞'));
   }
@@ -754,7 +745,7 @@ function handleInputJump(val) {
 
 function changePage(direction) {
   const activePage = currentPage[currentTab];
-  let currentPool = currentTab === 'acg' ? allAcgItems : (currentTab === 'setu' ? allSetuItems : allZrsetuItems);
+  let currentPool = allItems[currentTab];
   if (!unlocked) {
     currentPool = currentPool.filter(item => !item.caption || !item.caption.includes('🔞'));
   }
@@ -781,29 +772,15 @@ function toggleSearch(show) {
   }
 }
 
+// 预加载当前分类的后续分页（用于搜索）
 async function preloadAllSearchData() {
-  let p = 2; 
+  let p = 2;
   while (true) {
-    if (!cachePages[p]) {
-      const data = await fetchJson(`${rootUrl}data_pages/${p}.json`);
+    if (!cachePages[currentTab][p]) {
+      const data = await fetchJson(`${rootUrl}data_pages/${currentTab}/${p}.json`);
       if (!data) break;
-      cachePages[p] = data;
-      
-      if (data.acg) {
-        data.acg.forEach(item => {
-          if (!allAcgItems.some(x => x.file === item.file)) allAcgItems.push(item);
-        });
-      }
-      if (data.setu) {
-        data.setu.forEach(item => {
-          if (!allSetuItems.some(x => x.file === item.file)) allSetuItems.push(item);
-        });
-      }
-      if (data.zrsetu) {
-        data.zrsetu.forEach(item => {
-          if (!allZrsetuItems.some(x => x.file === item.file)) allZrsetuItems.push(item);
-        });
-      }
+      cachePages[currentTab][p] = data;
+      mergePageData(currentTab, data);
     }
     p++;
   }
@@ -814,10 +791,9 @@ function doSearch() {
   const resultsDiv = document.getElementById('searchResults');
   if (!val) { resultsDiv.innerHTML = ''; return; }
   
-  let currentPool = currentTab === 'acg' ? allAcgItems : (currentTab === 'setu' ? allSetuItems : allZrsetuItems);
+  let currentPool = allItems[currentTab];
   
   const matched = currentPool.filter(item => {
-
     if (!unlocked && item.caption && item.caption.includes('🔞')) return false;
     
     const isCaptionMatch = item.caption && item.caption.toLowerCase().includes(val);
@@ -847,13 +823,11 @@ function initTouchEvents() {
   document.getElementById('tab-setu').addEventListener('click', (e) => { e.preventDefault(); handleTabClick('setu'); });
   document.getElementById('tab-zrsetu').addEventListener('click', (e) => { e.preventDefault(); handleTabClick('zrsetu'); });
   
-
   const darkBtn = document.getElementById('darkModeToggle');
   if (darkBtn) {
     darkBtn.addEventListener('click', handleDarkModeClick);
   }
   
-
   const input = document.getElementById('secretKeyInput');
   if (input) {
     input.addEventListener('keydown', (e) => {
@@ -873,8 +847,14 @@ async function startAppNow() {
   const pBar = document.getElementById('topProgressBar');
   if (pBar) pBar.style.width = '35%';
   
-  const globalData = await fetchJson(`${rootUrl}data.json`);
-  if (!globalData) {
+  // 新结构：分别加载三个分类的全量数据
+  const [acgData, setuData, zrsetuData] = await Promise.all([
+    fetchJson(`${rootUrl}data/acg.json`),
+    fetchJson(`${rootUrl}data/setu.json`),
+    fetchJson(`${rootUrl}data/zrsetu.json`)
+  ]);
+  
+  if (!acgData && !setuData && !zrsetuData) {
     document.getElementById('skeleton').innerText = "数据加载失败，请刷新重试";
     if (pBar) pBar.style.opacity = '0';
     return;
@@ -882,19 +862,13 @@ async function startAppNow() {
   
   if (pBar) pBar.style.width = '70%';
   
-  const getCount = arr => (arr && arr.length > 0) ? (parseInt(arr[0].file) || arr.length) : 0;
-  totalAcgCount = getCount(globalData.acg);
-  totalSetuCount = getCount(globalData.setu);
-  totalZrsetuCount = getCount(globalData.zrsetu);
-  
-  allAcgItems = (globalData.acg || []);
-  allSetuItems = (globalData.setu || []);
-  allZrsetuItems = (globalData.zrsetu || []);
+  allItems.acg = (acgData && acgData.items) ? acgData.items : [];
+  allItems.setu = (setuData && setuData.items) ? setuData.items : [];
+  allItems.zrsetu = (zrsetuData && zrsetuData.items) ? zrsetuData.items : [];
   
   await renderCurrentList();
   
-
-  let currentPool = currentTab === 'acg' ? allAcgItems : (currentTab === 'setu' ? allSetuItems : allZrsetuItems);
+  let currentPool = allItems[currentTab];
   if (!unlocked) {
     currentPool = currentPool.filter(item => !item.caption || !item.caption.includes('🔞'));
   }

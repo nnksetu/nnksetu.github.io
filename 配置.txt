@@ -1,0 +1,69 @@
+============================================================
+  nnksetu.github.io — Git 配置说明
+  换电脑后执行以下命令即可恢复全部设置
+============================================================
+
+一、克隆项目（新电脑首次）
+------------------------------------------------------------
+git clone https://github.com/nnksetu/nnksetu.github.io.git
+cd nnksetu.github.io
+
+
+二、屏蔽 data/* 下所有 JSON 文件（不上传，只下载）
+------------------------------------------------------------
+git ls-files 'data/' | grep '\.json$' | while read file; do
+  git update-index --skip-worktree "$file"
+done
+
+
+三、配置 pull 时自动 rebase（防止分支分叉）
+------------------------------------------------------------
+git config pull.rebase true
+git config rebase.autoStash true
+
+
+四、验证是否生效
+------------------------------------------------------------
+# 查看 skip-worktree 文件（标记 S 或 s 的即为已屏蔽）
+git ls-files -v data/ | grep '^S\|^s'
+
+# 查看 git 配置
+git config pull.rebase
+git config rebase.autoStash
+
+
+五、日常使用
+------------------------------------------------------------
+git add .
+git commit -m "你的修改说明"
+git pull      # 自动 rebase，不会分叉
+git push      # 正常推送
+
+
+六、可选命令
+------------------------------------------------------------
+# 恢复上传某个 JSON 文件（取消屏蔽）
+git update-index --no-skip-worktree data/xxx.json
+
+# 查看当前屏蔽了哪些文件
+git ls-files -v data/ | grep '^S\|^s'
+
+# 强制对齐云端（极端情况下使用）
+git push --force origin main
+
+
+============================================================
+  原理说明
+------------------------------------------------------------
+skip-worktree：
+  - 本地修改 data/*.json → 不会被 commit/push
+  - git pull → 依然下载云端 GitHub Actions 自动生成的 JSON
+  - 避免本地和云端 JSON 互相覆盖
+
+pull.rebase = true：
+  - 你的 commit 会自动排在云端 Actions commit 后面
+  - 历史保持一条直线，不再出现 "diverged" 分叉
+
+rebase.autoStash = true：
+  - rebase 前自动暂存未提交的改动，完成后自动恢复
+============================================================

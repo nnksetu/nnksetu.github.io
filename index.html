@@ -78,9 +78,8 @@
   .tab-item { flex: 1; text-align: center; padding: 12px 0; font-weight: 600; font-size: 15px; color: #4b5563; cursor: pointer; z-index: 2; transition: color 0.2s, transform 0.1s; border-radius: 25px; -webkit-tap-highlight-color: transparent; user-select: none; }
   .tab-item:active { transform: scale(0.96); opacity: 0.9; }
   .tab-item.active { color: #ffffff; }
-  .tab-item.hidden-tab { display: none; }
   
-  .tab-slider { position: absolute; top: 5px; left: 5px; height: calc(100% - 10px); border-radius: 25px; z-index: 1; transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), background 0.3s, width 0.3s; box-shadow: 0 4px 12px rgba(80,200,120,0.3); }
+  .tab-slider { position: absolute; top: 5px; left: 5px; height: calc(100% - 10px); width: calc(33.3333% - 5px); border-radius: 25px; z-index: 1; transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), background 0.3s, width 0.3s; box-shadow: 0 4px 12px rgba(80,200,120,0.3); }
   
   ul.list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; min-height: 400px; }
   ul.list li { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 18px; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: all 0.25s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.01); -webkit-tap-highlight-color: transparent; }
@@ -192,44 +191,6 @@
   html.dark-theme .search-results .item { background: #1f2937; border-color: #374151; }
   html.dark-theme .search-results .item .title { color: #f9fafb; }
   html.dark-theme .search-results .item .sub { color: #9ca3af !important; }
-
-  /* 密钥弹窗 */
-  .secret-modal-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.55);
-    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-    z-index: 20000; display: flex; align-items: center; justify-content: center;
-    opacity: 0; pointer-events: none; transition: opacity 0.25s ease;
-  }
-  .secret-modal-overlay.show { opacity: 1; pointer-events: auto; }
-  .secret-modal {
-    background: #ffffff; border-radius: 20px; padding: 28px 24px;
-    width: 90%; max-width: 340px; box-shadow: 0 20px 50px rgba(0,0,0,0.25);
-    transform: scale(0.9) translateY(20px); transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1);
-  }
-  .secret-modal-overlay.show .secret-modal { transform: scale(1) translateY(0); }
-  .secret-modal h3 { margin: 0 0 8px; font-size: 18px; font-weight: 700; color: #111827; text-align: center; }
-  .secret-modal p { margin: 0 0 18px; font-size: 13px; color: #6b7280; text-align: center; }
-  .secret-modal input {
-    width: 100%; height: 46px; border: 1px solid #e5e7eb; border-radius: 12px;
-    padding: 0 16px; font-size: 16px; color: #111827; outline: none; box-sizing: border-box;
-    transition: border-color 0.2s, box-shadow 0.2s; margin-bottom: 16px;
-  }
-  .secret-modal input:focus { border-color: #50C878; box-shadow: 0 0 0 3px rgba(80,200,120,0.15); }
-  .secret-modal-btns { display: flex; gap: 10px; }
-  .secret-modal-btns button {
-    flex: 1; height: 42px; border: none; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s;
-  }
-  .secret-modal-btns .btn-cancel { background: #f3f4f6; color: #4b5563; }
-  .secret-modal-btns .btn-cancel:hover { background: #e5e7eb; }
-  .secret-modal-btns .btn-confirm { background: #50C878; color: #ffffff; }
-  .secret-modal-btns .btn-confirm:hover { background: #45b56c; }
-  html.dark-theme .secret-modal { background: #1f2937; }
-  html.dark-theme .secret-modal h3 { color: #f9fafb; }
-  html.dark-theme .secret-modal p { color: #9ca3af; }
-  html.dark-theme .secret-modal input { background: #374151; border-color: #4b5563; color: #f9fafb; }
-  html.dark-theme .secret-modal input:focus { border-color: #50C878; }
-  html.dark-theme .secret-modal-btns .btn-cancel { background: #374151; color: #d1d5db; }
-  html.dark-theme .secret-modal-btns .btn-cancel:hover { background: #4b5563; }
 </style>
 </head>
 <body>
@@ -293,66 +254,10 @@
   <div class="search-results" id="searchResults"></div>
 </div>
 
-<!-- 密钥输入弹窗 -->
-<div class="secret-modal-overlay" id="secretModal">
-  <div class="secret-modal">
-    <h3>🔒 隐藏入口</h3>
-    <p>本期密码有效期〖08/07〗～〖08/21〗<br>迅雷群组查看密码</p>
-    <input type="password" id="secretKeyInput" placeholder="输入四位数密码..." autocomplete="off">
-    <div class="secret-modal-btns">
-      <button class="btn-cancel" onclick="closeSecretModal()">取消</button>
-      <button class="btn-confirm" onclick="verifySecretKey()">确认</button>
-    </div>
-  </div>
-</div>
-
 <script>
-// ===================== 配置 =====================
-const SECRET_KEY = '3021'; //没错，这就是密码。
-const UNLOCK_DAYS = 1; // Ciallo～(∠・ω< )⌒☆
-// =================================================
-
-const ONE_DAY = 24 * 60 * 60 * 1000;
 const ONE_HOUR = 60 * 60 * 1000;
 
-function getUnlockState() {
-  try {
-    const raw = localStorage.getItem('setutime_unlocked');
-    if (!raw) return false;
-    if (raw === 'true') {
-      localStorage.removeItem('setutime_unlocked');
-      return false;
-    }
-    const data = JSON.parse(raw);
-    if (!data || !data.expireAt) {
-      localStorage.removeItem('setutime_unlocked');
-      return false;
-    }
-    if (Date.now() > data.expireAt) {
-      localStorage.removeItem('setutime_unlocked');
-      return false;
-    }
-    return true;
-  } catch (e) {
-    localStorage.removeItem('setutime_unlocked');
-    return false;
-  }
-}
-
-function setUnlockState() {
-  const expireAt = Date.now() + UNLOCK_DAYS * ONE_DAY;
-  localStorage.setItem('setutime_unlocked', JSON.stringify({ expireAt }));
-}
-
-function clearUnlockState() {
-  localStorage.removeItem('setutime_unlocked');
-}
-
-let unlocked = getUnlockState();
 let currentTab = 'acg';
-
-let darkClickCount = 0;
-let darkClickTimer = null;
 
 function getSavedPage(tabType) {
   try {
@@ -429,91 +334,7 @@ function initDarkMode() {
 }
 initDarkMode();
 
-
-function handleDarkModeClick(e) {
-  e.preventDefault();
-  e.stopPropagation();
-  
-  darkClickCount++;
-  
-  if (darkClickTimer) clearTimeout(darkClickTimer);
-  darkClickTimer = setTimeout(() => {
-    darkClickCount = 0;
-  }, 7000);
-
-  if (darkClickCount >= 5) {
-    darkClickCount = 0;
-    if (unlocked) {
-      if (confirm('当前已解锁完整版，是否重新锁定为隐藏版？')) {
-        clearUnlockState();
-        unlocked = false;
-        location.reload();
-      }
-    } else {
-      openSecretModal();
-    }
-    return;
-  }
-  
-  toggleDarkMode();
-}
-
-function openSecretModal() {
-  const modal = document.getElementById('secretModal');
-  const input = document.getElementById('secretKeyInput');
-  modal.classList.add('show');
-  input.value = '';
-  setTimeout(() => input.focus(), 80);
-}
-
-function closeSecretModal() {
-  document.getElementById('secretModal').classList.remove('show');
-}
-
-function verifySecretKey() {
-  const input = document.getElementById('secretKeyInput');
-  const key = input.value.trim();
-  
-  if (key === SECRET_KEY) {
-    setUnlockState();
-    unlocked = true;
-    closeSecretModal();
-    location.reload();
-  } else {
-    input.value = '';
-    input.placeholder = '密码错误，请重试';
-    input.style.borderColor = '#ef4444';
-    setTimeout(() => {
-      input.placeholder = '输入四位数密码...';
-      input.style.borderColor = '';
-      input.focus();
-    }, 1200);
-  }
-}
-
-
-function updateTabsVisibility() {
-  const tabSetu = document.getElementById('tab-setu');
-  const slider = document.getElementById('tabSlider');
-  
-  if (unlocked) {
-    tabSetu.classList.remove('hidden-tab');
-    slider.style.width = 'calc(33.3333% - 5px)';
-  } else {
-    tabSetu.classList.add('hidden-tab');
-    slider.style.width = 'calc(50% - 5px)';
-    
-    if (currentTab === 'setu') {
-      currentTab = 'acg';
-      localStorage.setItem('setutime_active_tab', 'acg');
-    }
-  }
-}
-
 function getVisibleTabIndex(type) {
-  if (!unlocked) {
-    return type === 'zrsetu' ? 1 : 0;
-  }
   if (type === 'acg') return 0;
   if (type === 'setu') return 1;
   return 2;
@@ -521,7 +342,6 @@ function getVisibleTabIndex(type) {
 
 function handleTabClick(type) {
   if (currentTab === type) return;
-  if (!unlocked && type === 'setu') return; 
   
   currentTab = type;
   localStorage.setItem('setutime_active_tab', type);
@@ -572,10 +392,6 @@ function handleTabClick(type) {
 }
 
 function initTabSliderSilent(type) {
-  if (!unlocked && type === 'setu') type = 'acg';
-  
-  updateTabsVisibility();
-  
   const slider = document.getElementById('tabSlider');
   const mainTitle = document.getElementById('main-title');
   const subTitle = document.getElementById('sub-title');
@@ -692,15 +508,8 @@ async function renderCurrentList(isTabSwitch = false) {
     return numB - numA;
   });
 
-  let filteredPool = allItems[currentTab];
-  if (!unlocked) {
-    filteredPool = filteredPool.filter(item => !item.caption || !item.caption.includes('🔞'));
-  }
-
-  // 优先用服务端 total，过滤后可能变少
-  const rawTotal = totalCount[currentTab] || filteredPool.length;
-  // 未解锁时用已加载+过滤后的长度估算，已解锁用服务端 total
-  const displayTotal = unlocked ? rawTotal : filteredPool.length;
+  const filteredPool = allItems[currentTab];
+  const displayTotal = totalCount[currentTab] || filteredPool.length;
   const totalPages = Math.ceil(displayTotal / ITEMS_PER_PAGE) || 1;
   const pageItems = filteredPool.slice(startIdx, endIdx);
   
@@ -741,12 +550,7 @@ async function renderCurrentList(isTabSwitch = false) {
 }
 
 function getDisplayTotal() {
-  let pool = allItems[currentTab];
-  if (!unlocked) {
-    pool = pool.filter(item => !item.caption || !item.caption.includes('🔞'));
-    return pool.length;
-  }
-  return totalCount[currentTab] || pool.length;
+  return totalCount[currentTab] || allItems[currentTab].length;
 }
 
 function handleInputJump(val) {
@@ -816,11 +620,9 @@ function doSearch() {
   const resultsDiv = document.getElementById('searchResults');
   if (!val) { resultsDiv.innerHTML = ''; return; }
   
-  let currentPool = allItems[currentTab];
+  const currentPool = allItems[currentTab];
   
   const matched = currentPool.filter(item => {
-    if (!unlocked && item.caption && item.caption.includes('🔞')) return false;
-    
     const isCaptionMatch = item.caption && item.caption.toLowerCase().includes(val);
     const issueNum = item.file.match(/\d+/)?.[0] || '';
     const isNumMatch = issueNum && issueNum.includes(val);
@@ -839,7 +641,6 @@ window.onkeydown = (e) => {
   if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); toggleSearch(true); }
   if (e.key === 'Escape') {
     toggleSearch(false);
-    closeSecretModal();
   }
 };
 
@@ -850,14 +651,10 @@ function initTouchEvents() {
   
   const darkBtn = document.getElementById('darkModeToggle');
   if (darkBtn) {
-    darkBtn.addEventListener('click', handleDarkModeClick);
-  }
-  
-  const input = document.getElementById('secretKeyInput');
-  if (input) {
-    input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') verifySecretKey();
-      if (e.key === 'Escape') closeSecretModal();
+    darkBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleDarkMode();
     });
   }
 }
@@ -865,8 +662,7 @@ function initTouchEvents() {
 async function startAppNow() {
   initTouchEvents();
   
-  let savedTab = localStorage.getItem('setutime_active_tab') || 'acg';
-  if (!unlocked && savedTab === 'setu') savedTab = 'acg';
+  const savedTab = localStorage.getItem('setutime_active_tab') || 'acg';
   initTabSliderSilent(savedTab);
   
   const pBar = document.getElementById('topProgressBar');

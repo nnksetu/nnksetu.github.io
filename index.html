@@ -130,8 +130,8 @@
   .search-results .item .title { font-weight: 600; color: #111827; font-size: 15px; flex-shrink: 0; margin-right: 15px; }
   .search-results .item .sub { color: #6b7280 !important; font-size: 13px !important; line-height: 1.4 !important; white-space: normal !important; word-break: break-all !important; overflow: visible !important; flex: 1; text-align: right; }
 
-  .hidden-entry-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.78); backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px); z-index: 1200; display: flex; align-items: center; justify-content: center; padding: 24px; box-sizing: border-box; opacity: 0; pointer-events: none; transition: opacity 0.28s ease; }
-  .hidden-entry-overlay.active { opacity: 1; pointer-events: auto; }
+  .hidden-entry-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.78); z-index: 1200; display: none; align-items: center; justify-content: center; padding: 24px; box-sizing: border-box; opacity: 0; pointer-events: none; }
+  .hidden-entry-overlay.active { display: flex; opacity: 1; pointer-events: auto; backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px); }
   .hidden-entry-dialog { width: 100%; max-width: 390px; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 26px; padding: 24px; box-shadow: 0 24px 70px rgba(17,24,39,0.12); box-sizing: border-box; transform: translateY(12px) scale(0.98); transition: transform 0.28s cubic-bezier(0.25, 1, 0.5, 1); }
   .hidden-entry-overlay.active .hidden-entry-dialog { transform: translateY(0) scale(1); }
   .hidden-entry-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
@@ -390,7 +390,9 @@ function registerHiddenEntryTap() {
   if (hiddenEntryTapTimes.length >= HIDDEN_ENTRY_TRIGGER_COUNT) {
     hiddenEntryTapTimes = [];
     openHiddenEntryDialog();
+    return true;
   }
+  return false;
 }
 
 function openHiddenEntryDialog() {
@@ -779,7 +781,7 @@ function initTouchEvents() {
     darkBtn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      registerHiddenEntryTap();
+      if (registerHiddenEntryTap()) return;
       toggleDarkMode();
     });
   }

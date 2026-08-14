@@ -11,6 +11,7 @@
 <meta name="description" content="点击前往SetuTime~">
 <title>SetuTime!</title>
 <style>
+  /* ===== 全局重置 & 主题 ===== */
   html, body {
     background: #50C878;
     margin: 0;
@@ -18,7 +19,6 @@
     min-height: 100vh;
     transition: background 0.3s cubic-bezier(0.25, 1, 0.5, 1);
   }
-  
   html.green-theme, body.green-theme { background: #50C878; }
   html.pink-theme, body.pink-theme { background: #f8b8c8; }
   html.blue-theme, body.blue-theme { background: #428cca; }
@@ -31,6 +31,7 @@
     -webkit-font-smoothing: antialiased;
   }
 
+  /* ===== 进度条 ===== */
   .top-progress-bar {
     position: fixed; top: 0; left: 0; width: 0%; height: 3px;
     background: linear-gradient(90deg, rgba(255,255,255,0.4), rgba(255,255,255,1), rgba(255,255,255,0.4));
@@ -44,128 +45,220 @@
     100% { background-position: -200% 0; }
   }
 
+  /* ===== 头部呼吸动画 ===== */
   header.app-loading { animation: headerBreathe 1.6s ease-in-out infinite alternate; }
   @keyframes headerBreathe {
     0% { opacity: 0.45; transform: scale(0.98); }
     100% { opacity: 0.9; transform: scale(1); }
   }
 
-  header, .main-wrapper { 
-    opacity: 0; transform: translateY(20px); 
+  header, .main-wrapper {
+    opacity: 0; transform: translateY(20px);
     transition: opacity 0.5s cubic-bezier(0.25, 1, 0.5, 1), transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
   }
   header { opacity: 1; transform: translateY(0); }
   .loaded .main-wrapper { opacity: 1; transform: translateY(0); }
-  
+
   ul.list li { opacity: 0; transform: translateY(10px); transition: opacity 0.35s ease-out, transform 0.35s cubic-bezier(0.2, 1, 0.2, 1); }
   .loaded ul.list li.show { opacity: 1; transform: translateY(0); }
-  
-  header { background: transparent; color: #ffffff; padding: 40px 20px 20px; text-align: center; position: relative; }
-  header h1 { margin: 0; font-size: 37px; font-weight: 700; letter-spacing: 1px; text-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-  header p { 
-    margin: 8px 0 0; opacity: 0.9; font-size: 18px; font-weight: 400; 
-    font-family: 'xiaolai', -apple-system, BlinkMacSystemFont, sans-serif; letter-spacing: 0.5px; 
+
+  header {
+    background: transparent; color: #ffffff; padding: 40px 20px 20px; text-align: center; position: relative;
   }
-  
+  header h1 { margin: 0; font-size: 37px; font-weight: 700; letter-spacing: 1px; text-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+  header p {
+    margin: 8px 0 0; opacity: 0.9; font-size: 18px; font-weight: 400;
+    font-family: 'xiaolai', -apple-system, BlinkMacSystemFont, sans-serif; letter-spacing: 0.5px;
+  }
+
   .main-wrapper {
     background: #ffffff; border-radius: 30px 30px 0 0; margin-top: 10px;
     min-height: calc(100vh - 150px); box-shadow: 0 -10px 30px rgba(0,0,0,0.03); position: relative;
   }
-
   .container { max-width: 700px; margin: 0 auto; padding: 30px 20px 100px; box-sizing: border-box; }
-  
-  .tabs { display: flex; background: rgba(243,244,246,0.86); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 5px; border-radius: 30px; margin-bottom: 25px; position: relative; border: 1px solid #e5e7eb; touch-action: manipulation; }
-  .tab-item { flex: 1; text-align: center; padding: 12px 0; font-weight: 600; font-size: 15px; color: #4b5563; cursor: pointer; z-index: 2; transition: color 0.2s, transform 0.1s; border-radius: 25px; -webkit-tap-highlight-color: transparent; user-select: none; }
+
+  /* ===== 选项卡 ===== */
+  .tabs {
+    display: flex; background: rgba(243,244,246,0.86); backdrop-filter: blur(10px);
+    padding: 5px; border-radius: 30px; margin-bottom: 25px; position: relative;
+    border: 1px solid #e5e7eb; touch-action: manipulation;
+  }
+  .tab-item {
+    flex: 1; text-align: center; padding: 12px 0; font-weight: 600; font-size: 15px;
+    color: #4b5563; cursor: pointer; z-index: 2; transition: color 0.2s, transform 0.1s;
+    border-radius: 25px; -webkit-tap-highlight-color: transparent; user-select: none;
+  }
   .tab-item:active { transform: scale(0.96); opacity: 0.9; }
   .tab-item.active { color: #ffffff; }
-  
-  .tab-slider { position: absolute; top: 5px; left: 5px; height: calc(100% - 10px); width: calc(33.3333% - 5px); border-radius: 25px; z-index: 1; transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), background 0.3s, width 0.3s; box-shadow: 0 4px 12px rgba(80,200,120,0.3); }
-  
-  ul.list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; min-height: 400px; }
-  ul.list li { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 18px; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: all 0.25s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.01); -webkit-tap-highlight-color: transparent; }
+  .tab-slider {
+    position: absolute; top: 5px; left: 5px; height: calc(100% - 10px);
+    width: calc(33.3333% - 5px); border-radius: 25px; z-index: 1;
+    transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), background 0.3s, width 0.3s;
+    box-shadow: 0 4px 12px rgba(80,200,120,0.3);
+  }
+
+  /* ===== 列表 ===== */
+  ul.list {
+    list-style: none; padding: 0; margin: 0;
+    display: flex; flex-direction: column; gap: 14px; min-height: 400px;
+  }
+  ul.list li {
+    background: #ffffff; border: 1px solid #e5e7eb; border-radius: 18px;
+    padding: 16px 20px; display: flex; align-items: center; justify-content: space-between;
+    cursor: pointer; transition: all 0.25s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.01);
+    -webkit-tap-highlight-color: transparent;
+  }
   ul.list li:hover { border-color: #50C878; box-shadow: 0 6px 16px rgba(80,200,120,0.06); }
   ul.list li:active { transform: scale(0.98); background: #f9fafb; }
-  
+
   .item-left { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0; text-align: left; padding-right: 12px; }
   .item-title { font-size: 16px; font-weight: 600; color: #111827; white-space: nowrap; }
   .item-sub { font-size: 13px !important; color: #6b7280 !important; line-height: 1.5 !important; white-space: normal !important; word-break: break-all !important; overflow: visible !important; flex: 1; }
-  
-  .item-btn { background: #f3f4f6; color: #4b5563; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; transition: all 0.25s; flex-shrink: 0; user-select: none; }
+
+  .item-btn {
+    background: #f3f4f6; color: #4b5563; padding: 8px 16px; border-radius: 20px;
+    font-size: 13px; font-weight: 600; transition: all 0.25s; flex-shrink: 0; user-select: none;
+  }
   ul.list li:hover .item-btn { background: #50C878; color: #ffffff; }
-  
+
   .skeleton-list { display: flex; flex-direction: column; gap: 14px; min-height: 400px; }
-  .skeleton-item { height: 72px; background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 37%, #f3f4f6 63%); background-size: 400% 100%; animation: skeleton-loading 1.4s ease infinite; border-radius: 18px; }
-  @keyframes skeleton-loading { 0% { background-position: 100% 0 } 100% { background-position: 0 0 } }
-  
-  .pagination-container { display: flex; align-items: center; justify-content: space-between; margin-top: 35px; gap: 10px; user-select: none; }
-  .page-btn { flex: 1; max-width: 100px; text-align: center; padding: 11px 0; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 22px; color: #4b5563; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s; -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+  .skeleton-item {
+    height: 72px; background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 37%, #f3f4f6 63%);
+    background-size: 400% 100%; animation: skeleton-loading 1.4s ease infinite; border-radius: 18px;
+  }
+  @keyframes skeleton-loading {
+    0% { background-position: 100% 0; }
+    100% { background-position: 0 0; }
+  }
+
+  /* ===== 分页 ===== */
+  .pagination-container {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 35px; gap: 10px; user-select: none;
+  }
+  .page-btn {
+    flex: 1; max-width: 100px; text-align: center; padding: 11px 0;
+    background: #ffffff; border: 1px solid #e5e7eb; border-radius: 22px;
+    color: #4b5563; font-weight: 600; font-size: 14px; cursor: pointer;
+    transition: all 0.2s; -webkit-tap-highlight-color: transparent; box-sizing: border-box;
+  }
   .page-btn:hover:not(.disabled) { border-color: #50C878; color: #50C878; background: rgba(80,200,120,0.02); }
   .page-btn:active:not(.disabled) { transform: scale(0.95); }
-  .page-btn.disabled { color: #d1d5db; background: #f9fafb; border-color: #e5e7eb; cursor: not-allowed; transform: none; opacity: 0.6; }
+  .page-btn.disabled { color: #d1d5db; background: #f9fafb; border-color: #e5e7eb; cursor: not-allowed; opacity: 0.6; }
 
-  .page-info-wrap { display: flex; align-items: center; justify-content: center; background: #f3f4f6; border: 1px solid #e5e7eb; padding: 0 16px; height: 40px; border-radius: 22px; gap: 6px; font-size: 14px; color: #6b7280; font-weight: 600; box-sizing: border-box; }
-  .page-current-input { width: 38px; height: 24px; background: #ffffff; border: 1px solid #d1d5db; border-radius: 12px; text-align: center; font-size: 14px; font-weight: 700; color: #111827; outline: none; transition: all 0.2s; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05); -moz-appearance: textfield; box-sizing: border-box; padding: 0; }
-  .page-current-input::-webkit-outer-spin-button, .page-current-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .page-info-wrap {
+    display: flex; align-items: center; justify-content: center;
+    background: #f3f4f6; border: 1px solid #e5e7eb; padding: 0 16px; height: 40px;
+    border-radius: 22px; gap: 6px; font-size: 14px; color: #6b7280; font-weight: 600;
+    box-sizing: border-box;
+  }
+  .page-current-input {
+    width: 38px; height: 24px; background: #ffffff; border: 1px solid #d1d5db;
+    border-radius: 12px; text-align: center; font-size: 14px; font-weight: 700;
+    color: #111827; outline: none; transition: all 0.2s;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+    -moz-appearance: textfield; box-sizing: border-box; padding: 0;
+  }
+  .page-current-input::-webkit-outer-spin-button,
+  .page-current-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
   .page-current-input:focus { border-color: #50C878; box-shadow: 0 0 0 2px rgba(80,200,120,0.15); }
-  
-  .search-trigger { position: fixed; bottom: 25px; right: 25px; width: 54px; height: 54px; background: #50C878; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 20px rgba(80,200,120,0.3); cursor: pointer; z-index: 99; transition: all 0.25s ease; -webkit-tap-highlight-color: transparent; }
+
+  /* ===== 搜索按钮 & 遮罩 ===== */
+  .search-trigger {
+    position: fixed; bottom: 25px; right: 25px; width: 54px; height: 54px;
+    background: #50C878; color: white; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 6px 20px rgba(80,200,120,0.3); cursor: pointer; z-index: 99;
+    transition: all 0.25s ease; -webkit-tap-highlight-color: transparent;
+  }
   .search-trigger:hover { transform: scale(1.08) translateY(-2px); background: #62d387; box-shadow: 0 8px 24px rgba(80,200,120,0.4); }
   .search-trigger:active { transform: scale(0.95); }
   .search-trigger svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
-  
-  .search-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); z-index: 1000; display: flex; flex-direction: column; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+
+  .search-overlay {
+    position: fixed; inset: 0; background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    z-index: 1000; display: flex; flex-direction: column;
+    opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+  }
   .search-overlay.active { opacity: 1; pointer-events: auto; }
-  .search-header { padding: 20px; display: flex; align-items: center; max-width: 600px; width: 100%; margin: 0 auto; box-sizing: border-box; gap: 15px; }
+  .search-header {
+    padding: 20px; display: flex; align-items: center;
+    max-width: 600px; width: 100%; margin: 0 auto; box-sizing: border-box; gap: 15px;
+  }
   .search-input-wrap { position: relative; flex: 1; }
-  .search-input { width: 100%; height: 46px; background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 23px; padding: 0 20px 0 45px; font-size: 16px; color: #111827; outline: none; box-sizing: border-box; transition: all 0.25s; }
+  .search-input {
+    width: 100%; height: 46px; background: #f3f4f6; border: 1px solid #e5e7eb;
+    border-radius: 23px; padding: 0 20px 0 45px; font-size: 16px; color: #111827;
+    outline: none; box-sizing: border-box; transition: all 0.25s;
+  }
   .search-input:focus { background: #ffffff; border-color: #50C878; box-shadow: 0 0 0 3px rgba(80,200,120,0.15); }
   .search-icon-left { position: absolute; left: 18px; top: 13px; color: #9ca3af; }
   .search-icon-left svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.5; }
   .search-close { font-size: 15px; color: #6b7280; cursor: pointer; font-weight: 600; padding: 5px 10px; -webkit-tap-highlight-color: transparent; user-select: none; }
   .search-close:hover { color: #111827; }
-  
-  .search-results { flex: 1; overflow-y: auto; max-width: 600px; width: 100%; margin: 0 auto; padding: 10px 20px 40px; box-sizing: border-box; }
-  .search-results .item { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 16px; padding: 14px 18px; margin-bottom: 12px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: all 0.2s; }
+
+  .search-results {
+    flex: 1; overflow-y: auto; max-width: 600px; width: 100%;
+    margin: 0 auto; padding: 10px 20px 40px; box-sizing: border-box;
+  }
+  .search-results .item {
+    background: #ffffff; border: 1px solid #e5e7eb; border-radius: 16px;
+    padding: 14px 18px; margin-bottom: 12px; cursor: pointer;
+    display: flex; align-items: center; justify-content: space-between;
+    transition: all 0.2s;
+  }
   .search-results .item:hover { border-color: #50C878; background: rgba(80,200,120,0.01); transform: translateY(-1px); }
   .search-results .item .title { font-weight: 600; color: #111827; font-size: 15px; flex-shrink: 0; margin-right: 15px; }
   .search-results .item .sub { color: #6b7280 !important; font-size: 13px !important; line-height: 1.4 !important; white-space: normal !important; word-break: break-all !important; overflow: visible !important; flex: 1; text-align: right; }
-  
-  /* Theme overrides */
-  html.green-theme .tab-slider, body.green-theme .tab-slider { background: #50C878; box-shadow: 0 4px 12px rgba(80,200,120,0.3); }
-  html.green-theme ul.list li:hover, body.green-theme ul.list li:hover { border-color: #50C878; box-shadow: 0 6px 16px rgba(80,200,120,0.1); }
-  html.green-theme ul.list li:hover .item-btn, body.green-theme ul.list li:hover .item-btn { background: #50C878; color: #ffffff; }
-  html.green-theme .page-btn:hover:not(.disabled), body.green-theme .page-btn:hover:not(.disabled) { border-color: #50C878; color: #50C878; background: rgba(80,200,120,0.03); }
-  html.green-theme .search-trigger, body.green-theme .search-trigger { background: #50C878; box-shadow: 0 6px 20px rgba(80,200,120,0.4); }
-  html.green-theme .search-trigger:hover, body.green-theme .search-trigger:hover { background: #62d387; box-shadow: 0 8px 24px rgba(80,200,120,0.5); }
-  html.green-theme .search-input:focus, body.green-theme .search-input:focus { border-color: #50C878; box-shadow: 0 0 0 3px rgba(80,200,120,0.15); }
-  html.green-theme .search-results .item:hover, body.green-theme .search-results .item:hover { border-color: #50C878; background: rgba(80,200,120,0.02); }
-  html.green-theme .page-current-input:focus, body.green-theme .page-current-input:focus { border-color: #50C878; box-shadow: 0 0 0 2px rgba(80,200,120,0.15); }
 
-  html.pink-theme .tab-slider, body.pink-theme .tab-slider { background: #f8b8c8; box-shadow: 0 4px 12px rgba(248,184,200,0.3); }
-  html.pink-theme ul.list li:hover, body.pink-theme ul.list li:hover { border-color: #f8b8c8; box-shadow: 0 6px 16px rgba(248,184,200,0.1); }
-  html.pink-theme ul.list li:hover .item-btn, body.pink-theme ul.list li:hover .item-btn { background: #f8b8c8; color: #ffffff; }
-  html.pink-theme .page-btn:hover:not(.disabled), body.pink-theme .page-btn:hover:not(.disabled) { border-color: #f8b8c8; color: #f8b8c8; background: rgba(248,184,200,0.03); }
-  html.pink-theme .search-trigger, body.pink-theme .search-trigger { background: #f8b8c8; box-shadow: 0 6px 20px rgba(248,184,200,0.4); }
-  html.pink-theme .search-trigger:hover, body.pink-theme .search-trigger:hover { background: #fca1b7; box-shadow: 0 8px 24px rgba(248,184,200,0.5); }
-  html.pink-theme .search-input:focus, body.pink-theme .search-input:focus { border-color: #f8b8c8; box-shadow: 0 0 0 3px rgba(248,184,200,0.15); }
-  html.pink-theme .search-results .item:hover, body.pink-theme .search-results .item:hover { border-color: #f8b8c8; background: rgba(248,184,200,0.02); }
-  html.pink-theme .page-current-input:focus, body.pink-theme .page-current-input:focus { border-color: #f8b8c8; box-shadow: 0 0 0 2px rgba(248,184,200,0.15); }
+  /* ===== 暗色模式主题覆盖 ===== */
+  /* 绿色（默认） */
+  html.green-theme .tab-slider { background: #50C878; box-shadow: 0 4px 12px rgba(80,200,120,0.3); }
+  html.green-theme ul.list li:hover { border-color: #50C878; box-shadow: 0 6px 16px rgba(80,200,120,0.1); }
+  html.green-theme ul.list li:hover .item-btn { background: #50C878; color: #ffffff; }
+  html.green-theme .page-btn:hover:not(.disabled) { border-color: #50C878; color: #50C878; background: rgba(80,200,120,0.03); }
+  html.green-theme .search-trigger { background: #50C878; box-shadow: 0 6px 20px rgba(80,200,120,0.4); }
+  html.green-theme .search-trigger:hover { background: #62d387; box-shadow: 0 8px 24px rgba(80,200,120,0.5); }
+  html.green-theme .search-input:focus { border-color: #50C878; box-shadow: 0 0 0 3px rgba(80,200,120,0.15); }
+  html.green-theme .search-results .item:hover { border-color: #50C878; background: rgba(80,200,120,0.02); }
+  html.green-theme .page-current-input:focus { border-color: #50C878; box-shadow: 0 0 0 2px rgba(80,200,120,0.15); }
 
-  html.blue-theme .tab-slider, body.blue-theme .tab-slider { background: #428cca; box-shadow: 0 4px 12px rgba(66,140,202,0.3); }
-  html.blue-theme ul.list li:hover, body.blue-theme ul.list li:hover { border-color: #428cca; box-shadow: 0 6px 16px rgba(66,140,202,0.1); }
-  html.blue-theme ul.list li:hover .item-btn, body.blue-theme ul.list li:hover .item-btn { background: #428cca; color: #ffffff; }
-  html.blue-theme .page-btn:hover:not(.disabled), body.blue-theme .page-btn:hover:not(.disabled) { border-color: #428cca; color: #428cca; background: rgba(66,140,202,0.03); }
-  html.blue-theme .search-trigger, body.blue-theme .search-trigger { background: #428cca; box-shadow: 0 6px 20px rgba(66,140,202,0.4); }
-  html.blue-theme .search-trigger:hover, body.blue-theme .search-trigger:hover { background: #53a3e6; box-shadow: 0 8px 24px rgba(66,140,202,0.5); }
-  html.blue-theme .search-input:focus, body.blue-theme .search-input:focus { border-color: #428cca; box-shadow: 0 0 0 3px rgba(66,140,202,0.15); }
-  html.blue-theme .search-results .item:hover, body.blue-theme .search-results .item:hover { border-color: #428cca; background: rgba(66,140,202,0.02); }
-  html.blue-theme .page-current-input:focus, body.blue-theme .page-current-input:focus { border-color: #428cca; box-shadow: 0 0 0 2px rgba(66,140,202,0.15); }
+  /* 粉色 */
+  html.pink-theme .tab-slider { background: #f8b8c8; box-shadow: 0 4px 12px rgba(248,184,200,0.3); }
+  html.pink-theme ul.list li:hover { border-color: #f8b8c8; box-shadow: 0 6px 16px rgba(248,184,200,0.1); }
+  html.pink-theme ul.list li:hover .item-btn { background: #f8b8c8; color: #ffffff; }
+  html.pink-theme .page-btn:hover:not(.disabled) { border-color: #f8b8c8; color: #f8b8c8; background: rgba(248,184,200,0.03); }
+  html.pink-theme .search-trigger { background: #f8b8c8; box-shadow: 0 6px 20px rgba(248,184,200,0.4); }
+  html.pink-theme .search-trigger:hover { background: #fca1b7; box-shadow: 0 8px 24px rgba(248,184,200,0.5); }
+  html.pink-theme .search-input:focus { border-color: #f8b8c8; box-shadow: 0 0 0 3px rgba(248,184,200,0.15); }
+  html.pink-theme .search-results .item:hover { border-color: #f8b8c8; background: rgba(248,184,200,0.02); }
+  html.pink-theme .page-current-input:focus { border-color: #f8b8c8; box-shadow: 0 0 0 2px rgba(248,184,200,0.15); }
 
-  .dark-mode-toggle { position: absolute; top: 20px; right: 20px; width: 40px; height: 40px; background: rgba(255,255,255,0.15); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: white; border: 1px solid rgba(255,255,255,0.2); transition: all 0.25s; z-index: 101; -webkit-tap-highlight-color: transparent; }
+  /* 蓝色 */
+  html.blue-theme .tab-slider { background: #428cca; box-shadow: 0 4px 12px rgba(66,140,202,0.3); }
+  html.blue-theme ul.list li:hover { border-color: #428cca; box-shadow: 0 6px 16px rgba(66,140,202,0.1); }
+  html.blue-theme ul.list li:hover .item-btn { background: #428cca; color: #ffffff; }
+  html.blue-theme .page-btn:hover:not(.disabled) { border-color: #428cca; color: #428cca; background: rgba(66,140,202,0.03); }
+  html.blue-theme .search-trigger { background: #428cca; box-shadow: 0 6px 20px rgba(66,140,202,0.4); }
+  html.blue-theme .search-trigger:hover { background: #53a3e6; box-shadow: 0 8px 24px rgba(66,140,202,0.5); }
+  html.blue-theme .search-input:focus { border-color: #428cca; box-shadow: 0 0 0 3px rgba(66,140,202,0.15); }
+  html.blue-theme .search-results .item:hover { border-color: #428cca; background: rgba(66,140,202,0.02); }
+  html.blue-theme .page-current-input:focus { border-color: #428cca; box-shadow: 0 0 0 2px rgba(66,140,202,0.15); }
+
+  /* ===== 暗色模式 ===== */
+  .dark-mode-toggle {
+    position: absolute; top: 20px; right: 20px; width: 40px; height: 40px;
+    background: rgba(255,255,255,0.15); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: white; border: 1px solid rgba(255,255,255,0.2);
+    transition: all 0.25s; z-index: 101; -webkit-tap-highlight-color: transparent;
+  }
   .dark-mode-toggle:hover { background: rgba(255,255,255,0.3); transform: scale(1.05); }
   .dark-mode-toggle svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
-  html.dark-theme .dark-mode-toggle .sun-icon, html:not(.dark-theme) .dark-mode-toggle .moon-icon { display: none; }
-  
+  html.dark-theme .dark-mode-toggle .sun-icon,
+  html:not(.dark-theme) .dark-mode-toggle .moon-icon { display: none; }
+
   html.dark-theme, html.dark-theme body { background: #111827 !important; }
   html.dark-theme body { color: #e5e7eb; }
   html.dark-theme .main-wrapper { background: #1f2937; box-shadow: 0 -10px 30px rgba(0,0,0,0.2); }
@@ -191,21 +284,78 @@
   html.dark-theme .search-results .item { background: #1f2937; border-color: #374151; }
   html.dark-theme .search-results .item .title { color: #f9fafb; }
   html.dark-theme .search-results .item .sub { color: #9ca3af !important; }
+
+  /* ===== 隐藏入口模态框 ===== */
+  .hidden-modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    z-index: 9999; display: none; align-items: center; justify-content: center;
+    animation: fadeIn 0.2s ease;
+  }
+  .hidden-modal-overlay.active { display: flex; }
+  @keyframes fadeIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+
+  .hidden-modal {
+    background: #ffffff; border-radius: 28px; max-width: 400px; width: 90%;
+    padding: 30px 28px 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    text-align: center; position: relative;
+  }
+  .hidden-modal h3 {
+    margin: 0 0 8px; font-size: 22px; font-weight: 700; color: #111827;
+    letter-spacing: 0.5px;
+  }
+  .hidden-modal p {
+    margin: 0 0 20px; font-size: 14px; color: #6b7280; line-height: 1.5;
+  }
+  .hidden-modal input {
+    width: 100%; padding: 14px 18px; font-size: 16px; border: 1px solid #e5e7eb;
+    border-radius: 18px; background: #f9fafb; box-sizing: border-box;
+    transition: border 0.2s, box-shadow 0.2s; outline: none;
+    text-align: center; letter-spacing: 2px; font-weight: 600;
+  }
+  .hidden-modal input:focus { border-color: #7c3aed; box-shadow: 0 0 0 3px rgba(124,58,237,0.15); }
+  .hidden-modal .btn-group {
+    display: flex; gap: 12px; margin-top: 20px; justify-content: center;
+  }
+  .hidden-modal .btn {
+    flex: 1; padding: 13px 0; border-radius: 30px; font-weight: 600; font-size: 16px;
+    border: none; cursor: pointer; transition: all 0.2s; -webkit-tap-highlight-color: transparent;
+  }
+  .hidden-modal .btn-primary {
+    background: #7c3aed; color: #fff; box-shadow: 0 4px 14px rgba(124,58,237,0.3);
+  }
+  .hidden-modal .btn-primary:hover { background: #6d28d9; transform: translateY(-1px); }
+  .hidden-modal .btn-primary:active { transform: scale(0.96); }
+  .hidden-modal .btn-secondary {
+    background: #f3f4f6; color: #4b5563;
+  }
+  .hidden-modal .btn-secondary:hover { background: #e5e7eb; }
+
+  html.dark-theme .hidden-modal { background: #1f2937; }
+  html.dark-theme .hidden-modal h3 { color: #f9fafb; }
+  html.dark-theme .hidden-modal p { color: #9ca3af; }
+  html.dark-theme .hidden-modal input { background: #374151; border-color: #4b5563; color: #f9fafb; }
+  html.dark-theme .hidden-modal input:focus { border-color: #8b5cf6; box-shadow: 0 0 0 3px rgba(139,92,246,0.2); }
+  html.dark-theme .hidden-modal .btn-secondary { background: #374151; color: #d1d5db; }
+  html.dark-theme .hidden-modal .btn-secondary:hover { background: #4b5563; }
 </style>
 </head>
 <body>
 
+<!-- ===== 顶部进度条 ===== -->
 <div class="top-progress-bar" id="topProgressBar"></div>
 
+<!-- ===== 头部 ===== -->
 <header class="app-loading" id="appHeader">
-  <div class="dark-mode-toggle" id="darkModeToggle" title="切换主题">
-    <svg class="sun-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-    <svg class="moon-icon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+  <div class="dark-mode-toggle" id="darkModeToggle" title="切换主题（连续点击5次触发隐藏入口）">
+    <svg class="sun-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    <svg class="moon-icon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
   </div>
   <h1 id="main-title">SetuTime</h1>
   <p id="sub-title">全年龄向ACGイラストまとめ</p>
 </header>
 
+<!-- ===== 主内容 ===== -->
 <div class="main-wrapper">
   <div class="container">
     <div class="tabs" id="tabsContainer">
@@ -224,7 +374,7 @@
     </div>
 
     <ul class="list" id="contentList" style="display:none;"></ul>
-    
+
     <div class="pagination-container" id="paginationCtrl" style="display:none;">
       <div class="page-btn" id="prevPageBtn" onclick="changePage(-1)">上一页</div>
       <div class="page-info-wrap">
@@ -237,15 +387,17 @@
   </div>
 </div>
 
+<!-- ===== 搜索按钮 ===== -->
 <div class="search-trigger" onclick="toggleSearch(true)">
-  <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+  <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
 </div>
 
+<!-- ===== 搜索遮罩 ===== -->
 <div class="search-overlay" id="searchOverlay">
   <div class="search-header">
     <div class="search-input-wrap">
       <div class="search-icon-left">
-        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       </div>
       <input type="text" class="search-input" id="searchInput" placeholder="搜索本分类下的期号或标题..." oninput="doSearch()">
     </div>
@@ -254,7 +406,24 @@
   <div class="search-results" id="searchResults"></div>
 </div>
 
+<!-- ===== 隐藏入口模态框 ===== -->
+<div class="hidden-modal-overlay" id="hiddenModalOverlay">
+  <div class="hidden-modal">
+    <h3>🔐 本期入口</h3>
+    <p>请输入本期密码以访问隐藏内容</p>
+    <input type="text" id="hiddenCodeInput" placeholder="请输入密码" maxlength="64" autocomplete="off" spellcheck="false">
+    <div class="btn-group">
+      <button class="btn btn-secondary" onclick="closeHiddenModal()">取消</button>
+      <button class="btn btn-primary" onclick="submitHiddenCode()">确认</button>
+    </div>
+  </div>
+</div>
+
 <script>
+// ============================================================
+//  核心逻辑
+// ============================================================
+
 const ONE_HOUR = 60 * 60 * 1000;
 
 let currentTab = 'acg';
@@ -278,37 +447,21 @@ function savePage(tabType, pageNum) {
   localStorage.setItem(`setutime_page_data_${tabType}`, JSON.stringify(item));
 }
 
-let currentPage = { 
+let currentPage = {
   acg: getSavedPage('acg'),
-  setu: getSavedPage('setu'), 
-  zrsetu: getSavedPage('zrsetu') 
+  setu: getSavedPage('setu'),
+  zrsetu: getSavedPage('zrsetu')
 };
 
-// 每个分类独立缓存：服务端分页文件
-let cachePages = {
-  acg: {},
-  setu: {},
-  zrsetu: {}
-};
+let cachePages = { acg: {}, setu: {}, zrsetu: {} };
+let allItems = { acg: [], setu: [], zrsetu: [] };
+let totalCount = { acg: 0, setu: 0, zrsetu: 0 };
 
-// 累计已加载的条目（用于搜索 + 前端分页）
-let allItems = {
-  acg: [],
-  setu: [],
-  zrsetu: []
-};
-
-// 各分类总条数（从任意一页 JSON 的 total 字段获取）
-let totalCount = {
-  acg: 0,
-  setu: 0,
-  zrsetu: 0
-};
-
-const ITEMS_PER_PAGE = 10;          // 前端每页显示条数
-const SERVER_ITEMS_PER_FILE = 50;   // 服务端每个 json 文件条数
+const ITEMS_PER_PAGE = 10;
+const SERVER_ITEMS_PER_FILE = 50;
 const rootUrl = `${window.location.protocol}//${window.location.host}/`;
 
+// ===== 暗色模式 =====
 function toggleDarkMode() {
   const isDark = document.documentElement.classList.toggle('dark-theme');
   localStorage.setItem('setutime_dark_mode', isDark ? 'true' : 'false');
@@ -323,34 +476,6 @@ function toggleDarkMode() {
   }
 }
 
-
-// ========== 隐藏入口：3 秒内连续点击主题切换键 5 次 ==========
-let hiddenThemeClickTimes = [];
-
-function checkHiddenEntryTrigger() {
-  const now = Date.now();
-  hiddenThemeClickTimes = hiddenThemeClickTimes.filter(function(t) {
-    return now - t <= 3000;
-  });
-  hiddenThemeClickTimes.push(now);
-
-  if (hiddenThemeClickTimes.length < 5) return;
-  hiddenThemeClickTimes = [];
-
-  const code = prompt('请输入本期密码：');
-  if (code === null) return;
-
-  const cleanCode = code.trim();
-  if (!cleanCode) {
-    alert('请输入密码');
-    return;
-  }
-
-  // Worker 绑定域名为 dl.setutime.com，使用 GET + 302，
-  // 不依赖主页所在域名的 CORS 配置。
-  window.location.href = 'https://dl.setutime.com/api/hidden/check?code=' + encodeURIComponent(cleanCode);
-}
-
 function initDarkMode() {
   const savedDark = localStorage.getItem('setutime_dark_mode');
   const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -362,6 +487,82 @@ function initDarkMode() {
 }
 initDarkMode();
 
+// ===== 隐藏入口：5秒内点击主题切换键5次 =====
+let hiddenClickCount = 0;
+let hiddenClickTimer = null;
+
+function resetHiddenClickCounter() {
+  hiddenClickCount = 0;
+  if (hiddenClickTimer) {
+    clearTimeout(hiddenClickTimer);
+    hiddenClickTimer = null;
+  }
+}
+
+function onDarkToggleClick() {
+  // 计数
+  hiddenClickCount++;
+  if (hiddenClickTimer) {
+    clearTimeout(hiddenClickTimer);
+  }
+  // 5秒后重置
+  hiddenClickTimer = setTimeout(() => {
+    resetHiddenClickCounter();
+  }, 5000);
+
+  if (hiddenClickCount >= 5) {
+    resetHiddenClickCounter();
+    // 触发隐藏入口
+    showHiddenModal();
+  }
+}
+
+// ===== 隐藏入口模态框 =====
+function showHiddenModal() {
+  document.getElementById('hiddenModalOverlay').classList.add('active');
+  const input = document.getElementById('hiddenCodeInput');
+  input.value = '';
+  input.focus();
+  // 按回车提交
+  input.onkeydown = function(e) {
+    if (e.key === 'Enter') submitHiddenCode();
+  };
+}
+
+function closeHiddenModal() {
+  document.getElementById('hiddenModalOverlay').classList.remove('active');
+}
+
+async function submitHiddenCode() {
+  const code = document.getElementById('hiddenCodeInput').value.trim();
+  if (!code) {
+    alert('请输入密码');
+    return;
+  }
+  try {
+    const res = await fetch(`/api/hidden/check?code=${encodeURIComponent(code)}`, {
+      method: 'GET',
+      cache: 'no-store'
+    });
+    if (res.ok) {
+      // 如果是302重定向，浏览器会自动跟随；否则手动处理
+      const data = await res.json().catch(() => null);
+      if (data && data.url) {
+        window.location.href = data.url;
+      } else {
+        // 可能直接302，页面会跳转
+        closeHiddenModal();
+      }
+    } else {
+      const err = await res.json().catch(() => ({ msg: '验证失败' }));
+      alert(err.msg || '密码错误，请重试');
+    }
+  } catch (e) {
+    alert('网络错误，请稍后重试');
+  }
+}
+
+// ===== 选项卡切换 =====
 function getVisibleTabIndex(type) {
   if (type === 'acg') return 0;
   if (type === 'setu') return 1;
@@ -370,27 +571,27 @@ function getVisibleTabIndex(type) {
 
 function handleTabClick(type) {
   if (currentTab === type) return;
-  
+
   currentTab = type;
   localStorage.setItem('setutime_active_tab', type);
   document.getElementById('searchInput').value = '';
   document.getElementById('searchResults').innerHTML = '';
-  
+
   const slider = document.getElementById('tabSlider');
   const index = getVisibleTabIndex(type);
   slider.style.transform = `translateX(${index * 100}%)`;
-  
+
   document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
   const activeEl = document.getElementById('tab-' + type);
   if (activeEl) activeEl.classList.add('active');
-  
+
   const mainTitle = document.getElementById('main-title');
   const subTitle = document.getElementById('sub-title');
   const metaTheme = document.getElementById('meta-theme-color');
-  
+
   document.documentElement.classList.remove('blue-theme', 'pink-theme', 'green-theme');
   document.body.classList.remove('blue-theme', 'pink-theme', 'green-theme');
-  
+
   if (type === 'setu') {
     document.documentElement.classList.add('blue-theme');
     document.body.classList.add('blue-theme');
@@ -413,9 +614,8 @@ function handleTabClick(type) {
     slider.style.background = '#50C878';
     if (metaTheme && !document.documentElement.classList.contains('dark-theme')) metaTheme.setAttribute('content', '#50C878');
   }
-  
+
   renderCurrentList(true);
-  // 后台预加载该分类其余分页，方便搜索
   preloadAllSearchData();
 }
 
@@ -424,19 +624,19 @@ function initTabSliderSilent(type) {
   const mainTitle = document.getElementById('main-title');
   const subTitle = document.getElementById('sub-title');
   const metaTheme = document.getElementById('meta-theme-color');
-  
+
   slider.style.transition = 'none';
   document.documentElement.classList.remove('blue-theme', 'pink-theme', 'green-theme');
   document.body.classList.remove('blue-theme', 'pink-theme', 'green-theme');
   document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
-  
+
   currentTab = type;
   const index = getVisibleTabIndex(type);
   slider.style.transform = `translateX(${index * 100}%)`;
-  
+
   const activeEl = document.getElementById('tab-' + type);
   if (activeEl) activeEl.classList.add('active');
-  
+
   if (type === 'setu') {
     document.documentElement.classList.add('blue-theme');
     document.body.classList.add('blue-theme');
@@ -459,11 +659,12 @@ function initTabSliderSilent(type) {
     slider.style.background = '#50C878';
     if (metaTheme && !document.documentElement.classList.contains('dark-theme')) metaTheme.setAttribute('content', '#50C878');
   }
-  
+
   slider.offsetHeight;
   slider.style.transition = 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), background 0.3s, width 0.3s';
 }
 
+// ===== 数据获取 =====
 async function fetchJson(url) {
   try {
     const timestamp = new Date().getTime();
@@ -477,7 +678,6 @@ async function fetchJson(url) {
   }
 }
 
-// 合并分页数据到 allItems，并更新 totalCount
 function mergePageData(tab, pageData) {
   if (!pageData || !pageData.items) return;
   if (typeof pageData.total === 'number') {
@@ -490,7 +690,6 @@ function mergePageData(tab, pageData) {
   });
 }
 
-// 确保某服务端分页文件已加载
 async function ensureServerPage(tab, serverPage) {
   if (cachePages[tab][serverPage]) return cachePages[tab][serverPage];
   const pageData = await fetchJson(`${rootUrl}data/${tab}/${serverPage}.json`);
@@ -501,35 +700,34 @@ async function ensureServerPage(tab, serverPage) {
   return pageData;
 }
 
+// ===== 渲染列表 =====
 async function renderCurrentList(isTabSwitch = false) {
   const listDiv = document.getElementById('contentList');
   const paginationCtrl = document.getElementById('paginationCtrl');
   const skeleton = document.getElementById('skeleton');
-  
+
   if (isTabSwitch) {
     listDiv.style.display = 'none';
     skeleton.style.display = 'flex';
     paginationCtrl.style.display = 'none';
   }
-  
+
   const activePage = currentPage[currentTab];
   const startIdx = (activePage - 1) * ITEMS_PER_PAGE;
   const endIdx = activePage * ITEMS_PER_PAGE;
-  
-  // 计算需要的服务端分页文件
+
   const neededFileIndexStart = Math.floor(startIdx / SERVER_ITEMS_PER_FILE) + 1;
   const neededFileIndexEnd = Math.floor((endIdx - 1) / SERVER_ITEMS_PER_FILE) + 1;
-  
+
   for (let p = neededFileIndexStart; p <= neededFileIndexEnd; p++) {
     if (!cachePages[currentTab][p]) {
       if (listDiv.style.display !== 'none') listDiv.style.opacity = '0.4';
       await ensureServerPage(currentTab, p);
     }
   }
-  
+
   listDiv.style.opacity = '1';
-  
-  // 排序（保证顺序）
+
   allItems[currentTab].sort((a, b) => {
     const numA = parseInt(a.file.match(/\d+/)?.[0] || 0);
     const numB = parseInt(b.file.match(/\d+/)?.[0] || 0);
@@ -540,7 +738,7 @@ async function renderCurrentList(isTabSwitch = false) {
   const displayTotal = totalCount[currentTab] || filteredPool.length;
   const totalPages = Math.ceil(displayTotal / ITEMS_PER_PAGE) || 1;
   const pageItems = filteredPool.slice(startIdx, endIdx);
-  
+
   if (pageItems.length === 0) {
     listDiv.innerHTML = `<div style="text-align:center;padding:40px;color:#9ca3af;font-weight:600;width:100%;">暂无当前页数据</div>`;
   } else {
@@ -554,26 +752,26 @@ async function renderCurrentList(isTabSwitch = false) {
       </li>
     `).join('');
   }
-  
+
   skeleton.style.display = 'none';
   listDiv.style.display = 'flex';
-  
+
   const listLi = listDiv.querySelectorAll('li');
   listLi.forEach((li, idx) => {
     setTimeout(() => li.classList.add('show'), idx * 20);
   });
-  
+
   document.getElementById('pageCurrentInput').value = activePage;
   document.getElementById('pageTotalLabel').innerText = totalPages;
-  
+
   const prevBtn = document.getElementById('prevPageBtn');
   if (activePage <= 1) prevBtn.classList.add('disabled');
   else prevBtn.classList.remove('disabled');
-  
+
   const nextBtn = document.getElementById('nextPageBtn');
   if (activePage >= totalPages) nextBtn.classList.add('disabled');
   else nextBtn.classList.remove('disabled');
-  
+
   paginationCtrl.style.display = 'flex';
 }
 
@@ -584,19 +782,19 @@ function getDisplayTotal() {
 function handleInputJump(val) {
   const totalPages = Math.ceil(getDisplayTotal() / ITEMS_PER_PAGE) || 1;
   let pageNum = parseInt(val);
-  
+
   if (isNaN(pageNum)) {
     document.getElementById('pageCurrentInput').value = currentPage[currentTab];
     return;
   }
   if (pageNum < 1) pageNum = 1;
   if (pageNum > totalPages) pageNum = totalPages;
-  
+
   if (pageNum === currentPage[currentTab]) {
     document.getElementById('pageCurrentInput').value = pageNum;
     return;
   }
-  
+
   currentPage[currentTab] = pageNum;
   savePage(currentTab, pageNum);
   renderCurrentList();
@@ -605,22 +803,22 @@ function handleInputJump(val) {
 function changePage(direction) {
   const activePage = currentPage[currentTab];
   const totalPages = Math.ceil(getDisplayTotal() / ITEMS_PER_PAGE) || 1;
-  
+
   const newPage = activePage + direction;
   if (newPage < 1 || newPage > totalPages) return;
-  
+
   currentPage[currentTab] = newPage;
   savePage(currentTab, newPage);
   renderCurrentList();
 }
 
+// ===== 搜索 =====
 function toggleSearch(show) {
   const overlay = document.getElementById('searchOverlay');
   const input = document.getElementById('searchInput');
   if (show) {
     overlay.classList.add('active');
     setTimeout(() => input.focus(), 100);
-    // 打开搜索时确保尽量加载完当前分类
     preloadAllSearchData();
   } else {
     overlay.classList.remove('active');
@@ -629,13 +827,10 @@ function toggleSearch(show) {
   }
 }
 
-// 后台预加载当前分类的所有服务端分页（用于搜索）
 async function preloadAllSearchData() {
-  // 先确保第 1 页已加载以拿到 totalPages
   const first = await ensureServerPage(currentTab, 1);
   if (!first) return;
   const totalServerPages = first.totalPages || 1;
-  
   for (let p = 2; p <= totalServerPages; p++) {
     if (!cachePages[currentTab][p]) {
       await ensureServerPage(currentTab, p);
@@ -647,16 +842,15 @@ function doSearch() {
   const val = document.getElementById('searchInput').value.trim().toLowerCase();
   const resultsDiv = document.getElementById('searchResults');
   if (!val) { resultsDiv.innerHTML = ''; return; }
-  
+
   const currentPool = allItems[currentTab];
-  
   const matched = currentPool.filter(item => {
     const isCaptionMatch = item.caption && item.caption.toLowerCase().includes(val);
     const issueNum = item.file.match(/\d+/)?.[0] || '';
     const isNumMatch = issueNum && issueNum.includes(val);
     return isCaptionMatch || isNumMatch;
   });
-  
+
   resultsDiv.innerHTML = matched.map(item => `
     <div class="item" onclick="window.open('/${currentTab}/${item.file}', '_self')">
       <div class="title">第 ${item.file.match(/\d+/)?.[0] || '?'} 期</div>
@@ -665,116 +859,71 @@ function doSearch() {
   `).join('');
 }
 
+// ===== 键盘快捷键 =====
 window.onkeydown = (e) => {
   if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); toggleSearch(true); }
-  if (e.key === 'Escape') {
-    toggleSearch(false);
-  }
+  if (e.key === 'Escape') { toggleSearch(false); closeHiddenModal(); }
 };
 
-// ========== 隐藏彩蛋入口：3 秒内点击主题切换 5 次 ==========
-let hiddenEntryClickCount = 0;
-let hiddenEntryFirstClickAt = 0;
-let hiddenEntryPrompting = false;
-
-function checkHiddenEntryTrigger() {
-  const now = Date.now();
-
-  // 超过 3 秒，重新从第 1 次开始计数
-  if (!hiddenEntryFirstClickAt || now - hiddenEntryFirstClickAt > 3000) {
-    hiddenEntryFirstClickAt = now;
-    hiddenEntryClickCount = 1;
-    return;
-  }
-
-  hiddenEntryClickCount++;
-
-  if (hiddenEntryClickCount >= 5) {
-    // 触发后立即清零，避免连续误触再次触发
-    hiddenEntryClickCount = 0;
-    hiddenEntryFirstClickAt = 0;
-
-    if (hiddenEntryPrompting) return;
-    hiddenEntryPrompting = true;
-
-    const code = window.prompt('请输入本期密码');
-    if (!code) {
-      hiddenEntryPrompting = false;
-      return;
-    }
-
-    const cleanCode = String(code).trim();
-    if (!cleanCode) {
-      hiddenEntryPrompting = false;
-      return;
-    }
-
-    // 使用 GET + 302，由 Worker 在服务端验证密码后直接跳转。
-    // 这样密码不会写死在 index.html 中。
-    const checkUrl = `${window.location.protocol}//${window.location.host}/api/hidden/check?code=${encodeURIComponent(cleanCode)}`;
-    window.location.href = checkUrl;
-  }
-}
-
+// ===== 初始化事件 =====
 function initTouchEvents() {
   document.getElementById('tab-acg').addEventListener('click', (e) => { e.preventDefault(); handleTabClick('acg'); });
   document.getElementById('tab-setu').addEventListener('click', (e) => { e.preventDefault(); handleTabClick('setu'); });
   document.getElementById('tab-zrsetu').addEventListener('click', (e) => { e.preventDefault(); handleTabClick('zrsetu'); });
-  
+
   const darkBtn = document.getElementById('darkModeToggle');
   if (darkBtn) {
-    darkBtn.addEventListener('click', (e) => {
+    // 先移除原有点击事件（如果有），再用我们的包装
+    darkBtn.removeEventListener('click', toggleDarkMode);
+    darkBtn.addEventListener('click', function(e) {
       e.preventDefault();
       e.stopPropagation();
-      toggleDarkMode();
-      checkHiddenEntryTrigger();
+      toggleDarkMode();          // 正常切换主题
+      onDarkToggleClick();      // 计数触发隐藏入口
     });
   }
 }
 
+// ===== 启动应用 =====
 async function startAppNow() {
   initTouchEvents();
-  
+
   const savedTab = localStorage.getItem('setutime_active_tab') || 'acg';
   initTabSliderSilent(savedTab);
-  
+
   const pBar = document.getElementById('topProgressBar');
   if (pBar) pBar.style.width = '30%';
-  
-  // 只加载当前分类、当前页所需的服务端分页（按需加载，不一次拉全量）
+
   const activePage = currentPage[currentTab];
   const startIdx = (activePage - 1) * ITEMS_PER_PAGE;
   const serverPage = Math.floor(startIdx / SERVER_ITEMS_PER_FILE) + 1;
-  
-  // 至少加载第 1 页拿 total，以及当前需要的页
+
   await ensureServerPage(currentTab, 1);
   if (pBar) pBar.style.width = '60%';
-  
+
   if (serverPage !== 1) {
     await ensureServerPage(currentTab, serverPage);
   }
-  
+
   if (pBar) pBar.style.width = '85%';
-  
-  // 若本地记录的页码超出实际总页，纠正
+
   const maxPages = Math.ceil((totalCount[currentTab] || allItems[currentTab].length) / ITEMS_PER_PAGE) || 1;
   if (currentPage[currentTab] > maxPages) {
     currentPage[currentTab] = maxPages;
   }
-  
+
   await renderCurrentList();
-  
+
   if (pBar) {
     pBar.style.width = '100%';
     setTimeout(() => { pBar.style.opacity = '0'; }, 200);
   }
-  
+
   const headerEl = document.getElementById('appHeader');
   if (headerEl) headerEl.classList.remove('app-loading');
-  
+
   document.body.classList.add('loaded');
-  
-  // 后台慢慢预加载当前分类其余页，方便搜索
+
   preloadAllSearchData();
 }
 

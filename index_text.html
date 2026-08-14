@@ -323,6 +323,34 @@ function toggleDarkMode() {
   }
 }
 
+
+// ========== 隐藏入口：3 秒内连续点击主题切换键 5 次 ==========
+let hiddenThemeClickTimes = [];
+
+function checkHiddenEntryTrigger() {
+  const now = Date.now();
+  hiddenThemeClickTimes = hiddenThemeClickTimes.filter(function(t) {
+    return now - t <= 3000;
+  });
+  hiddenThemeClickTimes.push(now);
+
+  if (hiddenThemeClickTimes.length < 5) return;
+  hiddenThemeClickTimes = [];
+
+  const code = prompt('请输入本期密码：');
+  if (code === null) return;
+
+  const cleanCode = code.trim();
+  if (!cleanCode) {
+    alert('请输入密码');
+    return;
+  }
+
+  // Worker 绑定域名为 dl.setutime.com，使用 GET + 302，
+  // 不依赖主页所在域名的 CORS 配置。
+  window.location.href = 'https://dl.setutime.com/api/hidden/check?code=' + encodeURIComponent(cleanCode);
+}
+
 function initDarkMode() {
   const savedDark = localStorage.getItem('setutime_dark_mode');
   const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -644,6 +672,50 @@ window.onkeydown = (e) => {
   }
 };
 
+// ========== 隐藏彩蛋入口：3 秒内点击主题切换 5 次 ==========
+let hiddenEntryClickCount = 0;
+let hiddenEntryFirstClickAt = 0;
+let hiddenEntryPrompting = false;
+
+function checkHiddenEntryTrigger() {
+  const now = Date.now();
+
+  // 超过 3 秒，重新从第 1 次开始计数
+  if (!hiddenEntryFirstClickAt || now - hiddenEntryFirstClickAt > 3000) {
+    hiddenEntryFirstClickAt = now;
+    hiddenEntryClickCount = 1;
+    return;
+  }
+
+  hiddenEntryClickCount++;
+
+  if (hiddenEntryClickCount >= 5) {
+    // 触发后立即清零，避免连续误触再次触发
+    hiddenEntryClickCount = 0;
+    hiddenEntryFirstClickAt = 0;
+
+    if (hiddenEntryPrompting) return;
+    hiddenEntryPrompting = true;
+
+    const code = window.prompt('请输入本期密码');
+    if (!code) {
+      hiddenEntryPrompting = false;
+      return;
+    }
+
+    const cleanCode = String(code).trim();
+    if (!cleanCode) {
+      hiddenEntryPrompting = false;
+      return;
+    }
+
+    // 使用 GET + 302，由 Worker 在服务端验证密码后直接跳转。
+    // 这样密码不会写死在 index.html 中。
+    const checkUrl = `${window.location.protocol}//${window.location.host}/api/hidden/check?code=${encodeURIComponent(cleanCode)}`;
+    window.location.href = checkUrl;
+  }
+}
+
 function initTouchEvents() {
   document.getElementById('tab-acg').addEventListener('click', (e) => { e.preventDefault(); handleTabClick('acg'); });
   document.getElementById('tab-setu').addEventListener('click', (e) => { e.preventDefault(); handleTabClick('setu'); });
@@ -655,6 +727,7 @@ function initTouchEvents() {
       e.preventDefault();
       e.stopPropagation();
       toggleDarkMode();
+      checkHiddenEntryTrigger();
     });
   }
 }

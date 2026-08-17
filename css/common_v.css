@@ -1,0 +1,310 @@
+/* 全局重写：统一 Pornhub 经典黑暗底色 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, "Helvetica Neue", Helvetica, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", sans-serif;
+  background-color: #0f0f0f !important; /* Pornhub 官方暗黑背景色 */
+  color: #ffffff !important;
+  line-height: 1.6;
+}
+
+.container {
+  max-width: 100%;
+  padding: 15px;
+  background-color: #0f0f0f;
+}
+
+.header {
+  text-align: center;
+  padding: 20px 0;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #222222; /* 弱化分割线，防止刺眼 */
+}
+
+/* Pornhub 风格 Logo 基础样式 */
+.logo-ph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+  font-weight: 900; /* 超粗体 */
+  font-size: 2.2rem; 
+  letter-spacing: -1px;
+  user-select: none;
+  margin: 10px 0;
+}
+
+.logo-ph .logo-text {
+  color: #ffffff;
+  padding-right: 4px;
+}
+
+.logo-ph .logo-badge {
+  background-color: #ff9900; /* Pornhub 标志性经典黄色 */
+  color: #000000;            /* 纯黑字体 */
+  padding: 1px 8px 3px 8px;
+  border-radius: 4px;        /* 轻微圆角 */
+  line-height: 1.1;
+  display: inline-block;
+}
+
+/* 标题胶囊：适配暗色主题 */
+#setu-title {
+  display: block !important;
+  text-align: left !important;
+  width: 100% !important; 
+  max-width: min(92vw, 700px);
+  margin: 15px auto 25px !important; 
+  background-color: #1f1f1f !important; /* 改为深黑灰色底 */
+  border-radius: 999px !important;
+  padding: 12px 25px 12px 35px !important;
+  font-size: 15px;
+  font-weight: 500;
+  color: #e0e0e0 !important;             /* 浅灰白字体 */
+  line-height: 1.6;
+  border: 1px solid #333333 !important;  /* 边缘增加弱灰框提升质感 */
+  box-sizing: border-box;
+  word-wrap: break-word;
+}
+
+.image-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 100%;
+  max-width: min(90vw, 700px);
+  margin: 0 auto;
+}
+
+/* 视频与图片卡片容器：去除白边 */
+.image-item {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+  background: #000000 !important; /* 彻底去除浅灰/白边底 */
+  border: 1px solid #222222;
+  position: relative;
+}
+
+.img-wrap {
+  position: relative;
+  width: 100%;
+  min-height: 180px;
+  background: #181818; 
+  overflow: hidden;
+}
+
+/* 暗色 Shimmer 骨架屏 */
+.img-wrap::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, #181818 0%, #282828 50%, #181818 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite ease-in-out;
+  z-index: 1;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.img-wrap img {
+  width: 100%;
+  height: auto;
+  display: block;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  z-index: 2;
+  object-fit: contain;
+  position: relative;
+}
+
+.img-wrap.loaded::before {
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.img-wrap.loaded img {
+  opacity: 1;
+}
+
+/* 视频组件彻底消除边框与背景露白 */
+.responsive-video {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  object-fit: contain;
+  background-color: #000000 !important;
+  display: block;
+}
+
+.explanation {
+  background: #1f1f1f;
+  border: 1px solid #333333;
+  border-radius: 16px;
+  padding: 22px;
+  text-align: center;
+  color: #cccccc;
+  margin: 25px 0;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+.explanation h2 {
+  font-size: 20px;
+  color: #ffffff;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.explanation p {
+  font-size: 15px;
+  color: #aaaaaa;
+}
+
+.explanation p span {
+  color: #ff9900;
+  font-weight: 700;
+}
+
+.preserve {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 210px;
+  max-width: 100%;
+  height: 46px;
+  margin: 15px auto 0;
+  background: #ff9900;
+  box-shadow: 0 6px 16px rgba(255, 153, 0, 0.3);
+  border-radius: 999px;
+  color: #000000;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 1.1rem;
+  transition: all .3s ease;
+  box-sizing: border-box;
+}
+
+.preserve:hover {
+  transform: translateY(-2px);
+  background: #ffaa11;
+  box-shadow: 0 8px 22px rgba(255, 153, 0, 0.45);
+}
+
+.save {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 280px;
+  height: 46px;
+  margin: 0 auto;
+  padding: 0;
+  background: #222222;
+  color: #cccccc;
+  border: 1px solid #333333;
+  border-radius: 999px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1.1rem;
+  line-height: 1;
+  box-sizing: border-box;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: all .3s ease;
+}
+
+.save:hover {
+  background: #333333;
+  color: #ffffff;
+  transform: translateY(-2px); 
+}
+
+/* 底部固定跳转按钮 */
+.fixed-button {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%) scale(1);
+  width: calc(100% - 80px);
+  max-width: 500px;
+  z-index: 1000;
+  will-change: transform, opacity; 
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.fixed-button.hidden {
+  transform: translateX(-50%) translateY(20px) scale(0.85);
+  opacity: 0;
+}
+
+.fixed-button a {
+  display: block;
+  text-align: center;
+  background: rgba(30, 30, 30, 0.85) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  color: #ffffff !important;
+  padding: 12px;
+  border-radius: 999px;
+  text-decoration: none;
+  font-weight: 700;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  pointer-events: auto;
+  transition: .3s;
+}
+
+.fixed-button a:hover {
+  background: rgba(45, 45, 45, 0.95) !important;
+  color: #ff9900 !important;
+  transform: translateY(-2px);
+}
+
+.prev-next-link {
+  display: block;
+  margin: 15px 0 40px;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.prev-next-card {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2 / 1;
+  background: #181818;
+  border: 1px solid #2a2a2a;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transition: border-color 0.3s;
+}
+
+.prev-next-card:hover {
+  border-color: #ff9900;
+}
+
+.next-text {
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 1.8rem;
+  letter-spacing: 2px;
+  z-index: 2;
+}
+
+.next-sub {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.75rem;
+  letter-spacing: 4px;
+  margin-top: 8px;
+  z-index: 2;
+  text-transform: uppercase;
+}

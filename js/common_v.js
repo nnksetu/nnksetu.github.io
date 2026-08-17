@@ -1,0 +1,360 @@
+document.addEventListener("DOMContentLoaded", function() {
+    // ==========================================
+    // 0. 彩蛋：每次刷新触发彩纸飘落动画（自然撒完）
+    // ==========================================
+    (function triggerConfetti() {
+        const canvas = document.createElement('canvas');
+        canvas.id = 'confetti-canvas';
+        canvas.style.cssText = 'position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 9999;';
+        document.body.appendChild(canvas);
+
+        const ctx = canvas.getContext('2d');
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+
+        window.addEventListener('resize', () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        });
+
+        const colors = ['#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#03a9f4', '#00bcd4', '#009688', '#4caf50', '#8bc34a', '#cddc39', '#ffeb3b', '#ffc107', '#ff9800'];
+        const confettiCount = 80;
+        const confetti = [];
+
+        for (let i = 0; i < confettiCount; i++) {
+            confetti.push({
+                x: Math.random() * width,
+                y: Math.random() * -height - 10,
+                size: Math.random() * 8 + 4,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                speedY: Math.random() * 2.5 + 1.5,
+                speedX: Math.random() * 2 - 1,
+                rotation: Math.random() * 360,
+                rotationSpeed: Math.random() * 10 - 5
+            });
+        }
+
+        function renderConfetti() {
+            ctx.clearRect(0, 0, width, height);
+            let hasActiveConfetti = false;
+
+            confetti.forEach(p => {
+                p.y += p.speedY;
+                p.x += Math.sin(p.y / 30) + p.speedX;
+                p.rotation += p.rotationSpeed;
+
+                if (p.y < height + 20) {
+                    hasActiveConfetti = true;
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate((p.rotation * Math.PI) / 180);
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 1.5);
+                    ctx.restore();
+                }
+            });
+
+            if (hasActiveConfetti) {
+                requestAnimationFrame(renderConfetti);
+            } else {
+                ctx.clearRect(0, 0, width, height);
+                canvas.remove();
+            }
+        }
+
+        renderConfetti();
+    })();
+
+    // ==========================================
+    // 0.5 底部像素宝可梦小人跳舞组 (JS 动态注入)
+    // ==========================================
+    (function injectPixelCharacters() {
+        // 创建像素小人容器
+        const danceContainer = document.createElement('div');
+        danceContainer.id = 'pixel-dance-container';
+        
+        // 动态注入 CSS
+        const style = document.createElement('style');
+        style.innerHTML = `
+            #pixel-dance-container {
+                position: relative;
+                display: flex;
+                justify-content: center;
+                align-items: flex-end;
+                gap: 25px;
+                margin: 30px auto 100px;
+                width: 100%;
+                max-width: 500px;
+                user-select: none;
+                z-index: 10;
+            }
+            .pixel-sprite {
+                width: 56px;
+                height: 56px;
+                image-rendering: pixelated; /* 开启硬边像素渲染 */
+                cursor: pointer;
+                transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.6));
+            }
+            .pixel-sprite:hover {
+                transform: scale(1.35) translateY(-5px);
+            }
+            .pixel-sprite:active {
+                transform: scale(0.9) translateY(2px);
+            }
+            /* 节奏律动动画 */
+            @keyframes pixelBounce {
+                0%, 100% { transform: translateY(0); }
+                50% { transform: translateY(-8px); }
+            }
+            .bounce-1 { animation: pixelBounce 0.8s infinite ease-in-out; }
+            .bounce-2 { animation: pixelBounce 0.8s infinite ease-in-out 0.2s; }
+            .bounce-3 { animation: pixelBounce 0.8s infinite ease-in-out 0.4s; }
+            .bounce-4 { animation: pixelBounce 0.8s infinite ease-in-out 0.6s; }
+        `;
+        document.head.appendChild(style);
+
+        // 知名像素宝可梦精选（在线动态 GIF 库）
+        const pokemons = [
+            { name: 'pikachu', url: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/25.gif' },      // 皮卡丘
+            { name: 'squirtle', url: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/7.gif' },       // 杰尼龟
+            { name: 'gengar', url: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/94.gif' },       // 耿鬼
+            { name: 'psyduck', url: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/54.gif' }       // 可达鸭
+        ];
+
+        // 渲染图像节点
+        pokemons.forEach((pokemon, index) => {
+            const img = document.createElement('img');
+            img.src = pokemon.url;
+            img.alt = pokemon.name;
+            img.className = `pixel-sprite bounce-${index + 1}`;
+            
+            // 点击触发跳跃加换声音/换闪光效果（再次点击可切换为 Shiny 闪光形态）
+            img.addEventListener('click', () => {
+                const isShiny = img.src.includes('/shiny/');
+                if (!isShiny) {
+                    img.src = pokemon.url.replace('/animated/', '/animated/shiny/');
+                } else {
+                    img.src = pokemon.url;
+                }
+            });
+
+            danceContainer.appendChild(img);
+        });
+
+        // 挂载在图片列表/跳转卡片下方
+        const targetContainer = document.querySelector('.image-grid') || document.body;
+        const fixedButton = document.querySelector('.fixed-button');
+        if (fixedButton) {
+            targetContainer.insertBefore(danceContainer, fixedButton);
+        } else {
+            targetContainer.appendChild(danceContainer);
+        }
+    })();
+
+    // ==========================================
+    // 1. 解析分类与期数[cite: 4]
+    // ==========================================
+    const path = window.location.pathname; //[cite: 4]
+    let category = 'setu'; // 默认分类[cite: 4]
+
+    if (path.includes('/zrsetu/')) { //[cite: 4]
+        category = 'zrsetu'; //[cite: 4]
+    } else if (path.includes('/acg/')) { //[cite: 4]
+        category = 'acg'; //[cite: 4]
+    } else if (path.includes('/setu/')) { //[cite: 4]
+        category = 'setu'; //[cite: 4]
+    }
+
+    let currentNo = null; //[cite: 4]
+    const titleEl = document.querySelector('.title'); //[cite: 4]
+    if (titleEl) { //[cite: 4]
+        const match = titleEl.innerText.match(/\d+/); //[cite: 4]
+        if (match) { //[cite: 4]
+            currentNo = parseInt(match[0], 10); //[cite: 4]
+        }
+    } else {
+        const pathMatch = path.match(/\/(\d+)(\.html)?/); //[cite: 4]
+        if (pathMatch) { //[cite: 4]
+            currentNo = parseInt(pathMatch[1], 10); //[cite: 4]
+        }
+    }
+
+    // ==========================================
+    // 2. 前三张竞速，锁定更快渠道[cite: 4]
+    // ==========================================
+    const RACE_COUNT = 3; //[cite: 4]
+    let lockedSource = null; //[cite: 4]
+    const raceWins = []; //[cite: 4]
+
+    function getR2Src(img) { //[cite: 4]
+        if (!currentNo) return null; //[cite: 4]
+        const imgIndex = img.alt ? img.alt.trim() : '1'; //[cite: 4]
+        return `https://r2.setutime.com/${category}_pic/pic-${currentNo}-${imgIndex}.webp`; //[cite: 4]
+    }
+
+    function raceImage(img, wrap) { //[cite: 4]
+        const defaultSrc = img.dataset.src; //[cite: 4]
+        const r2Src = getR2Src(img); //[cite: 4]
+        let settled = false; //[cite: 4]
+
+        function trySrc(src, type) { //[cite: 4]
+            if (!src) return; //[cite: 4]
+            const temp = new Image(); //[cite: 4]
+            temp.decoding = 'async'; //[cite: 4]
+            temp.src = src; //[cite: 4]
+            temp.onload = () => { //[cite: 4]
+                if (settled) return; //[cite: 4]
+                settled = true; //[cite: 4]
+                img.src = src; //[cite: 4]
+                wrap.classList.add('loaded'); //[cite: 4]
+                raceWins.push(type); //[cite: 4]
+                tryLock(); //[cite: 4]
+            };
+        }
+
+        trySrc(defaultSrc, 'default'); //[cite: 4]
+        if (r2Src) trySrc(r2Src, 'r2'); //[cite: 4]
+    }
+
+    function tryLock() { //[cite: 4]
+        if (lockedSource || raceWins.length < RACE_COUNT) return; //[cite: 4]
+        const r2Count = raceWins.filter(t => t === 'r2').length; //[cite: 4]
+        lockedSource = r2Count >= 2 ? 'r2' : 'default'; //[cite: 4]
+    }
+
+    function loadLocked(img, wrap) { //[cite: 4]
+        const defaultSrc = img.dataset.src; //[cite: 4]
+        const r2Src = getR2Src(img); //[cite: 4]
+
+        let primarySrc, fallbackSrc; //[cite: 4]
+        if (lockedSource === 'r2' && r2Src) { //[cite: 4]
+            primarySrc = r2Src; //[cite: 4]
+            fallbackSrc = defaultSrc; //[cite: 4]
+        } else {
+            primarySrc = defaultSrc; //[cite: 4]
+            fallbackSrc = r2Src; //[cite: 4]
+        }
+
+        img.decoding = 'async'; //[cite: 4]
+        img.src = primarySrc; //[cite: 4]
+        img.onload = () => wrap.classList.add('loaded'); //[cite: 4]
+        img.onerror = () => { //[cite: 4]
+            if (fallbackSrc && img.src !== fallbackSrc) { //[cite: 4]
+                img.src = fallbackSrc; //[cite: 4]
+            }
+        };
+    }
+
+    // ==========================================
+    // 3. 内存回收机制[cite: 4]
+    // ==========================================
+    const MAX_ACTIVE_IMAGES = 100; //[cite: 4]
+
+    function manageMemory() { //[cite: 4]
+        const loadedWraps = Array.from(document.querySelectorAll('.img-wrap.loaded')); //[cite: 4]
+        const activeImgs = loadedWraps //[cite: 4]
+            .map(wrap => wrap.querySelector('img')) //[cite: 4]
+            .filter(img => img && img.src && !img.src.includes('about:blank')); //[cite: 4]
+
+        if (activeImgs.length > MAX_ACTIVE_IMAGES) { //[cite: 4]
+            const countToRecycle = activeImgs.length - MAX_ACTIVE_IMAGES; //[cite: 4]
+            for (let i = 0; i < countToRecycle; i++) { //[cite: 4]
+                const imgToRecycle = activeImgs[i]; //[cite: 4]
+                const rect = imgToRecycle.getBoundingClientRect(); //[cite: 4]
+                if (rect.bottom < -1000) { //[cite: 4]
+                    imgToRecycle.removeAttribute('src'); //[cite: 4]
+                }
+            }
+        }
+    }
+
+    // ==========================================
+    // 4. 滚动观察与预加载[cite: 4]
+    // ==========================================
+    const allImgs = Array.from(document.querySelectorAll('.img-wrap img')); //[cite: 4]
+
+    if ('IntersectionObserver' in window) { //[cite: 4]
+        const imageObserver = new IntersectionObserver((entries) => { //[cite: 4]
+            entries.forEach(entry => { //[cite: 4]
+                const img = entry.target; //[cite: 4]
+                const wrap = img.parentElement; //[cite: 4]
+
+                if (!entry.isIntersecting) return; //[cite: 4]
+                if (img.src && img.src !== window.location.href && !img.src.includes('about:blank')) return; //[cite: 4]
+
+                const index = allImgs.indexOf(img); //[cite: 4]
+
+                if (lockedSource) { //[cite: 4]
+                    loadLocked(img, wrap); //[cite: 4]
+                } else if (index < RACE_COUNT) { //[cite: 4]
+                    raceImage(img, wrap); //[cite: 4]
+                } else {
+                    img.decoding = 'async'; //[cite: 4]
+                    img.src = img.dataset.src; //[cite: 4]
+                    img.onload = () => wrap.classList.add('loaded'); //[cite: 4]
+                }
+            });
+
+            manageMemory(); //[cite: 4]
+        }, {
+            rootMargin: "1500px 0px 1500px 0px" //[cite: 4]
+        });
+
+        allImgs.forEach(img => imageObserver.observe(img)); //[cite: 4]
+    } else {
+        allImgs.forEach(img => { //[cite: 4]
+            img.src = img.dataset.src; //[cite: 4]
+            img.onload = () => img.parentElement.classList.add('loaded'); //[cite: 4]
+        });
+    }
+
+    // ==========================================
+    // 5. 动态计算链接[cite: 4]
+    // ==========================================
+    if (currentNo) { //[cite: 4]
+        const prevNo = currentNo - 1; //[cite: 4]
+
+        const prevLink = document.getElementById('prev-link'); //[cite: 4]
+        if (prevLink) { //[cite: 4]
+            prevLink.href = `https://www.setutime.com/${category}/${prevNo}`; //[cite: 4]
+        }
+
+        const downloadUrl = `https://dl.setutime.com/support?id=${category}_${currentNo}`; //[cite: 4]
+        const topSaveBtn = document.querySelector('.save-blue'); //[cite: 4]
+        if (topSaveBtn) { //[cite: 4]
+            topSaveBtn.href = downloadUrl; //[cite: 4]
+        }
+        const bottomSaveBtn = document.querySelector('.preserve'); //[cite: 4]
+        if (bottomSaveBtn) { //[cite: 4]
+            bottomSaveBtn.href = downloadUrl; //[cite: 4]
+        }
+    }
+
+    // ==========================================
+    // 6. 底部固定按钮滚动显隐[cite: 4]
+    // ==========================================
+    const fixedBtn = document.querySelector('.fixed-button'); //[cite: 4]
+    if (fixedBtn) { //[cite: 4]
+        let lastScrollY = window.scrollY; //[cite: 4]
+        let ticking = false; //[cite: 4]
+
+        function updateButtonVisibility() { //[cite: 4]
+            const currentScrollY = window.scrollY; //[cite: 4]
+            if (currentScrollY > lastScrollY && currentScrollY > 10) { //[cite: 4]
+                fixedBtn.classList.add('hidden'); //[cite: 4]
+            } else {
+                fixedBtn.classList.remove('hidden'); //[cite: 4]
+            }
+            lastScrollY = currentScrollY; //[cite: 4]
+            ticking = false; //[cite: 4]
+        }
+
+        window.addEventListener('scroll', () => { //[cite: 4]
+            if (!ticking) { //[cite: 4]
+                window.requestAnimationFrame(updateButtonVisibility); //[cite: 4]
+                ticking = true; //[cite: 4]
+            }
+        });
+    }
+});

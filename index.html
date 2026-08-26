@@ -222,85 +222,11 @@
   html.dark-theme .hidden-entry-input { background: #374151; border-color: #4b5563; color: #f9fafb; }
   html.dark-theme .hidden-entry-input:focus { background: #1f2937; }
 
-  body.age-gate-open { overflow: hidden; }
-  .age-gate-overlay {
-    position: fixed; inset: 0; z-index: 2000; display: flex; align-items: center; justify-content: center;
-    padding: 24px; box-sizing: border-box; background: rgba(17,24,39,0.42);
-    backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
-  }
-  .age-gate-dialog {
-    width: 100%; max-width: 430px; padding: 30px 26px 26px; box-sizing: border-box;
-    background: rgba(255,255,255,0.96); border: 1px solid rgba(255,255,255,0.8);
-    border-radius: 28px; text-align: center; box-shadow: 0 26px 80px rgba(17,24,39,0.22);
-    animation: ageGateEnter 0.45s cubic-bezier(0.25, 1, 0.5, 1) both;
-  }
-  @keyframes ageGateEnter {
-    from { opacity: 0; transform: translateY(14px) scale(0.96); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
-  }
-  .age-gate-mark {
-    width: 58px; height: 58px; margin: 0 auto 18px; display: flex; align-items: center; justify-content: center;
-    border-radius: 50%; background: #ef4444; color: #ffffff; font-size: 25px; font-weight: 800;
-    box-shadow: 0 10px 24px rgba(239,68,68,0.28);
-  }
-  .age-gate-title { margin: 0; color: #111827; font-size: 23px; font-weight: 750; }
-  .age-gate-copy { margin: 12px auto 0; max-width: 330px; color: #6b7280; font-size: 14px; line-height: 1.7; }
-  .age-gate-actions { display: flex; gap: 12px; margin-top: 24px; }
-  .age-gate-button {
-    flex: 1; min-width: 0; height: 46px; padding: 0 16px; border-radius: 23px; font-size: 14px;
-    font-weight: 700; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .age-gate-button:active { transform: scale(0.97); }
-  .age-gate-enter { border: 0; background: #428cca; color: #ffffff; box-shadow: 0 8px 20px rgba(66,140,202,0.28); }
-  .age-gate-enter:hover { background: #53a3e6; box-shadow: 0 10px 24px rgba(66,140,202,0.36); }
-  .age-gate-leave { border: 1px solid #e5e7eb; background: #f3f4f6; color: #4b5563; }
-  .age-gate-leave:hover { background: #e5e7eb; }
-
-  .site-notice {
-    margin: 26px auto 0; max-width: 620px; color: #9ca3af; font-size: 11px; line-height: 1.7;
-    text-align: center; letter-spacing: 0.1px;
-  }
-
-  html.green-theme .age-gate-mark, body.green-theme .age-gate-mark,
-  html.pink-theme .age-gate-mark, body.pink-theme .age-gate-mark,
-  html.blue-theme .age-gate-mark, body.blue-theme .age-gate-mark { background: #ef4444; box-shadow: 0 10px 24px rgba(239,68,68,0.28); }
-  html.green-theme .age-gate-enter, body.green-theme .age-gate-enter,
-  html.pink-theme .age-gate-enter, body.pink-theme .age-gate-enter,
-  html.blue-theme .age-gate-enter, body.blue-theme .age-gate-enter { background: #428cca; box-shadow: 0 8px 20px rgba(66,140,202,0.28); }
-  html.green-theme .age-gate-enter:hover, body.green-theme .age-gate-enter:hover,
-  html.pink-theme .age-gate-enter:hover, body.pink-theme .age-gate-enter:hover,
-  html.blue-theme .age-gate-enter:hover, body.blue-theme .age-gate-enter:hover { background: #53a3e6; box-shadow: 0 10px 24px rgba(66,140,202,0.36); }
-
-  html.dark-theme .age-gate-dialog { background: rgba(31,41,55,0.97); border-color: #374151; box-shadow: 0 26px 80px rgba(0,0,0,0.38); }
-  html.dark-theme .age-gate-title { color: #f9fafb; }
-  html.dark-theme .age-gate-copy { color: #9ca3af; }
-  html.dark-theme .age-gate-leave { border-color: #4b5563; background: #374151; color: #d1d5db; }
-  html.dark-theme .age-gate-leave:hover { background: #4b5563; }
-  html.dark-theme .site-notice { color: #6b7280; }
-
-  @media (max-width: 420px) {
-    .age-gate-dialog { padding: 26px 20px 22px; }
-    .age-gate-actions { gap: 9px; }
-    .age-gate-button { padding: 0 10px; }
-  }
 </style>
 </head>
 <body>
 
 <div class="top-progress-bar" id="topProgressBar"></div>
-
-<div class="age-gate-overlay" id="ageGateOverlay" role="dialog" aria-modal="true" aria-labelledby="ageGateTitle">
-  <div class="age-gate-dialog">
-    <div class="age-gate-mark" aria-hidden="true">18+</div>
-    <h2 class="age-gate-title" id="ageGateTitle">年龄确认</h2>
-    <p class="age-gate-copy">本站包含可能不适合未满 18 岁人士浏览的内容。请确认您的年龄后继续。</p>
-    <div class="age-gate-actions">
-      <button type="button" class="age-gate-button age-gate-leave" id="ageGateLeave">未满 18 岁</button>
-      <button type="button" class="age-gate-button age-gate-enter" id="ageGateEnter">我已满 18 岁</button>
-    </div>
-  </div>
-</div>
 
 <header class="app-loading" id="appHeader">
   <div class="dark-mode-toggle" id="darkModeToggle" title="切换主题">
@@ -339,7 +265,6 @@
       </div>
       <div class="page-btn" id="nextPageBtn" onclick="changePage(1)">下一页</div>
     </div>
-    <p class="site-notice">本站立足于美利坚合众国，受北美法律保护，服务于全球华人，未满18岁或被误导访问本站，请立即离开。</p>
   </div>
 </div>
 
@@ -379,8 +304,6 @@ const ONE_HOUR = 60 * 60 * 1000;
 const HIDDEN_ENTRY_API = 'https://dl.setutime.com/api/hidden-entry/check';
 const HIDDEN_ENTRY_TRIGGER_WINDOW = 1500;
 const HIDDEN_ENTRY_TRIGGER_COUNT = 5;
-const AGE_GATE_STORAGE_KEY = 'setutime_age_verified';
-const AGE_GATE_EXIT_URL = 'https://www.setutimedl.eu.cc';
 
 let currentTab = 'acg';
 let hiddenEntryTapTimes = [];
@@ -450,28 +373,6 @@ function toggleDarkMode() {
   }
 }
 
-function initAgeGate() {
-  const overlay = document.getElementById('ageGateOverlay');
-  const enterButton = document.getElementById('ageGateEnter');
-  const leaveButton = document.getElementById('ageGateLeave');
-  if (!overlay || !enterButton || !leaveButton) return;
-
-  if (localStorage.getItem(AGE_GATE_STORAGE_KEY) === 'true') {
-    overlay.remove();
-    return;
-  }
-
-  document.body.classList.add('age-gate-open');
-  enterButton.addEventListener('click', () => {
-    localStorage.setItem(AGE_GATE_STORAGE_KEY, 'true');
-    document.body.classList.remove('age-gate-open');
-    overlay.remove();
-  });
-  leaveButton.addEventListener('click', () => {
-    window.location.replace(AGE_GATE_EXIT_URL);
-  });
-}
-
 function initDarkMode() {
   const savedDark = localStorage.getItem('setutime_dark_mode');
   const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -482,7 +383,6 @@ function initDarkMode() {
   }
 }
 initDarkMode();
-initAgeGate();
 
 function registerHiddenEntryTap() {
   const now = Date.now();

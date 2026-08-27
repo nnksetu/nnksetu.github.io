@@ -116,7 +116,7 @@ document.addEventListener("DOMContentLoaded", function() {
     function getR2Src(img) { //[cite: 4]
         if (!currentNo) return null; //[cite: 4]
         const imgIndex = img.alt ? img.alt.trim() : '1'; //[cite: 4]
-        return `https://r2.setutime.com/${category}_pic/pic-${currentNo}-${imgIndex}.webp`; //[cite: 4]
+        return `https://eo.setutime.com/${category}_pic/pic-${currentNo}-${imgIndex}.webp`; //[cite: 4]
     }
 
     function raceImage(img, wrap) { //[cite: 4]

@@ -34,7 +34,7 @@ document.addEventListener("DOMContentLoaded", function() {
     function getR2Src(img) {
         if (!currentNo) return null;
         const imgIndex = img.alt ? img.alt.trim() : '1';
-        return `https://r2.setutime.com/${category}_pic/pic-${currentNo}-${imgIndex}.webp`;
+        return `https://eo.setutime.com/${category}_pic/pic-${currentNo}-${imgIndex}.webp`;
     }
 
     // 竞速单张：双发，谁先 onload 用谁，并记录胜出渠道

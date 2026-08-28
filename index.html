@@ -93,13 +93,10 @@
   .preview-wrap.loaded img { opacity: 1; }
   .preview-fallback { position: absolute; inset: 0; z-index: 2; display: flex; align-items: center; justify-content: center; padding: 14px; color: #9ca3af; font-size: 13px; text-align: center; background: #f3f4f6; }
   .preview-fallback[hidden] { display: none; }
-  .item-content { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-width: 0; padding: 14px 16px 16px; }
+  .item-content { display: flex; align-items: center; min-width: 0; padding: 14px 16px 16px; }
   .item-left { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0; text-align: left; }
   .item-title { font-size: 16px; font-weight: 600; color: #111827; white-space: nowrap; }
-  .item-sub { font-size: 13px !important; color: #6b7280 !important; line-height: 1.5 !important; white-space: normal !important; word-break: break-all !important; overflow: visible !important; flex: 1; }
-  
-  .item-btn { background: #f3f4f6; color: #4b5563; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; transition: all 0.25s; flex-shrink: 0; user-select: none; }
-  ul.list li:hover .item-btn { background: #50C878; color: #ffffff; }
+  .item-sub { font-size: 13px !important; color: #6b7280 !important; line-height: 1.5 !important; white-space: normal !important; word-break: normal !important; overflow-wrap: anywhere !important; overflow: visible !important; flex: 1; }
   
   .skeleton-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; min-height: 400px; }
   .skeleton-item { height: 72px; background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 37%, #f3f4f6 63%); background-size: 400% 100%; animation: skeleton-loading 1.4s ease infinite; border-radius: 18px; }
@@ -165,7 +162,6 @@
   /* Theme overrides */
   html.green-theme .tab-slider, body.green-theme .tab-slider { background: #50C878; box-shadow: 0 4px 12px rgba(80,200,120,0.3); }
   html.green-theme ul.list li:hover, body.green-theme ul.list li:hover { border-color: #50C878; box-shadow: 0 6px 16px rgba(80,200,120,0.1); }
-  html.green-theme ul.list li:hover .item-btn, body.green-theme ul.list li:hover .item-btn { background: #50C878; color: #ffffff; }
   html.green-theme .page-btn:hover:not(.disabled), body.green-theme .page-btn:hover:not(.disabled) { border-color: #50C878; color: #50C878; background: rgba(80,200,120,0.03); }
   html.green-theme .search-trigger, body.green-theme .search-trigger { background: #50C878; box-shadow: 0 6px 20px rgba(80,200,120,0.4); }
   html.green-theme .search-trigger:hover, body.green-theme .search-trigger:hover { background: #62d387; box-shadow: 0 8px 24px rgba(80,200,120,0.5); }
@@ -177,7 +173,6 @@
 
   html.pink-theme .tab-slider, body.pink-theme .tab-slider { background: #f8b8c8; box-shadow: 0 4px 12px rgba(248,184,200,0.3); }
   html.pink-theme ul.list li:hover, body.pink-theme ul.list li:hover { border-color: #f8b8c8; box-shadow: 0 6px 16px rgba(248,184,200,0.1); }
-  html.pink-theme ul.list li:hover .item-btn, body.pink-theme ul.list li:hover .item-btn { background: #f8b8c8; color: #ffffff; }
   html.pink-theme .page-btn:hover:not(.disabled), body.pink-theme .page-btn:hover:not(.disabled) { border-color: #f8b8c8; color: #f8b8c8; background: rgba(248,184,200,0.03); }
   html.pink-theme .search-trigger, body.pink-theme .search-trigger { background: #f8b8c8; box-shadow: 0 6px 20px rgba(248,184,200,0.4); }
   html.pink-theme .search-trigger:hover, body.pink-theme .search-trigger:hover { background: #fca1b7; box-shadow: 0 8px 24px rgba(248,184,200,0.5); }
@@ -189,7 +184,6 @@
 
   html.blue-theme .tab-slider, body.blue-theme .tab-slider { background: #428cca; box-shadow: 0 4px 12px rgba(66,140,202,0.3); }
   html.blue-theme ul.list li:hover, body.blue-theme ul.list li:hover { border-color: #428cca; box-shadow: 0 6px 16px rgba(66,140,202,0.1); }
-  html.blue-theme ul.list li:hover .item-btn, body.blue-theme ul.list li:hover .item-btn { background: #428cca; color: #ffffff; }
   html.blue-theme .page-btn:hover:not(.disabled), body.blue-theme .page-btn:hover:not(.disabled) { border-color: #428cca; color: #428cca; background: rgba(66,140,202,0.03); }
   html.blue-theme .search-trigger, body.blue-theme .search-trigger { background: #428cca; box-shadow: 0 6px 20px rgba(66,140,202,0.4); }
   html.blue-theme .search-trigger:hover, body.blue-theme .search-trigger:hover { background: #53a3e6; box-shadow: 0 8px 24px rgba(66,140,202,0.5); }
@@ -214,8 +208,6 @@
   html.dark-theme ul.list li:active { background: #374151; }
   html.dark-theme .item-title { color: #f9fafb; }
   html.dark-theme .item-sub { color: #9ca3af !important; }
-  html.dark-theme .item-btn { background: #374151; color: #d1d5db; }
-  html.dark-theme ul.list li:hover .item-btn { color: #ffffff; }
   html.dark-theme .skeleton-item { background: linear-gradient(90deg, #374151 25%, #4b5563 37%, #374151 63%); background-size: 400% 100%; }
   html.dark-theme .page-btn { background: #1f2937; border-color: #374151; color: #d1d5db; }
   html.dark-theme .page-btn.disabled { background: #111827; border-color: #374151; color: #4b5563; }
@@ -756,7 +748,6 @@ async function renderCurrentList(isTabSwitch = false) {
             <div class="item-title">第 ${item.file.match(/\d+/)?.[0] || '?'} 期</div>
             <div class="item-sub">${item.caption || '精选合集发布'}</div>
           </div>
-          <div class="item-btn">点击阅读</div>
         </div>
       </li>
     `;

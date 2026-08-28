@@ -107,69 +107,14 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     // ==========================================
-    // 2. 前三张竞速，锁定更快渠道[cite: 4]
+    // 2. 默认图床懒加载[cite: 4]
     // ==========================================
-    const RACE_COUNT = 3; //[cite: 4]
-    let lockedSource = null; //[cite: 4]
-    const raceWins = []; //[cite: 4]
-
-    function getR2Src(img) { //[cite: 4]
-        if (!currentNo) return null; //[cite: 4]
-        const imgIndex = img.alt ? img.alt.trim() : '1'; //[cite: 4]
-        return `https://eo.setutime.com/${category}_pic/pic-${currentNo}-${imgIndex}.webp`; //[cite: 4]
-    }
-
-    function raceImage(img, wrap) { //[cite: 4]
-        const defaultSrc = img.dataset.src; //[cite: 4]
-        const r2Src = getR2Src(img); //[cite: 4]
-        let settled = false; //[cite: 4]
-
-        function trySrc(src, type) { //[cite: 4]
-            if (!src) return; //[cite: 4]
-            const temp = new Image(); //[cite: 4]
-            temp.decoding = 'async'; //[cite: 4]
-            temp.src = src; //[cite: 4]
-            temp.onload = () => { //[cite: 4]
-                if (settled) return; //[cite: 4]
-                settled = true; //[cite: 4]
-                img.src = src; //[cite: 4]
-                wrap.classList.add('loaded'); //[cite: 4]
-                raceWins.push(type); //[cite: 4]
-                tryLock(); //[cite: 4]
-            };
-        }
-
-        trySrc(defaultSrc, 'default'); //[cite: 4]
-        if (r2Src) trySrc(r2Src, 'r2'); //[cite: 4]
-    }
-
-    function tryLock() { //[cite: 4]
-        if (lockedSource || raceWins.length < RACE_COUNT) return; //[cite: 4]
-        const r2Count = raceWins.filter(t => t === 'r2').length; //[cite: 4]
-        lockedSource = r2Count >= 2 ? 'r2' : 'default'; //[cite: 4]
-    }
-
-    function loadLocked(img, wrap) { //[cite: 4]
-        const defaultSrc = img.dataset.src; //[cite: 4]
-        const r2Src = getR2Src(img); //[cite: 4]
-
-        let primarySrc, fallbackSrc; //[cite: 4]
-        if (lockedSource === 'r2' && r2Src) { //[cite: 4]
-            primarySrc = r2Src; //[cite: 4]
-            fallbackSrc = defaultSrc; //[cite: 4]
-        } else {
-            primarySrc = defaultSrc; //[cite: 4]
-            fallbackSrc = r2Src; //[cite: 4]
-        }
-
+    function loadDefault(img, wrap) { //[cite: 4]
+        const src = img.dataset.src; //[cite: 4]
+        if (!src) return; //[cite: 4]
         img.decoding = 'async'; //[cite: 4]
-        img.src = primarySrc; //[cite: 4]
+        img.src = src; //[cite: 4]
         img.onload = () => wrap.classList.add('loaded'); //[cite: 4]
-        img.onerror = () => { //[cite: 4]
-            if (fallbackSrc && img.src !== fallbackSrc) { //[cite: 4]
-                img.src = fallbackSrc; //[cite: 4]
-            }
-        };
     }
 
     // ==========================================
@@ -209,17 +154,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 if (!entry.isIntersecting) return; //[cite: 4]
                 if (img.src && img.src !== window.location.href && !img.src.includes('about:blank')) return; //[cite: 4]
 
-                const index = allImgs.indexOf(img); //[cite: 4]
-
-                if (lockedSource) { //[cite: 4]
-                    loadLocked(img, wrap); //[cite: 4]
-                } else if (index < RACE_COUNT) { //[cite: 4]
-                    raceImage(img, wrap); //[cite: 4]
-                } else {
-                    img.decoding = 'async'; //[cite: 4]
-                    img.src = img.dataset.src; //[cite: 4]
-                    img.onload = () => wrap.classList.add('loaded'); //[cite: 4]
-                }
+                loadDefault(img, wrap); //[cite: 4]
             });
 
             manageMemory(); //[cite: 4]
@@ -230,8 +165,7 @@ document.addEventListener("DOMContentLoaded", function() {
         allImgs.forEach(img => imageObserver.observe(img)); //[cite: 4]
     } else {
         allImgs.forEach(img => { //[cite: 4]
-            img.src = img.dataset.src; //[cite: 4]
-            img.onload = () => img.parentElement.classList.add('loaded'); //[cite: 4]
+            loadDefault(img, img.parentElement); //[cite: 4]
         });
     }
 

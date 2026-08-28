@@ -26,72 +26,13 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 
-    // 2. 前三张竞速，锁定更快渠道
-    const RACE_COUNT = 3;
-    let lockedSource = null; // 'r2' | 'default' | null
-    const raceWins = [];     // 记录前三张的胜出渠道
-
-    function getR2Src(img) {
-        if (!currentNo) return null;
-        const imgIndex = img.alt ? img.alt.trim() : '1';
-        return `https://eo.setutime.com/${category}_pic/pic-${currentNo}-${imgIndex}.webp`;
-    }
-
-    // 竞速单张：双发，谁先 onload 用谁，并记录胜出渠道
-    function raceImage(img, wrap) {
-        const defaultSrc = img.dataset.src;
-        const r2Src = getR2Src(img);
-        let settled = false;
-
-        function trySrc(src, type) {
-            if (!src) return;
-            const temp = new Image();
-            temp.decoding = 'async';
-            temp.src = src;
-            temp.onload = () => {
-                if (settled) return;
-                settled = true;
-                img.src = src;
-                wrap.classList.add('loaded');
-                raceWins.push(type);
-                tryLock();
-            };
-            // onerror 忽略，等另一条线
-        }
-
-        trySrc(defaultSrc, 'default');
-        if (r2Src) trySrc(r2Src, 'r2');
-    }
-
-    // 根据前三张结果锁定渠道（多数胜出）
-    function tryLock() {
-        if (lockedSource || raceWins.length < RACE_COUNT) return;
-        const r2Count = raceWins.filter(t => t === 'r2').length;
-        lockedSource = r2Count >= 2 ? 'r2' : 'default';
-    }
-
-    // 已锁定后的单线路加载（失败可回退另一条）
-    function loadLocked(img, wrap) {
-        const defaultSrc = img.dataset.src;
-        const r2Src = getR2Src(img);
-
-        let primarySrc, fallbackSrc;
-        if (lockedSource === 'r2' && r2Src) {
-            primarySrc = r2Src;
-            fallbackSrc = defaultSrc;
-        } else {
-            primarySrc = defaultSrc;
-            fallbackSrc = r2Src;
-        }
-
+    // 2. 默认图床懒加载
+    function loadDefault(img, wrap) {
+        const src = img.dataset.src;
+        if (!src) return;
         img.decoding = 'async';
-        img.src = primarySrc;
+        img.src = src;
         img.onload = () => wrap.classList.add('loaded');
-        img.onerror = () => {
-            if (fallbackSrc && img.src !== fallbackSrc) {
-                img.src = fallbackSrc;
-            }
-        };
     }
 
     // 3. 智能缓存管理（100P 以内不回收，超出 100P 回收最远端图片）
@@ -127,20 +68,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 if (!entry.isIntersecting) return;
                 if (img.src && img.src !== window.location.href && !img.src.includes('about:blank')) return;
 
-                const index = allImgs.indexOf(img);
-
-                if (lockedSource) {
-                    // 已锁定，只用胜出渠道
-                    loadLocked(img, wrap);
-                } else if (index < RACE_COUNT) {
-                    // 前三张：竞速
-                    raceImage(img, wrap);
-                } else {
-                    // 尚未锁定且不是前三张：先走默认
-                    img.decoding = 'async';
-                    img.src = img.dataset.src;
-                    img.onload = () => wrap.classList.add('loaded');
-                }
+                loadDefault(img, wrap);
             });
 
             manageMemory();
@@ -152,8 +80,7 @@ document.addEventListener("DOMContentLoaded", function() {
     } else {
         // 降级：全部用默认
         allImgs.forEach(img => {
-            img.src = img.dataset.src;
-            img.onload = () => img.parentElement.classList.add('loaded');
+            loadDefault(img, img.parentElement);
         });
     }
 

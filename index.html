@@ -81,15 +81,16 @@
   
   .tab-slider { position: absolute; top: 5px; left: 5px; height: calc(100% - 10px); width: calc(33.3333% - 5px); border-radius: 25px; z-index: 1; transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), background 0.3s, width 0.3s; box-shadow: 0 4px 12px rgba(80,200,120,0.3); }
   
-  ul.list { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 14px; min-height: 400px; }
-  .list-column { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
-  ul.list li { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 0; display: flex; flex-direction: column; align-items: stretch; justify-content: flex-start; align-self: start; height: fit-content; overflow: hidden; cursor: pointer; transition: all 0.25s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.01); -webkit-tap-highlight-color: transparent; }
+  ul.list { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 14px; min-height: 400px; min-width: 0; width: 100%; }
+  .list-column { display: flex; flex-direction: column; gap: 14px; min-width: 0; width: 100%; }
+  ul.list li { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 0; display: flex; flex-direction: column; align-items: stretch; justify-content: flex-start; align-self: stretch; width: 100%; max-width: 100%; height: fit-content; overflow: hidden; cursor: pointer; transition: all 0.25s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.01); -webkit-tap-highlight-color: transparent; }
   ul.list li:hover { border-color: #50C878; box-shadow: 0 6px 16px rgba(80,200,120,0.06); }
   ul.list li:active { transform: scale(0.98); background: #f9fafb; }
   
-  .preview-wrap { position: relative; width: 100%; border-radius: 12px; background: #f3f4f6; overflow: hidden; }
+  .preview-wrap { position: relative; width: 100%; min-height: 150px; border-radius: 12px; background: #f3f4f6; overflow: hidden; }
   .preview-wrap::before { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 37%, #f3f4f6 63%); background-size: 400% 100%; animation: skeleton-loading 1.4s ease infinite; }
   .preview-wrap img { position: relative; z-index: 1; width: 100%; height: auto; display: block; object-fit: contain; opacity: 0; transition: opacity 0.35s ease; }
+  .preview-wrap.loaded { min-height: 0; }
   .preview-wrap.loaded::before { opacity: 0; }
   .preview-wrap.loaded img { opacity: 1; }
   .preview-wrap.preview-unavailable { display: none; }
@@ -758,6 +759,12 @@ function distributeCardsToShortestColumn(cards, columns) {
   });
 }
 
+function distributeCardsRoundRobin(cards, columns) {
+  cards.forEach((card, index) => {
+    columns[index % columns.length].appendChild(card);
+  });
+}
+
 function rebalanceListColumns(cards, columns, listDiv, renderTab) {
   if (!listDiv.isConnected || currentTab !== renderTab || !cards.every(card => card.isConnected)) return;
   columns.forEach(column => {
@@ -822,8 +829,9 @@ async function renderCurrentList(isTabSwitch = false) {
       return card;
     });
 
-    // 先按当前高度分配，图片加载后再重排一次，避免短卡片下方留下空白
-    distributeCardsToShortestColumn(cards, columns);
+    // 列表尚未显示时所有列高度都是 0，首次按高度分配会把卡片全部放进第一列。
+    // 先轮换分配保证首帧列数正确，图片加载后再按真实高度重排。
+    distributeCardsRoundRobin(cards, columns);
     let rebalanceQueued = false;
     const queueRebalance = () => {
       if (rebalanceQueued) return;

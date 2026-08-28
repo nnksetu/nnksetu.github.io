@@ -81,25 +81,26 @@
   
   .tab-slider { position: absolute; top: 5px; left: 5px; height: calc(100% - 10px); width: calc(33.3333% - 5px); border-radius: 25px; z-index: 1; transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), background 0.3s, width 0.3s; box-shadow: 0 4px 12px rgba(80,200,120,0.3); }
   
-  ul.list { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; min-height: 400px; }
-  ul.list li { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 18px; padding: 0; display: flex; flex-direction: column; align-items: stretch; justify-content: space-between; overflow: hidden; cursor: pointer; transition: all 0.25s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.01); -webkit-tap-highlight-color: transparent; }
+  ul.list { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 14px; min-height: 400px; }
+  .list-column { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  ul.list li { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 0; display: flex; flex-direction: column; align-items: stretch; justify-content: flex-start; align-self: start; height: fit-content; overflow: hidden; cursor: pointer; transition: all 0.25s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.01); -webkit-tap-highlight-color: transparent; }
   ul.list li:hover { border-color: #50C878; box-shadow: 0 6px 16px rgba(80,200,120,0.06); }
   ul.list li:active { transform: scale(0.98); background: #f9fafb; }
   
-  .preview-wrap { position: relative; width: 100%; aspect-ratio: 4 / 3; min-height: 150px; background: #f3f4f6; overflow: hidden; }
+  .preview-wrap { position: relative; width: 100%; border-radius: 12px; background: #f3f4f6; overflow: hidden; }
   .preview-wrap::before { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 37%, #f3f4f6 63%); background-size: 400% 100%; animation: skeleton-loading 1.4s ease infinite; }
-  .preview-wrap img { position: relative; z-index: 1; width: 100%; height: 100%; display: block; object-fit: cover; opacity: 0; transition: opacity 0.35s ease; }
+  .preview-wrap img { position: relative; z-index: 1; width: 100%; height: auto; display: block; object-fit: contain; opacity: 0; transition: opacity 0.35s ease; }
   .preview-wrap.loaded::before { opacity: 0; }
   .preview-wrap.loaded img { opacity: 1; }
   .preview-fallback { position: absolute; inset: 0; z-index: 2; display: flex; align-items: center; justify-content: center; padding: 14px; color: #9ca3af; font-size: 13px; text-align: center; background: #f3f4f6; }
   .preview-fallback[hidden] { display: none; }
-  .item-content { display: flex; align-items: center; min-width: 0; padding: 14px 16px 16px; }
+  .item-content { display: flex; align-items: center; min-width: 0; padding: 12px 14px 14px; }
   .item-left { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0; text-align: left; }
   .item-title { font-size: 16px; font-weight: 600; color: #111827; white-space: nowrap; }
   .item-sub { font-size: 13px !important; color: #6b7280 !important; line-height: 1.5 !important; white-space: normal !important; word-break: normal !important; overflow-wrap: anywhere !important; overflow: visible !important; flex: 1; }
   
   .skeleton-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; min-height: 400px; }
-  .skeleton-item { height: 72px; background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 37%, #f3f4f6 63%); background-size: 400% 100%; animation: skeleton-loading 1.4s ease infinite; border-radius: 18px; }
+  .skeleton-item { height: 72px; background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 37%, #f3f4f6 63%); background-size: 400% 100%; animation: skeleton-loading 1.4s ease infinite; border-radius: 14px; }
   @keyframes skeleton-loading { 0% { background-position: 100% 0 } 100% { background-position: 0 0 } }
   
   .pagination-container { display: flex; align-items: center; justify-content: space-between; margin-top: 35px; gap: 10px; user-select: none; }
@@ -155,17 +156,20 @@
   @media (min-width: 900px) {
     .container { max-width: 960px; }
     ul.list { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+    .list-column { gap: 16px; }
     .skeleton-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
-    .skeleton-item { height: 330px; }
+    .skeleton-item { height: 280px; }
   }
 
   @media (max-width: 899px) {
-    .container { padding-left: 16px; padding-right: 16px; }
-    ul.list, .skeleton-list { gap: 10px; }
-    .preview-wrap { aspect-ratio: 1 / 1; min-height: 0; }
-    .item-content { padding: 11px 12px 12px; }
-    .item-title { font-size: 15px; }
-    .item-sub { font-size: 12px !important; line-height: 1.4 !important; }
+    .container { padding-left: 12px; padding-right: 12px; }
+    ul.list, .skeleton-list { gap: 8px; }
+    .list-column { gap: 8px; }
+    ul.list li { border-radius: 12px; }
+    .preview-wrap { background: #ffffff; }
+    .item-content { padding: 10px 11px 11px; }
+    .item-title { font-size: 14px; }
+    .item-sub { font-size: 11.5px !important; line-height: 1.35 !important; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden !important; }
   }
   
   /* Theme overrides */
@@ -700,6 +704,10 @@ async function loadPreviewForCard(card, tab, item) {
   image.src = previewUrl;
 }
 
+function getListColumnCount() {
+  return window.matchMedia('(min-width: 900px)').matches ? 3 : 2;
+}
+
 async function renderCurrentList(isTabSwitch = false) {
   const listDiv = document.getElementById('contentList');
   const paginationCtrl = document.getElementById('paginationCtrl');
@@ -744,26 +752,34 @@ async function renderCurrentList(isTabSwitch = false) {
     listDiv.innerHTML = `<div style="text-align:center;padding:40px;color:#9ca3af;font-weight:600;width:100%;">暂无当前页数据</div>`;
   } else {
     const renderTab = currentTab;
-    listDiv.innerHTML = pageItems.map(item => {
-      const previewKey = getPreviewKey(renderTab, item.file);
-      return `
-      <li class="preview-card" data-preview-key="${previewKey}" onclick="window.open('/${renderTab}/${item.file}', '_self')">
-        <div class="preview-wrap">
-          <img alt="第 ${item.file.match(/\d+/)?.[0] || '?'} 期预览图" loading="lazy" decoding="async">
-          <div class="preview-fallback" hidden>预览图暂时无法加载</div>
-        </div>
-        <div class="item-content">
-          <div class="item-left">
-            <div class="item-title">第 ${item.file.match(/\d+/)?.[0] || '?'} 期</div>
-            <div class="item-sub">${item.caption || '精选合集发布'}</div>
-          </div>
-        </div>
-      </li>
-    `;
-    }).join('');
+    const columnCount = getListColumnCount();
+    const columns = Array.from({ length: columnCount }, () => []);
 
-    listDiv.querySelectorAll('.preview-card').forEach((card, index) => {
-      loadPreviewForCard(card, renderTab, pageItems[index]);
+    pageItems.forEach((item, itemIndex) => {
+      const previewKey = getPreviewKey(renderTab, item.file);
+      columns[itemIndex % columnCount].push(`
+        <li class="preview-card" data-item-index="${itemIndex}" data-preview-key="${previewKey}" onclick="window.open('/${renderTab}/${item.file}', '_self')">
+          <div class="preview-wrap">
+            <img alt="第 ${item.file.match(/\d+/)?.[0] || '?'} 期预览图" loading="lazy" decoding="async">
+            <div class="preview-fallback" hidden>预览图暂时无法加载</div>
+          </div>
+          <div class="item-content">
+            <div class="item-left">
+              <div class="item-title">第 ${item.file.match(/\d+/)?.[0] || '?'} 期</div>
+              <div class="item-sub">${item.caption || '精选合集发布'}</div>
+            </div>
+          </div>
+        </li>
+      `);
+    });
+
+    listDiv.innerHTML = columns
+      .map(column => `<div class="list-column">${column.join('')}</div>`)
+      .join('');
+
+    listDiv.querySelectorAll('.preview-card').forEach(card => {
+      const itemIndex = parseInt(card.dataset.itemIndex, 10);
+      loadPreviewForCard(card, renderTab, pageItems[itemIndex]);
     });
   }
   

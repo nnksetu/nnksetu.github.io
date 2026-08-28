@@ -92,8 +92,8 @@
   .preview-wrap img { position: relative; z-index: 1; width: 100%; height: auto; display: block; object-fit: contain; opacity: 0; transition: opacity 0.35s ease; }
   .preview-wrap.loaded::before { opacity: 0; }
   .preview-wrap.loaded img { opacity: 1; }
-  .preview-fallback { position: absolute; inset: 0; z-index: 2; display: flex; align-items: center; justify-content: center; padding: 14px; color: #9ca3af; font-size: 13px; text-align: center; background: #f3f4f6; }
-  .preview-fallback[hidden] { display: none; }
+  .preview-wrap.preview-unavailable { display: none; }
+  .preview-fallback { display: none; }
   .item-content { display: flex; align-items: center; min-width: 0; padding: 12px 14px 14px; }
   .item-left { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0; text-align: left; }
   .item-title { font-size: 16px; font-weight: 600; color: #111827; white-space: nowrap; }
@@ -688,24 +688,82 @@ async function loadPreviewForCard(card, tab, item) {
   if (!card.isConnected || card.dataset.previewKey !== key) return;
 
   if (!previewUrl) {
-    previewWrap.classList.add('loaded');
-    fallback.hidden = false;
+    previewWrap.classList.add('preview-unavailable');
     return;
   }
 
-  image.onload = () => {
-    previewWrap.classList.add('loaded');
-    fallback.hidden = true;
-  };
-  image.onerror = () => {
-    previewWrap.classList.add('loaded');
-    fallback.hidden = false;
-  };
-  image.src = previewUrl;
+  return new Promise(resolve => {
+    let settled = false;
+
+    const finish = loaded => {
+      if (settled) return;
+      settled = true;
+      image.onload = null;
+      image.onerror = null;
+
+      if (loaded) {
+        previewWrap.classList.add('loaded');
+        fallback.hidden = true;
+      } else {
+        previewWrap.classList.add('preview-unavailable');
+      }
+      resolve(loaded);
+    };
+
+    image.onload = () => finish(true);
+    image.onerror = () => finish(false);
+    image.src = previewUrl;
+
+    if (image.complete) {
+      finish(image.naturalWidth > 0);
+    }
+  });
 }
 
 function getListColumnCount() {
   return window.matchMedia('(min-width: 900px)').matches ? 3 : 2;
+}
+
+function createPreviewCard(item, tab, itemIndex) {
+  const previewKey = getPreviewKey(tab, item.file);
+  const card = document.createElement('li');
+  card.className = 'preview-card';
+  card.dataset.itemIndex = itemIndex;
+  card.dataset.previewKey = previewKey;
+  card.onclick = () => window.open(`/${tab}/${item.file}`, '_self');
+  card.innerHTML = `
+    <div class="preview-wrap">
+      <img alt="第 ${item.file.match(/\d+/)?.[0] || '?'} 期预览图" loading="lazy" decoding="async">
+      <div class="preview-fallback" hidden>预览图暂时无法加载</div>
+    </div>
+    <div class="item-content">
+      <div class="item-left">
+        <div class="item-title">第 ${item.file.match(/\d+/)?.[0] || '?'} 期</div>
+        <div class="item-sub">${item.caption || '精选合集发布'}</div>
+      </div>
+    </div>
+  `;
+  return card;
+}
+
+function getShortestListColumn(columns) {
+  return columns.reduce((shortest, column) => {
+    return column.offsetHeight < shortest.offsetHeight ? column : shortest;
+  }, columns[0]);
+}
+
+function distributeCardsToShortestColumn(cards, columns) {
+  cards.forEach(card => {
+    getShortestListColumn(columns).appendChild(card);
+  });
+}
+
+function rebalanceListColumns(cards, columns, listDiv, renderTab) {
+  if (!listDiv.isConnected || currentTab !== renderTab || !cards.every(card => card.isConnected)) return;
+  columns.forEach(column => {
+    while (column.firstChild) column.firstChild.remove();
+  });
+  distributeCardsToShortestColumn(cards, columns);
 }
 
 async function renderCurrentList(isTabSwitch = false) {
@@ -753,33 +811,31 @@ async function renderCurrentList(isTabSwitch = false) {
   } else {
     const renderTab = currentTab;
     const columnCount = getListColumnCount();
-    const columns = Array.from({ length: columnCount }, () => []);
+    listDiv.innerHTML = Array.from(
+      { length: columnCount },
+      () => '<div class="list-column"></div>'
+    ).join('');
 
-    pageItems.forEach((item, itemIndex) => {
-      const previewKey = getPreviewKey(renderTab, item.file);
-      columns[itemIndex % columnCount].push(`
-        <li class="preview-card" data-item-index="${itemIndex}" data-preview-key="${previewKey}" onclick="window.open('/${renderTab}/${item.file}', '_self')">
-          <div class="preview-wrap">
-            <img alt="第 ${item.file.match(/\d+/)?.[0] || '?'} 期预览图" loading="lazy" decoding="async">
-            <div class="preview-fallback" hidden>预览图暂时无法加载</div>
-          </div>
-          <div class="item-content">
-            <div class="item-left">
-              <div class="item-title">第 ${item.file.match(/\d+/)?.[0] || '?'} 期</div>
-              <div class="item-sub">${item.caption || '精选合集发布'}</div>
-            </div>
-          </div>
-        </li>
-      `);
+    const columns = Array.from(listDiv.querySelectorAll('.list-column'));
+    const cards = pageItems.map((item, itemIndex) => {
+      const card = createPreviewCard(item, renderTab, itemIndex);
+      return card;
     });
 
-    listDiv.innerHTML = columns
-      .map(column => `<div class="list-column">${column.join('')}</div>`)
-      .join('');
+    // 先按当前高度分配，图片加载后再重排一次，避免短卡片下方留下空白
+    distributeCardsToShortestColumn(cards, columns);
+    let rebalanceQueued = false;
+    const queueRebalance = () => {
+      if (rebalanceQueued) return;
+      rebalanceQueued = true;
+      requestAnimationFrame(() => {
+        rebalanceQueued = false;
+        rebalanceListColumns(cards, columns, listDiv, renderTab);
+      });
+    };
 
-    listDiv.querySelectorAll('.preview-card').forEach(card => {
-      const itemIndex = parseInt(card.dataset.itemIndex, 10);
-      loadPreviewForCard(card, renderTab, pageItems[itemIndex]);
+    cards.forEach((card, itemIndex) => {
+      loadPreviewForCard(card, renderTab, pageItems[itemIndex]).then(queueRebalance);
     });
   }
   

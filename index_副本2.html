@@ -81,27 +81,19 @@
   
   .tab-slider { position: absolute; top: 5px; left: 5px; height: calc(100% - 10px); width: calc(33.3333% - 5px); border-radius: 25px; z-index: 1; transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), background 0.3s, width 0.3s; box-shadow: 0 4px 12px rgba(80,200,120,0.3); }
   
-  ul.list { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; min-height: 400px; }
-  ul.list li { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 18px; padding: 0; display: flex; flex-direction: column; align-items: stretch; justify-content: space-between; overflow: hidden; cursor: pointer; transition: all 0.25s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.01); -webkit-tap-highlight-color: transparent; }
+  ul.list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; min-height: 400px; }
+  ul.list li { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 18px; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: all 0.25s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.01); -webkit-tap-highlight-color: transparent; }
   ul.list li:hover { border-color: #50C878; box-shadow: 0 6px 16px rgba(80,200,120,0.06); }
   ul.list li:active { transform: scale(0.98); background: #f9fafb; }
   
-  .preview-wrap { position: relative; width: 100%; aspect-ratio: 4 / 3; min-height: 150px; background: #f3f4f6; overflow: hidden; }
-  .preview-wrap::before { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 37%, #f3f4f6 63%); background-size: 400% 100%; animation: skeleton-loading 1.4s ease infinite; }
-  .preview-wrap img { position: relative; z-index: 1; width: 100%; height: 100%; display: block; object-fit: cover; opacity: 0; transition: opacity 0.35s ease; }
-  .preview-wrap.loaded::before { opacity: 0; }
-  .preview-wrap.loaded img { opacity: 1; }
-  .preview-fallback { position: absolute; inset: 0; z-index: 2; display: flex; align-items: center; justify-content: center; padding: 14px; color: #9ca3af; font-size: 13px; text-align: center; background: #f3f4f6; }
-  .preview-fallback[hidden] { display: none; }
-  .item-content { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-width: 0; padding: 14px 16px 16px; }
-  .item-left { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0; text-align: left; }
+  .item-left { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0; text-align: left; padding-right: 12px; }
   .item-title { font-size: 16px; font-weight: 600; color: #111827; white-space: nowrap; }
   .item-sub { font-size: 13px !important; color: #6b7280 !important; line-height: 1.5 !important; white-space: normal !important; word-break: break-all !important; overflow: visible !important; flex: 1; }
   
   .item-btn { background: #f3f4f6; color: #4b5563; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; transition: all 0.25s; flex-shrink: 0; user-select: none; }
   ul.list li:hover .item-btn { background: #50C878; color: #ffffff; }
   
-  .skeleton-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; min-height: 400px; }
+  .skeleton-list { display: flex; flex-direction: column; gap: 14px; min-height: 400px; }
   .skeleton-item { height: 72px; background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 37%, #f3f4f6 63%); background-size: 400% 100%; animation: skeleton-loading 1.4s ease infinite; border-radius: 18px; }
   @keyframes skeleton-loading { 0% { background-position: 100% 0 } 100% { background-position: 0 0 } }
   
@@ -154,13 +146,6 @@
   .hidden-entry-submit:hover { transform: translateY(-1px); box-shadow: 0 10px 26px rgba(80,200,120,0.34); }
   .hidden-entry-submit:active { transform: scale(0.98); }
   .hidden-entry-submit:disabled { opacity: 0.68; cursor: wait; transform: none; }
-
-  @media (min-width: 900px) {
-    .container { max-width: 960px; }
-    ul.list { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
-    .skeleton-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
-    .skeleton-item { height: 330px; }
-  }
   
   /* Theme overrides */
   html.green-theme .tab-slider, body.green-theme .tab-slider { background: #50C878; box-shadow: 0 4px 12px rgba(80,200,120,0.3); }
@@ -236,8 +221,6 @@
   html.dark-theme .hidden-entry-close:hover { background: #4b5563; color: #ffffff; }
   html.dark-theme .hidden-entry-input { background: #374151; border-color: #4b5563; color: #f9fafb; }
   html.dark-theme .hidden-entry-input:focus { background: #1f2937; }
-  html.dark-theme .preview-wrap, html.dark-theme .preview-fallback { background: #374151; }
-  html.dark-theme .preview-wrap::before { background: linear-gradient(90deg, #374151 25%, #4b5563 37%, #374151 63%); background-size: 400% 100%; }
 
 </style>
 </head>
@@ -364,10 +347,6 @@ let allItems = {
   setu: [],
   zrsetu: []
 };
-
-// 优先使用 JSON 中的预览图，旧 JSON 没有 preview 时再从子页面提取
-const previewCache = {};
-const previewRequests = {};
 
 // 各分类总条数（从任意一页 JSON 的 total 字段获取）
 let totalCount = {
@@ -621,84 +600,6 @@ async function ensureServerPage(tab, serverPage) {
   return pageData;
 }
 
-function getPreviewKey(tab, file) {
-  return `${tab}/${file}`;
-}
-
-async function fetchPreviewUrl(tab, item) {
-  const key = getPreviewKey(tab, item.file);
-  if (Object.prototype.hasOwnProperty.call(previewCache, key)) {
-    return previewCache[key];
-  }
-  if (previewRequests[key]) {
-    return previewRequests[key];
-  }
-
-  if (item.preview) {
-    previewCache[key] = item.preview;
-    return item.preview;
-  }
-
-  const pageUrl = `${rootUrl}${tab}/${item.file}`;
-  previewRequests[key] = fetch(pageUrl, { cache: 'force-cache' })
-    .then(response => {
-      if (!response.ok) throw new Error('Preview page request failed');
-      return response.text();
-    })
-    .then(html => {
-      const doc = new DOMParser().parseFromString(html, 'text/html');
-      const imageUrls = Array.from(doc.querySelectorAll('.image-item img'))
-        .map(img => img.getAttribute('data-src') || img.getAttribute('src'))
-        .filter(Boolean)
-        .map(url => new URL(url, pageUrl).href);
-
-      // 偶数张图取前一个中间位置，例如 40 张取第 20 张
-      const middleIndex = imageUrls.length ? Math.ceil(imageUrls.length / 2) - 1 : -1;
-      const previewUrl = middleIndex >= 0 ? imageUrls[middleIndex] : null;
-      previewCache[key] = previewUrl;
-      return previewUrl;
-    })
-    .catch(error => {
-      console.warn(`Preview extraction failed for ${pageUrl}`, error);
-      previewCache[key] = null;
-      return null;
-    })
-    .finally(() => {
-      delete previewRequests[key];
-    });
-
-  return previewRequests[key];
-}
-
-async function loadPreviewForCard(card, tab, item) {
-  if (!card || !card.isConnected) return;
-
-  const image = card.querySelector('.preview-wrap img');
-  const fallback = card.querySelector('.preview-fallback');
-  const previewWrap = card.querySelector('.preview-wrap');
-  if (!image || !fallback || !previewWrap) return;
-
-  const key = getPreviewKey(tab, item.file);
-  const previewUrl = await fetchPreviewUrl(tab, item);
-  if (!card.isConnected || card.dataset.previewKey !== key) return;
-
-  if (!previewUrl) {
-    previewWrap.classList.add('loaded');
-    fallback.hidden = false;
-    return;
-  }
-
-  image.onload = () => {
-    previewWrap.classList.add('loaded');
-    fallback.hidden = true;
-  };
-  image.onerror = () => {
-    previewWrap.classList.add('loaded');
-    fallback.hidden = false;
-  };
-  image.src = previewUrl;
-}
-
 async function renderCurrentList(isTabSwitch = false) {
   const listDiv = document.getElementById('contentList');
   const paginationCtrl = document.getElementById('paginationCtrl');
@@ -706,7 +607,7 @@ async function renderCurrentList(isTabSwitch = false) {
   
   if (isTabSwitch) {
     listDiv.style.display = 'none';
-    skeleton.style.display = 'grid';
+    skeleton.style.display = 'flex';
     paginationCtrl.style.display = 'none';
   }
   
@@ -742,33 +643,19 @@ async function renderCurrentList(isTabSwitch = false) {
   if (pageItems.length === 0) {
     listDiv.innerHTML = `<div style="text-align:center;padding:40px;color:#9ca3af;font-weight:600;width:100%;">暂无当前页数据</div>`;
   } else {
-    const renderTab = currentTab;
-    listDiv.innerHTML = pageItems.map(item => {
-      const previewKey = getPreviewKey(renderTab, item.file);
-      return `
-      <li class="preview-card" data-preview-key="${previewKey}" onclick="window.open('/${renderTab}/${item.file}', '_self')">
-        <div class="preview-wrap">
-          <img alt="第 ${item.file.match(/\d+/)?.[0] || '?'} 期预览图" loading="lazy" decoding="async">
-          <div class="preview-fallback" hidden>预览图暂时无法加载</div>
+    listDiv.innerHTML = pageItems.map(item => `
+      <li onclick="window.open('/${currentTab}/${item.file}', '_self')">
+        <div class="item-left">
+          <div class="item-title">第 ${item.file.match(/\d+/)?.[0] || '?'} 期</div>
+          <div class="item-sub">${item.caption || '精选合集发布'}</div>
         </div>
-        <div class="item-content">
-          <div class="item-left">
-            <div class="item-title">第 ${item.file.match(/\d+/)?.[0] || '?'} 期</div>
-            <div class="item-sub">${item.caption || '精选合集发布'}</div>
-          </div>
-          <div class="item-btn">点击阅读</div>
-        </div>
+        <div class="item-btn">点击阅读</div>
       </li>
-    `;
-    }).join('');
-
-    listDiv.querySelectorAll('.preview-card').forEach((card, index) => {
-      loadPreviewForCard(card, renderTab, pageItems[index]);
-    });
+    `).join('');
   }
   
   skeleton.style.display = 'none';
-  listDiv.style.display = 'grid';
+  listDiv.style.display = 'flex';
   
   const listLi = listDiv.querySelectorAll('li');
   listLi.forEach((li, idx) => {

@@ -1,6 +1,42 @@
 document.addEventListener("DOMContentLoaded", function() {
     const SITE_ORIGIN = "https://www.setu.mom";
     const DOWNLOAD_ORIGIN = "https://dl.setu.mom";
+    const VIDEO_ORIGIN = "https://eo.setu.mom";
+    const MANAGED_VIDEO_HOSTS = ["r2.setu.mom", "eo.setu.mom"];
+
+    function isManagedVideoHost(hostname) {
+        return MANAGED_VIDEO_HOSTS.includes(String(hostname || "").toLowerCase());
+    }
+
+    function buildManagedVideoUrl(value) {
+        const raw = String(value || "").trim();
+        if (!raw) return "";
+
+        try {
+            const parsed = new URL(raw);
+            if (!isManagedVideoHost(parsed.hostname)) return raw;
+            return VIDEO_ORIGIN + parsed.pathname + parsed.search + parsed.hash;
+        } catch (error) {
+            const path = raw.replace(/^\/+/, "");
+            return path ? `${VIDEO_ORIGIN}/${path}` : "";
+        }
+    }
+
+    function hydrateVideos() {
+        document.querySelectorAll("video source").forEach(source => {
+            const currentSrc = source.getAttribute("src") || "";
+            const sourcePath = source.dataset.videoPath || source.dataset.src || currentSrc;
+            const nextSrc = buildManagedVideoUrl(sourcePath);
+
+            if (!nextSrc || currentSrc === nextSrc) return;
+            source.src = nextSrc;
+
+            const video = source.closest("video");
+            if (video) video.load();
+        });
+    }
+
+    hydrateVideos();
 
     // 1. 从当前页面 URL 解析分类与期数
     const path = window.location.pathname;

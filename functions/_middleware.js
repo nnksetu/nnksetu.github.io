@@ -1,7 +1,8 @@
 const DEFAULT_WORKER_DOWNLOAD_DOMAIN = "https://dl.setu.mom";
+const DEFAULT_VIDEO_MEDIA_DOMAIN = "https://eo.setu.mom";
 
-function getWorkerDownloadDomain(env) {
-  return String(env?.WORKER_DOWNLOAD_DOMAIN || DEFAULT_WORKER_DOWNLOAD_DOMAIN).replace(/\/+$/, "");
+function getDomainSetting(env, name, fallback) {
+  return String(env?.[name] || fallback).replace(/\/+$/, "");
 }
 
 export async function onRequest(context) {
@@ -28,12 +29,16 @@ export async function onRequest(context) {
     return response;
   }
 
-  const workerDownloadDomain = getWorkerDownloadDomain(context.env);
+  const workerDownloadDomain = getDomainSetting(context.env, "WORKER_DOWNLOAD_DOMAIN", DEFAULT_WORKER_DOWNLOAD_DOMAIN);
+  const videoMediaDomain = getDomainSetting(context.env, "VIDEO_MEDIA_DOMAIN", DEFAULT_VIDEO_MEDIA_DOMAIN);
 
   // 3. 仅在匹配成功的文章页面中注入文章页通用 JS 逻辑
   const injectScript = `
 <script>
 document.addEventListener("DOMContentLoaded", function() {
+    const VIDEO_ORIGIN = ${JSON.stringify(videoMediaDomain)};
+    const MANAGED_VIDEO_HOSTS = ["r2.setu.mom", "eo.setu.mom"];
+
     function getIssueNumber() {
         const titleEl = document.querySelector('.title');
         if (titleEl) {
@@ -44,6 +49,40 @@ document.addEventListener("DOMContentLoaded", function() {
         if (pathMatch) return pathMatch[0];
         return null;
     }
+
+    function isManagedVideoHost(hostname) {
+        return MANAGED_VIDEO_HOSTS.includes(String(hostname || "").toLowerCase());
+    }
+
+    function buildManagedVideoUrl(value) {
+        const raw = String(value || "").trim();
+        if (!raw) return "";
+
+        try {
+            const parsed = new URL(raw);
+            if (!isManagedVideoHost(parsed.hostname)) return raw;
+            return VIDEO_ORIGIN + parsed.pathname + parsed.search + parsed.hash;
+        } catch (error) {
+            const path = raw.replace(/^\\/+/, "");
+            return path ? VIDEO_ORIGIN + "/" + path : "";
+        }
+    }
+
+    function hydrateVideos() {
+        document.querySelectorAll("video source").forEach(source => {
+            const currentSrc = source.getAttribute("src") || "";
+            const sourcePath = source.dataset.videoPath || source.dataset.src || currentSrc;
+            const nextSrc = buildManagedVideoUrl(sourcePath);
+
+            if (!nextSrc || currentSrc === nextSrc) return;
+            source.src = nextSrc;
+
+            const video = source.closest("video");
+            if (video) video.load();
+        });
+    }
+
+    hydrateVideos();
 
     function loadDefaultImage(img, wrap) {
         const defaultSrc = img.getAttribute('data-src');

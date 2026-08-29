@@ -65,7 +65,7 @@
 
 <div class="section">
 <h2>批量生成图片链接</h2>
-<p>固定域名：https://eo.setu.mom</p>
+<p>固定域名：<span id="imageOriginText"></span></p>
 
 <div>
     <label>目录选择：</label>
@@ -102,8 +102,12 @@
 </div>
 
 <script>
+const MEDIA_IMAGE_ORIGIN = "https://eo.setu.mom";
+
 // 页面加载时恢复记忆
 window.onload = function() {
+    document.getElementById("imageOriginText").innerText = MEDIA_IMAGE_ORIGIN;
+
     if(localStorage.getItem("videoIssue")) {
         document.getElementById("videoIssue").value = localStorage.getItem("videoIssue");
     }
@@ -143,7 +147,7 @@ function generateCombinedHTML() {
         for(let i = 1; i <= count; i++) {
             const item = `<div class="image-item">
   <video class="responsive-video" controls preload="metadata" playsinline webkit-playsinline>
-    <source src="https://eo.setu.mom/${videoFolder}/video-${issue}-${i}.mp4#t=0.1" type="video/mp4">
+    <source data-video-path="${videoFolder}/video-${issue}-${i}.mp4#t=0.1" type="video/mp4">
   </video>
 </div>`;
             videoLines.push(item);
@@ -172,8 +176,7 @@ function generateBatchUrls() {
 
     const lines = [];
     for(let i = 1; i <= count; i++) {
-        // 格式：https://r2.setu.mom/目录/文件名基础-序号.后缀
-        const url = `https://eo.setu.mom/${folder}/${picIssue}-${i}.${cleanSuffix}`;
+        const url = `${MEDIA_IMAGE_ORIGIN}/${folder}/${picIssue}-${i}.${cleanSuffix}`;
         lines.push(url);
     }
     document.getElementById("batchOutput").value = lines.join("\n");

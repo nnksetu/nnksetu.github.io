@@ -1,4 +1,7 @@
 document.addEventListener("DOMContentLoaded", function() {
+    const SITE_ORIGIN = "https://www.setu.mom";
+    const DOWNLOAD_ORIGIN = "https://dl.setu.mom";
+
     // 1. 从当前页面 URL 解析分类与期数
     const path = window.location.pathname;
     let category = 'setu'; // 默认分类
@@ -90,10 +93,10 @@ document.addEventListener("DOMContentLoaded", function() {
 
         const prevLink = document.getElementById('prev-link');
         if (prevLink) {
-            prevLink.href = `https://www.setutime.com/${category}/${prevNo}`;
+            prevLink.href = `${SITE_ORIGIN}/${category}/${prevNo}`;
         }
 
-        const downloadUrl = `https://dl.setutime.com/support?id=${category}_${currentNo}`;
+        const downloadUrl = `${DOWNLOAD_ORIGIN}/support?id=${category}_${currentNo}`;
         const topSaveBtn = document.querySelector('.save-blue');
         if (topSaveBtn) {
             topSaveBtn.href = downloadUrl;

@@ -1,4 +1,7 @@
 document.addEventListener("DOMContentLoaded", function() {
+    const SITE_ORIGIN = "https://www.setu.mom";
+    const DOWNLOAD_ORIGIN = "https://dl.setu.mom";
+
     // ==========================================
     // 0.5 底部像素宝可梦小人跳舞组 (Pokemondb 图鉴源)
     // ==========================================
@@ -177,10 +180,10 @@ document.addEventListener("DOMContentLoaded", function() {
 
         const prevLink = document.getElementById('prev-link'); //[cite: 4]
         if (prevLink) { //[cite: 4]
-            prevLink.href = `https://www.setutime.com/${category}/${prevNo}`; //[cite: 4]
+            prevLink.href = `${SITE_ORIGIN}/${category}/${prevNo}`; //[cite: 4]
         }
 
-        const downloadUrl = `https://dl.setutime.com/support?id=${category}_${currentNo}`; //[cite: 4]
+        const downloadUrl = `${DOWNLOAD_ORIGIN}/support?id=${category}_${currentNo}`; //[cite: 4]
         const topSaveBtn = document.querySelector('.save-blue'); //[cite: 4]
         if (topSaveBtn) { //[cite: 4]
             topSaveBtn.href = downloadUrl; //[cite: 4]

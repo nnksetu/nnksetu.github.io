@@ -1,3 +1,9 @@
+const DEFAULT_WORKER_DOWNLOAD_DOMAIN = "https://dl.setu.mom";
+
+function getWorkerDownloadDomain(env) {
+  return String(env?.WORKER_DOWNLOAD_DOMAIN || DEFAULT_WORKER_DOWNLOAD_DOMAIN).replace(/\/+$/, "");
+}
+
 export async function onRequest(context) {
   const url = new URL(context.request.url);
   const pathname = url.pathname;
@@ -22,20 +28,12 @@ export async function onRequest(context) {
     return response;
   }
 
-  // 3. 仅在匹配成功的文章页面中注入的双通道竞速 JS 逻辑
+  const workerDownloadDomain = getWorkerDownloadDomain(context.env);
+
+  // 3. 仅在匹配成功的文章页面中注入文章页通用 JS 逻辑
   const injectScript = `
 <script>
 document.addEventListener("DOMContentLoaded", function() {
-    // 1. 获取当前分类的前缀
-    function getR2CategoryPrefix() {
-        const path = window.location.pathname;
-        if (path.includes('/zrsetu')) return 'zrsetu_pic';
-        if (path.includes('/setu')) return 'setu_pic';
-        if (path.includes('/acg')) return 'acg_pic';
-        return null;
-    }
-
-    // 2. 获取当前期号 (优先从标题提取，备用从 URL)
     function getIssueNumber() {
         const titleEl = document.querySelector('.title');
         if (titleEl) {
@@ -47,67 +45,13 @@ document.addEventListener("DOMContentLoaded", function() {
         return null;
     }
 
-    const r2Prefix = getR2CategoryPrefix();
-    const issueNo = getIssueNumber();
-
-    // 3. 竞速加载核心函数，传入：图片元素、容器
-    function raceLoadImage(img, wrap) {
+    function loadDefaultImage(img, wrap) {
         const defaultSrc = img.getAttribute('data-src');
         if (!defaultSrc) return;
 
-        // 过滤头像或普通图标
-        if (defaultSrc.includes('favicon') || defaultSrc.includes('qpic.cn')) {
-            img.src = defaultSrc;
-            img.onload = () => { wrap.classList.add('loaded'); };
-            return;
-        }
-
-        // 直接获取 alt 属性作为图片序号
-        const index = img.getAttribute('alt');
-
-        // 构建 R2 目标链接
-        let r2Src = null;
-        if (r2Prefix && issueNo && index) {
-            r2Src = "https://r2.setutime.com/" + r2Prefix + "/pic-" + issueNo + "-" + index + ".webp";
-        }
-
-        // 如果拼不出 R2 链接，退回到默认加载
-        if (!r2Src) {
-            img.src = defaultSrc;
-            img.onload = () => { wrap.classList.add('loaded'); };
-            return;
-        }
-
-        let hasLoaded = false;
-        const tempDefaultImg = new Image();
-        const tempR2Img = new Image();
-
-        // 胜出者回调
-        function onWinner(winnerSrc) {
-            if (hasLoaded) return;
-            hasLoaded = true;
-            tempDefaultImg.onload = tempDefaultImg.onerror = null;
-            tempR2Img.onload = tempR2Img.onerror = null;
-            img.src = winnerSrc;
-            img.onload = () => { wrap.classList.add('loaded'); };
-        }
-
-        let failCount = 0;
-        function onError() {
-            failCount++;
-            if (failCount >= 2 && !hasLoaded) {
-                img.src = defaultSrc;
-                img.onload = () => { wrap.classList.add('loaded'); };
-            }
-        }
-
-        tempDefaultImg.onload = () => onWinner(defaultSrc);
-        tempDefaultImg.onerror = onError;
-        tempR2Img.onload = () => onWinner(r2Src);
-        tempR2Img.onerror = onError;
-
-        tempDefaultImg.src = defaultSrc;
-        tempR2Img.src = r2Src;
+        img.decoding = 'async';
+        img.src = defaultSrc;
+        img.onload = () => { wrap.classList.add('loaded'); };
     }
 
     // 获取所有待加载的图片
@@ -119,7 +63,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 if (entry.isIntersecting) {
                     const img = entry.target;
                     const wrap = img.parentElement;
-                    raceLoadImage(img, wrap);
+                    loadDefaultImage(img, wrap);
                     observer.unobserve(img);
                 }
             });
@@ -128,7 +72,7 @@ document.addEventListener("DOMContentLoaded", function() {
         imgs.forEach(img => imageObserver.observe(img));
     } else {
         imgs.forEach(img => {
-            raceLoadImage(img, img.parentElement);
+            loadDefaultImage(img, img.parentElement);
         });
     }
 
@@ -141,9 +85,9 @@ document.addEventListener("DOMContentLoaded", function() {
             const prevNo = currentNo - 1;
             const prevLink = document.getElementById('prev-link');
             if (prevLink) {
-                prevLink.href = \`https://setutime.com/zrsetu/\${prevNo}\`;
+                prevLink.href = \`https://setu.mom/zrsetu/\${prevNo}\`;
             }
-            const downloadUrl = \`https://dl.setutime.com/support?id=zrsetu_\${currentNo}\`;
+            const downloadUrl = \`${workerDownloadDomain}/support?id=zrsetu_\${currentNo}\`;
             const topSaveBtn = document.querySelector('.save-blue');
             if (topSaveBtn) {
                 topSaveBtn.href = downloadUrl;

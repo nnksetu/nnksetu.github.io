@@ -328,6 +328,7 @@ const DOWNLOAD_ORIGIN = 'https://dl.setu.mom';
 const HIDDEN_ENTRY_API = `${DOWNLOAD_ORIGIN}/api/hidden-entry/check`;
 const HIDDEN_ENTRY_TRIGGER_WINDOW = 1500;
 const HIDDEN_ENTRY_TRIGGER_COUNT = 5;
+const OWNED_SITE_HOSTS = ['setutime.com', 'www.setutime.com', 'setu.mom', 'www.setu.mom'];
 
 let currentTab = 'acg';
 let hiddenEntryTapTimes = [];
@@ -450,6 +451,29 @@ function closeHiddenEntryDialog() {
   overlay.setAttribute('aria-hidden', 'true');
 }
 
+function isOwnedSiteHost(hostname) {
+  return OWNED_SITE_HOSTS.includes(String(hostname || '').toLowerCase());
+}
+
+function resolveHiddenEntryUrl(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+
+  if (raw.startsWith('/')) {
+    return window.location.origin + raw;
+  }
+
+  try {
+    const target = new URL(raw);
+    if (isOwnedSiteHost(target.hostname)) {
+      return window.location.origin + target.pathname + target.search + target.hash;
+    }
+    return target.href;
+  } catch (e) {
+    return window.location.origin + '/' + raw.replace(/^\/+/, '');
+  }
+}
+
 async function submitHiddenEntry(event) {
   event.preventDefault();
   if (hiddenEntryBusy) return;
@@ -471,10 +495,14 @@ async function submitHiddenEntry(event) {
   }
 
   try {
-    const response = await fetch(HIDDEN_ENTRY_API + '?code=' + encodeURIComponent(code), { method: 'GET', cache: 'no-store' });
+    const query = new URLSearchParams({
+      code,
+      siteOrigin: window.location.origin
+    });
+    const response = await fetch(HIDDEN_ENTRY_API + '?' + query.toString(), { method: 'GET', cache: 'no-store' });
     const data = await response.json();
     if (data && data.success && data.url) {
-      window.location.href = data.url;
+      window.location.href = resolveHiddenEntryUrl(data.url);
       return;
     }
     if (error) error.innerText = (data && data.msg) ? data.msg : '入口密码不正确';

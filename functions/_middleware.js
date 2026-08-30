@@ -59,6 +59,9 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     function getCategory() {
+        const declaredCategory = (document.body?.dataset.category || "").trim().toLowerCase();
+        if (IMAGE_FOLDER_BY_CATEGORY[declaredCategory]) return declaredCategory;
+
         const path = window.location.pathname;
         if (path.includes('/zrsetu/')) return 'zrsetu';
         if (path.includes('/acg/')) return 'acg';

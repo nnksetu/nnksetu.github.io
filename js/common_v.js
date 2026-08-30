@@ -124,18 +124,20 @@ document.addEventListener("DOMContentLoaded", function() {
     })();
 
     // ==========================================
-    // 1. 解析分类与期数[cite: 4]
+    // 1. 优先读取页面声明的分类，旧页面再从 URL 解析[cite: 4]
     // ==========================================
     const path = window.location.pathname; //[cite: 4]
-    let category = 'setu'; // 默认分类[cite: 4]
+    function getCategoryFromPath() { //[cite: 4]
+        if (path.includes('/zrsetu/')) return 'zrsetu'; //[cite: 4]
+        if (path.includes('/acg/')) return 'acg'; //[cite: 4]
+        if (path.includes('/setu/')) return 'setu'; //[cite: 4]
+        return null; //[cite: 4]
+    } //[cite: 4]
 
-    if (path.includes('/zrsetu/')) { //[cite: 4]
-        category = 'zrsetu'; //[cite: 4]
-    } else if (path.includes('/acg/')) { //[cite: 4]
-        category = 'acg'; //[cite: 4]
-    } else if (path.includes('/setu/')) { //[cite: 4]
-        category = 'setu'; //[cite: 4]
-    }
+    const declaredCategory = (document.body?.dataset.category || '').trim().toLowerCase(); //[cite: 4]
+    const category = IMAGE_FOLDER_BY_CATEGORY[declaredCategory] //[cite: 4]
+        ? declaredCategory //[cite: 4]
+        : (getCategoryFromPath() || 'setu'); //[cite: 4]
 
     let currentNo = null; //[cite: 4]
     const titleEl = document.querySelector('.title'); //[cite: 4]

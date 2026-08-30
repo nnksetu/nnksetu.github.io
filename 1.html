@@ -106,16 +106,6 @@
 <p>文章页面填写好期号后，公共 JS 会根据页面分类、期号和 alt 序号自动补全图片地址。</p>
 
 <div>
-    <label>页面分类：</label>
-    <select id="emptyImageCategory">
-        <option value="zrsetu" selected>/zrsetu</option>
-        <option value="setu">/setu</option>
-        <option value="acg">/acg</option>
-    </select>
-    <span id="emptyImageFolderHint" style="font-size:12px; color:#888; margin-left:10px;">对应图片目录：zrsetu_pic</span>
-</div>
-
-<div>
     <label>生成数量：</label>
     <input type="number" id="emptyImageCount" value="" min="1" max="9999" placeholder="留空不生成">
 </div>
@@ -131,17 +121,10 @@
 
 <script>
 const MEDIA_IMAGE_ORIGIN = "https://eo.setu.mom";
-const EMPTY_IMAGE_FOLDER_BY_CATEGORY = {
-    zrsetu: "zrsetu_pic",
-    setu: "setu_pic",
-    acg: "acg_pic"
-};
 
 // 页面加载时恢复记忆
 window.onload = function() {
     document.getElementById("imageOriginText").innerText = MEDIA_IMAGE_ORIGIN;
-    updateEmptyImageFolderHint();
-    document.getElementById("emptyImageCategory").addEventListener("change", updateEmptyImageFolderHint);
 
     if(localStorage.getItem("videoIssue")) {
         document.getElementById("videoIssue").value = localStorage.getItem("videoIssue");
@@ -225,20 +208,11 @@ function generateEmptyImageDivs() {
     const count = parseInt(countInput, 10);
     if (count < 1 || count > 9999) return;
 
-    const category = document.getElementById("emptyImageCategory").value;
-    if (!EMPTY_IMAGE_FOLDER_BY_CATEGORY[category]) return;
-
     const lines = [];
     for (let i = 1; i <= count; i++) {
         lines.push(`<div class="image-item"><div class="img-wrap"><img data-src="" alt="${i}"></div></div>`);
     }
     document.getElementById("emptyImageOutput").value = lines.join("\n");
-}
-
-function updateEmptyImageFolderHint() {
-    const category = document.getElementById("emptyImageCategory").value;
-    const folder = EMPTY_IMAGE_FOLDER_BY_CATEGORY[category] || "";
-    document.getElementById("emptyImageFolderHint").innerText = `对应图片目录：${folder}`;
 }
 
 // 复制功能
@@ -266,8 +240,6 @@ function clearBatch() {
 }
 
 function clearEmptyImageDivs() {
-    document.getElementById("emptyImageCategory").value = "zrsetu";
-    updateEmptyImageFolderHint();
     document.getElementById("emptyImageCount").value = "";
     document.getElementById("emptyImageOutput").value = "";
 }

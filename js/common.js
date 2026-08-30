@@ -44,17 +44,19 @@ document.addEventListener("DOMContentLoaded", function() {
 
     hydrateVideos();
 
-    // 1. 从当前页面 URL 解析分类与期数
+    // 1. 优先读取页面声明的分类，旧页面再从 URL 解析
     const path = window.location.pathname;
-    let category = 'setu'; // 默认分类
-
-    if (path.includes('/zrsetu/')) {
-        category = 'zrsetu';
-    } else if (path.includes('/acg/')) {
-        category = 'acg';
-    } else if (path.includes('/setu/')) {
-        category = 'setu';
+    function getCategoryFromPath() {
+        if (path.includes('/zrsetu/')) return 'zrsetu';
+        if (path.includes('/acg/')) return 'acg';
+        if (path.includes('/setu/')) return 'setu';
+        return null;
     }
+
+    const declaredCategory = (document.body?.dataset.category || '').trim().toLowerCase();
+    const category = IMAGE_FOLDER_BY_CATEGORY[declaredCategory]
+        ? declaredCategory
+        : (getCategoryFromPath() || 'setu');
 
     // 提取页面期数 (例如 /zrsetu/757.html -> 757)
     let currentNo = null;

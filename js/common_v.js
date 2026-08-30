@@ -2,7 +2,13 @@ document.addEventListener("DOMContentLoaded", function() {
     const SITE_ORIGIN = "https://www.setu.mom";
     const DOWNLOAD_ORIGIN = "https://dl.setu.mom";
     const VIDEO_ORIGIN = "https://eo.setu.mom";
+    const IMAGE_ORIGIN = "https://eo.setu.mom";
     const MANAGED_VIDEO_HOSTS = ["r2.setu.mom", "eo.setu.mom"];
+    const IMAGE_FOLDER_BY_CATEGORY = {
+        zrsetu: "zrsetu_pic",
+        setu: "setu_pic",
+        acg: "acg_pic"
+    };
 
     function isManagedVideoHost(hostname) {
         return MANAGED_VIDEO_HOSTS.includes(String(hostname || "").toLowerCase());
@@ -138,7 +144,9 @@ document.addEventListener("DOMContentLoaded", function() {
         if (match) { //[cite: 4]
             currentNo = parseInt(match[0], 10); //[cite: 4]
         }
-    } else {
+    }
+
+    if (!currentNo) {
         const pathMatch = path.match(/\/(\d+)(\.html)?/); //[cite: 4]
         if (pathMatch) { //[cite: 4]
             currentNo = parseInt(pathMatch[1], 10); //[cite: 4]
@@ -146,7 +154,25 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     // ==========================================
-    // 2. 默认图床懒加载[cite: 4]
+    // 2. 空图片占位自动补全默认预览图[cite: 4]
+    function fillEmptyImageSources() { //[cite: 4]
+        const imageFolder = IMAGE_FOLDER_BY_CATEGORY[category]; //[cite: 4]
+        if (!imageFolder || !currentNo) return; //[cite: 4]
+
+        document.querySelectorAll('.img-wrap img[data-src]').forEach(img => { //[cite: 4]
+            const source = (img.getAttribute('data-src') || '').trim(); //[cite: 4]
+            if (source) return; //[cite: 4]
+
+            const alt = (img.getAttribute('alt') || '').match(/\d+/); //[cite: 4]
+            if (!alt) return; //[cite: 4]
+
+            img.dataset.src = `${IMAGE_ORIGIN}/${imageFolder}/pic-${currentNo}-${alt[0]}.webp`; //[cite: 4]
+        }); //[cite: 4]
+    } //[cite: 4]
+
+    fillEmptyImageSources(); //[cite: 4]
+
+    // 3. 默认图床懒加载[cite: 4]
     // ==========================================
     function loadDefault(img, wrap) { //[cite: 4]
         const src = img.dataset.src; //[cite: 4]
@@ -157,7 +183,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     // ==========================================
-    // 3. 内存回收机制[cite: 4]
+    // 4. 内存回收机制[cite: 4]
     // ==========================================
     const MAX_ACTIVE_IMAGES = 100; //[cite: 4]
 
@@ -180,7 +206,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     // ==========================================
-    // 4. 滚动观察与预加载[cite: 4]
+    // 5. 滚动观察与预加载[cite: 4]
     // ==========================================
     const allImgs = Array.from(document.querySelectorAll('.img-wrap img')); //[cite: 4]
 
@@ -209,7 +235,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     // ==========================================
-    // 5. 动态计算链接[cite: 4]
+    // 6. 动态计算链接[cite: 4]
     // ==========================================
     if (currentNo) { //[cite: 4]
         const prevNo = currentNo - 1; //[cite: 4]
@@ -231,7 +257,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     // ==========================================
-    // 6. 底部固定按钮滚动显隐[cite: 4]
+    // 7. 底部固定按钮滚动显隐[cite: 4]
     // ==========================================
     const fixedBtn = document.querySelector('.fixed-button'); //[cite: 4]
     if (fixedBtn) { //[cite: 4]

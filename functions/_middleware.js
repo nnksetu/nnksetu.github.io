@@ -1,5 +1,6 @@
 const DEFAULT_WORKER_DOWNLOAD_DOMAIN = "https://dl.setu.mom";
 const DEFAULT_VIDEO_MEDIA_DOMAIN = "https://eo.setu.mom";
+const DEFAULT_IMAGE_MEDIA_DOMAIN = "https://eo.setu.mom";
 
 function getDomainSetting(env, name, fallback) {
   return String(env?.[name] || fallback).replace(/\/+$/, "");
@@ -31,13 +32,20 @@ export async function onRequest(context) {
 
   const workerDownloadDomain = getDomainSetting(context.env, "WORKER_DOWNLOAD_DOMAIN", DEFAULT_WORKER_DOWNLOAD_DOMAIN);
   const videoMediaDomain = getDomainSetting(context.env, "VIDEO_MEDIA_DOMAIN", DEFAULT_VIDEO_MEDIA_DOMAIN);
+  const imageMediaDomain = getDomainSetting(context.env, "IMAGE_MEDIA_DOMAIN", DEFAULT_IMAGE_MEDIA_DOMAIN);
 
   // 3. 仅在匹配成功的文章页面中注入文章页通用 JS 逻辑
   const injectScript = `
 <script>
 document.addEventListener("DOMContentLoaded", function() {
     const VIDEO_ORIGIN = ${JSON.stringify(videoMediaDomain)};
+    const IMAGE_ORIGIN = ${JSON.stringify(imageMediaDomain)};
     const MANAGED_VIDEO_HOSTS = ["r2.setu.mom", "eo.setu.mom"];
+    const IMAGE_FOLDER_BY_CATEGORY = {
+        zrsetu: "zrsetu_pic",
+        setu: "setu_pic",
+        acg: "acg_pic"
+    };
 
     function getIssueNumber() {
         const titleEl = document.querySelector('.title');
@@ -47,6 +55,14 @@ document.addEventListener("DOMContentLoaded", function() {
         }
         const pathMatch = window.location.pathname.match(/\\d+/);
         if (pathMatch) return pathMatch[0];
+        return null;
+    }
+
+    function getCategory() {
+        const path = window.location.pathname;
+        if (path.includes('/zrsetu/')) return 'zrsetu';
+        if (path.includes('/acg/')) return 'acg';
+        if (path.includes('/setu/')) return 'setu';
         return null;
     }
 
@@ -83,6 +99,24 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     hydrateVideos();
+
+    function fillEmptyImageSources() {
+        const imageFolder = IMAGE_FOLDER_BY_CATEGORY[getCategory()];
+        const issueNumber = getIssueNumber();
+        if (!imageFolder || !issueNumber) return;
+
+        document.querySelectorAll('.img-wrap img[data-src]').forEach(img => {
+            const source = (img.getAttribute('data-src') || '').trim();
+            if (source) return;
+
+            const alt = (img.getAttribute('alt') || '').match(/\\d+/);
+            if (!alt) return;
+
+            img.dataset.src = IMAGE_ORIGIN + "/" + imageFolder + "/pic-" + issueNumber + "-" + alt[0] + ".webp";
+        });
+    }
+
+    fillEmptyImageSources();
 
     function loadDefaultImage(img, wrap) {
         const defaultSrc = img.getAttribute('data-src');

@@ -2,7 +2,13 @@ document.addEventListener("DOMContentLoaded", function() {
     const SITE_ORIGIN = "https://www.setu.mom";
     const DOWNLOAD_ORIGIN = "https://dl.setu.mom";
     const VIDEO_ORIGIN = "https://eo.setu.mom";
+    const IMAGE_ORIGIN = "https://eo.setu.mom";
     const MANAGED_VIDEO_HOSTS = ["r2.setu.mom", "eo.setu.mom"];
+    const IMAGE_FOLDER_BY_CATEGORY = {
+        zrsetu: "zrsetu_pic",
+        setu: "setu_pic",
+        acg: "acg_pic"
+    };
 
     function isManagedVideoHost(hostname) {
         return MANAGED_VIDEO_HOSTS.includes(String(hostname || "").toLowerCase());
@@ -58,14 +64,34 @@ document.addEventListener("DOMContentLoaded", function() {
         if (match) {
             currentNo = parseInt(match[0], 10);
         }
-    } else {
+    }
+
+    if (!currentNo) {
         const pathMatch = path.match(/\/(\d+)(\.html)?/);
         if (pathMatch) {
             currentNo = parseInt(pathMatch[1], 10);
         }
     }
 
-    // 2. 默认图床懒加载
+    // 2. 空图片占位自动补全默认预览图
+    function fillEmptyImageSources() {
+        const imageFolder = IMAGE_FOLDER_BY_CATEGORY[category];
+        if (!imageFolder || !currentNo) return;
+
+        document.querySelectorAll('.img-wrap img[data-src]').forEach(img => {
+            const source = (img.getAttribute('data-src') || '').trim();
+            if (source) return;
+
+            const alt = (img.getAttribute('alt') || '').match(/\d+/);
+            if (!alt) return;
+
+            img.dataset.src = `${IMAGE_ORIGIN}/${imageFolder}/pic-${currentNo}-${alt[0]}.webp`;
+        });
+    }
+
+    fillEmptyImageSources();
+
+    // 3. 默认图床懒加载
     function loadDefault(img, wrap) {
         const src = img.dataset.src;
         if (!src) return;
@@ -74,7 +100,7 @@ document.addEventListener("DOMContentLoaded", function() {
         img.onload = () => wrap.classList.add('loaded');
     }
 
-    // 3. 智能缓存管理（100P 以内不回收，超出 100P 回收最远端图片）
+    // 4. 智能缓存管理（100P 以内不回收，超出 100P 回收最远端图片）
     const MAX_ACTIVE_IMAGES = 100;
 
     function manageMemory() {
@@ -95,7 +121,7 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 
-    // 4. 激进预加载 & 滚动观察
+    // 5. 激进预加载 & 滚动观察
     const allImgs = Array.from(document.querySelectorAll('.img-wrap img'));
 
     if ('IntersectionObserver' in window) {
@@ -123,7 +149,7 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
-    // 5. 动态设置下一期/上一期与下载链接
+    // 6. 动态设置下一期/上一期与下载链接
     if (currentNo) {
         const prevNo = currentNo - 1;
 
@@ -143,7 +169,7 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 
-    // 6. 底部悬浮按钮滚动显隐控制
+    // 7. 底部悬浮按钮滚动显隐控制
     const fixedBtn = document.querySelector('.fixed-button');
     if (fixedBtn) {
         let lastScrollY = window.scrollY;

@@ -7,6 +7,12 @@ const categories = [
   { name: 'setu', folder: 'setu' },
   { name: 'zrsetu', folder: 'zrsetu' }
 ];
+const IMAGE_ORIGIN = 'https://eo.setu.mom';
+const IMAGE_FOLDER_BY_CATEGORY = {
+  acg: 'acg_pic',
+  setu: 'setu_pic',
+  zrsetu: 'zrsetu_pic'
+};
 
 function stripHtml(text) {
   return text
@@ -33,27 +39,32 @@ function extractCaption(filePath) {
   }
 }
 
-function extractPreview(filePath) {
+function extractPreview(filePath, category) {
   try {
     const content = fs.readFileSync(filePath, 'utf8');
     const imageItemRegex = /<div\b[^>]*class=["'][^"']*\bimage-item\b[^"']*["'][^>]*>[\s\S]*?<img\b([^>]*)>/gi;
-    const imageUrls = [];
+    const images = [];
     let match;
 
     while ((match = imageItemRegex.exec(content)) !== null) {
       const attributes = match[1];
-      const srcMatch =
-        /\bdata-src\s*=\s*["']([^"']+)["']/i.exec(attributes) ||
-        /\bsrc\s*=\s*["']([^"']+)["']/i.exec(attributes);
-
-      if (srcMatch && srcMatch[1] && !srcMatch[1].startsWith('data:')) {
-        imageUrls.push(srcMatch[1].trim());
-      }
+      const altMatch = /\balt\s*=\s*["']([^"']*)["']/i.exec(attributes);
+      images.push({
+        alt: altMatch ? altMatch[1].trim() : ''
+      });
     }
 
-    // 偶数张图取前一个中间位置，例如 40 张取第 20 张
-    const middleIndex = imageUrls.length ? Math.ceil(imageUrls.length / 2) - 1 : -1;
-    return middleIndex >= 0 ? imageUrls[middleIndex] : '';
+    // 先按全部图片确定中间位置，不能因为 data-src 为空而改变封面序号。
+    const middleIndex = images.length ? Math.ceil(images.length / 2) - 1 : -1;
+    if (middleIndex < 0) return '';
+
+    const imageNumber = images[middleIndex].alt.match(/\d+/)?.[0];
+    const imageFolder = IMAGE_FOLDER_BY_CATEGORY[category];
+    const issueNumber = path.basename(filePath, '.html');
+    if (!imageFolder || !imageNumber || !/^\d+$/.test(issueNumber)) return '';
+
+    // JSON 封面统一使用 eo 图床，不再依赖 HTML 中原图床地址是否有效。
+    return `${IMAGE_ORIGIN}/${imageFolder}/pic-${issueNumber}-${imageNumber}.webp`;
   } catch (error) {
     console.log(`读取预览图失败 ${filePath}: ${error.message}`);
     return '';
@@ -71,7 +82,7 @@ function getItems(folder) {
       return {
         file,
         caption: extractCaption(filePath),
-        preview: extractPreview(filePath)
+        preview: extractPreview(filePath, folder)
       };
     })
     .sort((a, b) => {

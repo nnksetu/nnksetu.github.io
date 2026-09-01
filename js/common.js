@@ -1,4 +1,10 @@
 document.addEventListener("DOMContentLoaded", function() {
+    if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(error => {
+            console.warn("Image cache service worker registration failed:", error);
+        });
+    }
+
     const SITE_ORIGIN = "https://www.setu.mom";
     const DOWNLOAD_ORIGIN = "https://dl.setu.mom";
     const VIDEO_ORIGIN = "https://eo.setu.mom";

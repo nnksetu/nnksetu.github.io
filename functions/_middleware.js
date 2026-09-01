@@ -10,19 +10,30 @@ export async function onRequest(context) {
   const url = new URL(context.request.url);
   const pathname = url.pathname;
 
-  // 1. 精准路径匹配：只有属于 /setu/、/zrsetu/、/acg/ 目录下的具体文章页面才进行处理
+  // 1. 文章页注入逻辑，Service Worker 单独设置整站控制权限
   const isTargetPage = 
     /^\/setu\/.+/.test(pathname) || 
     /^\/zrsetu\/.+/.test(pathname) || 
     /^\/acg\/.+/.test(pathname);
+  const isServiceWorker = pathname === "/script/sw.js";
 
   // 如果不匹配目标路径，直接放行，绝不修改任何内容
-  if (!isTargetPage) {
+  if (!isTargetPage && !isServiceWorker) {
     return context.next();
   }
 
   // 2. 获取原始页面响应
   const response = await context.next();
+
+  if (isServiceWorker) {
+    const headers = new Headers(response.headers);
+    headers.set("Service-Worker-Allowed", "/");
+    return new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers
+    });
+  }
   
   // 兜底安全校验：如果不是 HTML 页面，也直接放行
   const contentType = response.headers.get("content-type") || "";

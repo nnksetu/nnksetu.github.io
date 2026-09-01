@@ -5,372 +5,125 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
 <link rel="icon" href="https://eo.setu.mom/favicon.png" type="image/png">
 <title>涩图time</title>
-<style>
-
-*{
-margin:0;
-padding:0;
-box-sizing:border-box
-}
-
-body{
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
-  background:#fafafa;
-color:#333;
-line-height:1.6;
-}
-
-.container{
-max-width:100%;
-padding:15px
-}
-
-.header{
-text-align:center;
-padding:20px 0;
-margin-bottom:20px;
-border-bottom:1px solid #eee
-}
-
-.title{
-font-size:1.5rem;
-font-weight:600;
-color:#1e1e1e
-}
-
-.image-grid{
-display:flex;
-flex-direction:column;
-gap:18px
-}
-
-.image-item{
-border-radius:6px;
-overflow:hidden;
-box-shadow:0 3px 10px rgba(0,0,0,.06);
-background:#f0f2f5;
-position:relative
-}
-
-/* 骨架加载渐变*/
-.img-wrap{
-  position:relative;
-  width:100%;
-  min-height:180px;
-  background:linear-gradient(100deg,#f1f3f6 0%,#e2e7ec 50%,#f1f3f6 100%);
-  background-size:200% 100%;
-  animation:skeleton 1.5s infinite ease-in-out;
-  overflow:hidden;
-}
-@keyframes skeleton{
-  0%{background-position:200% 0}
-  100%{background-position:-200% 0}
-}
-/* 图片本身淡入 */
-.img-wrap {
-  position: relative;
-  width: 100%;
-  background: #f3f4f6;
-  overflow: hidden;
-}
-
-/* 添加一个 shimmer 背景层，而不是动画在容器上 */
-.img-wrap::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, #f3f4f6 0%, #e9eef6 50%, #f3f4f6 100%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite ease-in-out;
-  z-index: 1;
-}
-
-@keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-
-/* 图片层：保持原比例完整显示 */
-.img-wrap img {
-  width: 100%;
-  height: auto;
-  display: block;
-  opacity: 0;
-  transition: opacity 0.5s ease;
-  z-index: 2;
-  object-fit: contain;
-  position: relative;
-}
-
-/* 自适应居中单列 */
-.image-grid {
-  width: 100%;
-  max-width: min(90vw, 700px); /* 小屏占90%，大屏不超过700px */
-  margin: 0 auto; /* 居中 */
-}
-
-/* 加载完成后，淡出骨架层 */
-.img-wrap.loaded::before {
-  opacity: 0;
-  transition: opacity 0.5s ease;
-}
-.img-wrap.loaded img {
-  opacity: 1;
-}
-
-
-/* ===== 迅雷下载模块===== */
-
-.explanation {
-  background: linear-gradient(135deg, #f2f4f6, #eceef0);  
-  border: 1px solid #dde2e9;
-  border-radius: 16px;
-  padding: 22px;
-  text-align: center;
-  color: #4a5568;
-  margin: 25px 0;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);  
-}
-.explanation h2 {
-  font-size: 20px;
-  color: #2d2d2d;
-  margin-bottom: 10px;
-  font-weight: 600;
-}
-.explanation p {
-  font-size: 15px;
-  color: #506070;
-}
-.explanation p span {
-  color: #2d3748;
-  font-weight: 700;
-  text-shadow: 0 0 8px rgba(45, 55, 72, 0.3);
-}
-.preserve {
-  display: inline-block;
-  margin-top: 15px;
-  padding: 11px 28px;
-  border-radius: 999px;
-  background: linear-gradient(135deg, #383f50, #626982);
-  color: #fff;
-  text-decoration: none;
-  font-weight: 600;
-  box-shadow: 0 6px 16px rgba(56, 63, 80, 0.38);
-  transition: all .3s ease;
-}
-.preserve:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 22px rgba(56, 63, 80, 0.48);
-  background: linear-gradient(135deg, #424a5e, #6d748c);
-}
-
-.fixed-button{
-  position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
-  width:calc(100% - 80px);max-width:500px;z-index:100;
-}
-.fixed-button a{
-  display:block;text-align:center;background:#5ca8e6;color:#fff;
-  padding:10px;border-radius:999px;text-decoration:none;
-  font-weight:600;box-shadow:0 5px 14px rgba(92,168,230,.4);
-  transition:.3s;
-}
-.fixed-button a:hover{background:#4b96d8;transform:translateY(-2px)}
-
-.collection-wrap {
-    display: block;
-    width: 100%;
-    text-align: center;
-}
-.collection {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    width: 300px;  
-    height: 44px; 
-
-    margin: 0 auto 25px;
-    padding: 0;           
-
-    background: #5ca8e6;
-    color: #fff;
-    border-radius: 999px;
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 1.1rem;
-    line-height: 1;        
-
-    box-sizing: border-box;
-    box-shadow: 0 6px 16px rgba(92,168,230,.4);
-    transition: all .3s ease;
-}
-.collection:hover {
-    background: #4b96d8;
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(75,150,216,.5);
-}
-.responsive-video {
-           width: 100%;
-           height: auto;
-           border-radius: 8px;
-           object-fit: contain;
-}
-</style>
+<link rel="stylesheet" href="/css/common.css">
 </head>
 <body data-category="zrsetu">
 <div class="container">
   <div class="header">
-                                     <!-- ‼️ 1️⃣⬇️-->
-    <h1 class="title">涩图time No.164</h1>
+    <h1 class="title">涩图time No.3</h1>
   </div>
 
   <div class="image-grid">
-    <p style="text-align:left;font-size:16px"># 少女映画 - 友利奈绪 🔞 </p>
+ 
+    <div id="setu-title" class="title-capsule">
+      # 少女映画 - 友利奈绪 🔞 [80P]
+</div>
+     
+    <div style="text-align:center;">
+<a href="#" class="save save-blue">>>>原图保存<<<</a>
+</div>
 
 
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_525971_lCrFGmVPANfoUU6G_1768113353" alt="1"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_999300_JtfgyDQfLfodLSUu_1768113354" alt="2"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_567876_1J2Yr2u2tgyhiLd7_1768113356" alt="3"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_230286_39aZ_Ff74Au-atAE_1768113358" alt="4"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_801290_jj1nWrXEZn0Uj0MY_1768113359" alt="5"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_337211_LsnuFwttCO-hPERZ_1768113362" alt="6"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_133295_snWRPey-lbFQvRDc_1768113364" alt="7"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_3937_EsP1o0ENo90aOEMb_1768113366" alt="8"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_367768_i2nwHCCbLnzgIUT7_1768113368" alt="9"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_279353_QMZ7TOXh18H7-rpH_1768113370" alt="10"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_962552_JUotXkC5aYbkq5Ch_1768113371" alt="11"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_89720_urvkPGM0yyVKRH4X_1768113373" alt="12"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_637498_XFmhg0UB-9rYQJCh_1768113374" alt="13"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_597082_5M5m7nnxlGbNTTTn_1768113375" alt="14"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_241350_0F69WCQh1UVOJpwV_1768113376" alt="15"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_776146_hS_m96x8qWk_OAFo_1768113376" alt="16"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_183341_Oivtc_zKgIGKRHdz_1768113377" alt="17"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_312185_yVBg6RvQYG5J07Qu_1768113378" alt="18"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_942067_FgB56cap_5IcoZ80_1768113378" alt="19"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_479272_XhiyL6mD-DPHA9u4_1768113379" alt="20"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_371824_z-h1dQ6-5UPeWUwL_1768113380" alt="21"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_923024_C3-EHRtJbK5UhVgn_1768113380" alt="22"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_480328_I8ZOelQgprNB9xLQ_1768113381" alt="23"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_174740_lnMm1Vhl4nI1zMgx_1768113383" alt="24"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_957260_pPiatzi1CGKabUDF_1768113384" alt="25"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_765271_m-rl6f7uQeQ0Y5lH_1768113386" alt="26"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_403998_pJ8InVmjDj8lM-9-_1768113388" alt="27"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_929597_wCiyfp82m3rUeW3y_1768113389" alt="28"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_557421_cJ10ihms6m9IcU5g_1768113391" alt="29"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_852043_iNdOaWBJs0N-6fkX_1768113392" alt="30"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_356742_0IA5QHeWK7cE8BlR_1768113394" alt="31"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_31583_fAmauYLuGLmGBHJS_1768113396" alt="32"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_454640_sUpcVWGWQHbKBAJg_1768113397" alt="33"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_191445_gJrC6QMm-Jci_kgU_1768113399" alt="34"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_681242_WT7j0baFRvRNtErs_1768113400" alt="35"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_515513_P4qsfH_-ylbrxKvn_1768113403" alt="36"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_343916_Z4M29-KMM7-5x8uf_1768113405" alt="37"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_208494_HYihj5GcOZleCF8h_1768113407" alt="38"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_920295_TblkPR-fJVNQjdIT_1768113408" alt="39"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_799869_hczs5wG-BrJv-Xnd_1768113411" alt="40"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_422353_Uv5EylvxhtDI5lHX_1768113413" alt="41"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_39886_XLkqB2cXx-Xx4Ig6_1768113415" alt="42"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_715161_IxnH73boLNv--Ex1_1768113416" alt="43"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_149611_b6BjlfSWpC4j0162_1768113418" alt="44"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_226244_n-KsUHenv5U6h_uP_1768113419" alt="45"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_27244_6Z7zl1Bmu2d-COgQ_1768113421" alt="46"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_505486_hnfPiLt6YPJksmjo_1768113422" alt="47"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_201699_NQoda3ZEqgjLcFtu_1768113424" alt="48"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_604470_z1DkZ_y7TMchnj6d_1768113425" alt="49"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_75665_WtQ4uwK6IN91HqBa_1768113427" alt="50"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_691290_0VqpyaqC63xl3tvC_1768113428" alt="51"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_344205_1ZtV3-l_mPy1IEiY_1768113430" alt="52"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_841647_Os3Gb2LP79o8B2ZF_1768113431" alt="53"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_322059_-ucMQfm-8TC9C1nu_1768113433" alt="54"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_209977_dwyffWKMAv573acy_1768113435" alt="55"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_681739_rfKSdSMLCU_saXNp_1768113436" alt="56"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_182116_iXZsKMD_f5tZ1ePR_1768113438" alt="57"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_676243_5_9icNKR4MqUVO1k_1768113439" alt="58"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_414350_LjiMVoxolX1VlatB_1768113441" alt="59"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_172426_YrmUPFsMZmea8i72_1768113444" alt="60"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_567491_jOyGZUniagJbl__M_1768113446" alt="61"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_351393_f9-P9htyR31uoFzE_1768113449" alt="62"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_841609_TjiRlSwVSqiERczV_1768113450" alt="63"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_449441_n7vVvi6Mq4I0TwU6_1768113452" alt="64"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_47407_gZiaJcHTXEu66fWr_1768113454" alt="65"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_363016_QfOWRAONGKaoWRGq_1768113455" alt="66"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_363522_FiCLu9Na83rbQqdI_1768113456" alt="67"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_661922_D9s8q7q5u7DX3CKe_1768113457" alt="68"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_562382_q140j54IBlNOUrYm_1768113458" alt="69"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_248164_wttLYtU-E0XYoWUv_1768113459" alt="70"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_933488_3CWiY9dK5CgK2CEa_1768113459" alt="71"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_368675_Uj2KymH4IB-jpGCG_1768113460" alt="72"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_350896_rrJORQUuCmOkwrJf_1768113462" alt="73"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_669181_15PNCf0R_sykhJ8-_1768113463" alt="74"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_747489_P1dh-QgaztVryLoj_1768113465" alt="75"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_878971_HP6XYmQxUU25oRbi_1768113468" alt="76"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_702914_vNTyDX4R1AROEH8V_1768113469" alt="77"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_943053_idLc47g0vJl1wRxt_1768113471" alt="78"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_744665_gkZmdEkv_ZTodLkh_1768113474" alt="79"></div></div>
-<div class="image-item"><div class="img-wrap"><img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_324830_nC4LESd4o6Kw3D6K_1768113477" alt="80"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-1.webp" alt="1"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-2.webp" alt="2"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-3.webp" alt="3"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-4.webp" alt="4"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-5.webp" alt="5"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-6.webp" alt="6"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-7.webp" alt="7"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-8.webp" alt="8"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-9.webp" alt="9"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-10.webp" alt="10"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-11.webp" alt="11"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-12.webp" alt="12"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-13.webp" alt="13"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-14.webp" alt="14"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-15.webp" alt="15"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-16.webp" alt="16"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-17.webp" alt="17"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-18.webp" alt="18"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-19.webp" alt="19"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-20.webp" alt="20"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-21.webp" alt="21"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-22.webp" alt="22"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-23.webp" alt="23"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-24.webp" alt="24"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-25.webp" alt="25"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-26.webp" alt="26"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-27.webp" alt="27"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-28.webp" alt="28"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-29.webp" alt="29"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-30.webp" alt="30"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-31.webp" alt="31"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-32.webp" alt="32"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-33.webp" alt="33"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-34.webp" alt="34"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-35.webp" alt="35"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-36.webp" alt="36"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-37.webp" alt="37"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-38.webp" alt="38"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-39.webp" alt="39"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-40.webp" alt="40"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-41.webp" alt="41"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-42.webp" alt="42"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-43.webp" alt="43"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-44.webp" alt="44"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-45.webp" alt="45"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-46.webp" alt="46"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-47.webp" alt="47"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-48.webp" alt="48"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-49.webp" alt="49"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-50.webp" alt="50"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-51.webp" alt="51"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-52.webp" alt="52"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-53.webp" alt="53"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-54.webp" alt="54"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-55.webp" alt="55"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-56.webp" alt="56"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-57.webp" alt="57"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-58.webp" alt="58"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-59.webp" alt="59"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-60.webp" alt="60"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-61.webp" alt="61"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-62.webp" alt="62"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-63.webp" alt="63"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-64.webp" alt="64"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-65.webp" alt="65"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-66.webp" alt="66"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-67.webp" alt="67"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-68.webp" alt="68"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-69.webp" alt="69"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-70.webp" alt="70"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-71.webp" alt="71"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-72.webp" alt="72"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-73.webp" alt="73"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-74.webp" alt="74"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-75.webp" alt="75"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-76.webp" alt="76"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-77.webp" alt="77"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-78.webp" alt="78"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-79.webp" alt="79"></div></div>
+<div class="image-item"><div class="img-wrap"><img data-src="https://image.acg.lol/file/2026/09/01/pic-3-80.webp" alt="80"></div></div>
+
+
+
 
     <div class="explanation">
       <h2>本期无水印原图</h2>
-      <p>压缩包内含视频</p>  
-     
-                     
-                  <!--‼️ 2️⃣⬇️-->
- <a href="https://t.me/setutime_nnk/37" target="_blank" class="preserve">点击保存</a>
+ <a href="" target="_blank" class="preserve">>>>原图保存<<<</a>
     </div>
-
-
-    <p style="text-align:center;font-size:22px">上一期↓↓↓（点击跳转）</p>
     
-    <div class="collection-wrap"><a href="https://setu.mom" target="_blank" class="collection">SetuTime 合集</a></div>
-
-<!-- ‼️ 3️⃣⬇️-->
-    <a href="https://setu.mom/zrsetu/163">
-      
-        <div class="image-item">
-        <div class="img-wrap">
-
-                                     <!-- ‼️ 4️⃣⬇️-->
-          <img data-src="https://wdcdn.qpic.cn/MTMxMDI2NjEwNzAzNzc4NzY_630872_EyLcXAK0zeJx75dJ_1767078942" alt="上一期">
+    <a href="#" id="prev-link" class="prev-next-link">
+        <div class="prev-next-card">
+            <span class="next-text">跳转下一期 >>></span>
+            <span id="prev-sub" class="next-sub">Next Issue Gallery</span>
         </div>
-      </div>
-    </a>
-  </div>
+    </a><br>
 
   <div class="fixed-button"><a href="/">SetuTime 合集</a>
 </div>
 </div>
 
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-    if ('IntersectionObserver' in window) {
-        const imageObserver = new IntersectionObserver((entries, observer) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    const img = entry.target;
-                    const wrap = img.parentElement;
-                    if (img.dataset.src) {
-                        img.src = img.dataset.src;
-                        img.onload = () => {
-                            wrap.classList.add('loaded');
-                        };
-                    }
-                    observer.unobserve(img);
-                }
-            });
-        }, {
-            rootMargin: "0px 0px 300px 0px"
-        });
-        const imgs = document.querySelectorAll('.img-wrap img');
-        imgs.forEach(img => imageObserver.observe(img));
-    } else {
-        const imgs = document.querySelectorAll('.img-wrap img');
-        imgs.forEach(img => {
-            img.src = img.dataset.src;
-            img.onload = () => img.parentElement.classList.add('loaded');
-        });
-    }
-});
-</script>
+<script src="/js/common.js"></script>
 </body>
 </html>
-

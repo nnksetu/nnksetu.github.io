@@ -4,6 +4,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const VIDEO_ORIGIN = "https://eo.setu.mom";
     const IMAGE_ORIGIN = "https://eo.setu.mom";
     const MANAGED_VIDEO_HOSTS = ["r2.setu.mom", "eo.setu.mom"];
+    const IMAGE_RACE_COUNT = 3;
     const IMAGE_FOLDER_BY_CATEGORY = {
         zrsetu: "zrsetu_pic",
         setu: "setu_pic",
@@ -47,7 +48,7 @@ document.addEventListener("DOMContentLoaded", function() {
     // 1. 优先读取页面声明的分类，旧页面再从 URL 解析
     const path = window.location.pathname;
     function getCategoryFromPath() {
-        if (path.includes('/zrsetu/')) return 'zrsetu';
+        if (path.includes('/zrsetu/') || path.includes('/zesetu/')) return 'zrsetu';
         if (path.includes('/acg/')) return 'acg';
         if (path.includes('/setu/')) return 'setu';
         return null;
@@ -76,33 +77,173 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     // 2. 空图片占位自动补全默认预览图
-    function fillEmptyImageSources() {
+    function getImageNumber(img) {
+        const match = (img.getAttribute('alt') || '').match(/\d+/);
+        return match ? match[0] : null;
+    }
+
+    function getHtmlImageSource(img) {
+        return (img.dataset.htmlSrc || '').trim();
+    }
+
+    function buildManagedImageUrl(img) {
         const imageFolder = IMAGE_FOLDER_BY_CATEGORY[category];
-        if (!imageFolder || !currentNo) return;
+        const imageNumber = getImageNumber(img);
+        if (!imageFolder || !currentNo || !imageNumber) return '';
 
-        document.querySelectorAll('.img-wrap img[data-src]').forEach(img => {
+        return `${IMAGE_ORIGIN}/${imageFolder}/pic-${currentNo}-${imageNumber}.webp`;
+    }
+
+    function fillEmptyImageSources() {
+        document.querySelectorAll('.img-wrap img').forEach(img => {
             const source = (img.getAttribute('data-src') || '').trim();
-            if (source) return;
+            if (source) {
+                img.dataset.htmlSrc = source;
+                return;
+            }
 
-            const alt = (img.getAttribute('alt') || '').match(/\d+/);
-            if (!alt) return;
+            const htmlSource = (img.getAttribute('src') || '').trim();
+            if (htmlSource && htmlSource !== window.location.href && !htmlSource.includes('about:blank')) {
+                img.dataset.htmlSrc = htmlSource;
+                return;
+            }
 
-            img.dataset.src = `${IMAGE_ORIGIN}/${imageFolder}/pic-${currentNo}-${alt[0]}.webp`;
+            const managedSource = buildManagedImageUrl(img);
+            if (managedSource) {
+                img.dataset.managedSrc = managedSource;
+                if (!source) img.dataset.src = managedSource;
+            }
         });
     }
 
     fillEmptyImageSources();
 
-    // 3. 默认图床懒加载
-    function loadDefault(img, wrap) {
-        const src = img.dataset.src;
-        if (!src) return;
-        img.decoding = 'async';
-        img.src = src;
-        img.onload = () => wrap.classList.add('loaded');
+    // 3. 前三张图片双线路竞速，胜出线路用于本页其余图片
+    function raceImageSources(htmlSource, managedSource) {
+        const sources = [
+            { route: 'html', src: htmlSource },
+            { route: 'managed', src: managedSource }
+        ].filter(({ src }, index, items) => src && items.findIndex(item => item.src === src) === index);
+
+        if (!sources.length) return Promise.resolve(null);
+        if (sources.length === 1) return Promise.resolve(sources[0]);
+
+        return new Promise(resolve => {
+            let pending = sources.length;
+            let settled = false;
+
+            sources.forEach(source => {
+                const probe = new Image();
+                const finish = success => {
+                    if (settled) return;
+                    if (success) {
+                        settled = true;
+                        resolve(source);
+                    } else if (--pending === 0) {
+                        settled = true;
+                        resolve(null);
+                    }
+                };
+
+                probe.onload = () => finish(true);
+                probe.onerror = () => finish(false);
+                probe.src = source.src;
+            });
+        });
     }
 
-    // 4. 智能缓存管理（100P 以内不回收，超出 100P 回收最远端图片）
+    function getImageSource(img, route) {
+        const htmlSource = getHtmlImageSource(img);
+        const managedSource = (img.dataset.managedSrc || buildManagedImageUrl(img)).trim();
+
+        if (route === 'managed') return managedSource || htmlSource;
+        return htmlSource || managedSource;
+    }
+
+    function getFallbackImageSource(img, route, primarySource) {
+        const fallbackRoute = route === 'managed' ? 'html' : 'managed';
+        const fallbackSource = getImageSource(img, fallbackRoute);
+        return fallbackSource !== primarySource ? fallbackSource : '';
+    }
+
+    function loadImage(img, wrap, primarySource, fallbackSource = '') {
+        if (!primarySource || img.dataset.loading === 'true') return;
+
+        img.decoding = 'async';
+        img.dataset.loading = 'true';
+        let retried = false;
+
+        const setSource = source => {
+            img.onload = () => {
+                img.dataset.loading = 'false';
+                wrap.classList.add('loaded');
+            };
+            img.onerror = () => {
+                if (!retried && fallbackSource) {
+                    retried = true;
+                    setSource(fallbackSource);
+                    return;
+                }
+
+                img.dataset.loading = 'false';
+            };
+            img.src = source;
+        };
+
+        setSource(primarySource);
+    }
+
+    const allImgs = Array.from(document.querySelectorAll('.img-wrap img'));
+    let selectedImageRoute = null;
+
+    const imageRouteReady = Promise.all(
+        allImgs.slice(0, IMAGE_RACE_COUNT).map(img => {
+            const wrap = img.parentElement;
+            const htmlSource = getHtmlImageSource(img);
+            const managedSource = buildManagedImageUrl(img);
+
+            img.dataset.racing = 'true';
+            return raceImageSources(htmlSource, managedSource).then(winner => {
+                img.dataset.racing = 'false';
+                if (winner) {
+                    loadImage(
+                        img,
+                        wrap,
+                        winner.src,
+                        winner.route === 'html' ? managedSource : htmlSource
+                    );
+                }
+                return winner?.route || null;
+            });
+        })
+    ).then(results => {
+        const managedWins = results.filter(route => route === 'managed').length;
+        const htmlWins = results.filter(route => route === 'html').length;
+
+        selectedImageRoute = managedWins > htmlWins ? 'managed' : 'html';
+        allImgs.slice(0, IMAGE_RACE_COUNT).forEach(img => {
+            loadDefault(img, img.parentElement);
+        });
+        return selectedImageRoute;
+    });
+
+    // 4. 按竞速胜出的图床懒加载
+    function loadDefault(img, wrap) {
+        if (img.dataset.racing === 'true') return;
+        const currentSource = img.getAttribute('src') || '';
+        if ((currentSource && !currentSource.includes('about:blank')) || img.dataset.loading === 'true') return;
+
+        if (!selectedImageRoute) {
+            imageRouteReady.then(() => loadDefault(img, wrap));
+            return;
+        }
+
+        const primarySource = getImageSource(img, selectedImageRoute);
+        const fallbackSource = getFallbackImageSource(img, selectedImageRoute, primarySource);
+        loadImage(img, wrap, primarySource, fallbackSource);
+    }
+
+    // 5. 智能缓存管理（100P 以内不回收，超出 100P 回收最远端图片）
     const MAX_ACTIVE_IMAGES = 100;
 
     function manageMemory() {
@@ -123,8 +264,7 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 
-    // 5. 激进预加载 & 滚动观察
-    const allImgs = Array.from(document.querySelectorAll('.img-wrap img'));
+    // 6. 激进预加载 & 滚动观察
 
     if ('IntersectionObserver' in window) {
         const imageObserver = new IntersectionObserver((entries) => {
@@ -151,7 +291,7 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
-    // 6. 动态设置下一期/上一期与下载链接
+    // 7. 动态设置下一期/上一期与下载链接
     if (currentNo) {
         const prevNo = currentNo - 1;
 
@@ -171,7 +311,7 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 
-    // 7. 底部悬浮按钮滚动显隐控制
+    // 8. 底部悬浮按钮滚动显隐控制
     const fixedBtn = document.querySelector('.fixed-button');
     if (fixedBtn) {
         let lastScrollY = window.scrollY;

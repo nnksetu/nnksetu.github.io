@@ -1,13 +1,18 @@
 const IMAGE_CACHE_NAME = "setutime-image-cache-v1";
 const IMAGE_META_CACHE_NAME = "setutime-image-cache-meta-v1";
 const IMAGE_CACHE_TTL = 180 * 24 * 60 * 60 * 1000;
-const CACHEABLE_IMAGE_HOSTS = new Set(["eo.setu.mom"]);
+const CACHEABLE_IMAGE_HOSTS = new Set(["eo.setu.mom", "r2.setu.mom"]);
+const COVER_IMAGE_PATH = /^\/(?:acg_pic|setu_pic|zrsetu_pic)\/pic-\d+-\d+\.webp$/;
 
 function isCacheableImage(request) {
     if (request.method !== "GET" || request.destination !== "image") return false;
 
     try {
-        return CACHEABLE_IMAGE_HOSTS.has(new URL(request.url).hostname.toLowerCase());
+        const url = new URL(request.url);
+        return (
+            CACHEABLE_IMAGE_HOSTS.has(url.hostname.toLowerCase()) &&
+            COVER_IMAGE_PATH.test(url.pathname)
+        );
     } catch (error) {
         return false;
     }

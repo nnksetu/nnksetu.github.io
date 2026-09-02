@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", function() {
     if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.register("/script/sw.js", { scope: "/" }).catch(error => {
+        navigator.serviceWorker.register("/scripts/sw.js", { scope: "/" }).catch(error => {
             console.warn("Image cache service worker registration failed:", error);
         });
     }
@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const SITE_ORIGIN = "https://www.setu.mom";
     const DOWNLOAD_ORIGIN = "https://dl.setu.mom";
     const VIDEO_ORIGIN = "https://eo.setu.mom";
-    const IMAGE_ORIGIN = "https://eo.setu.mom";
+    const IMAGE_ORIGIN = "https://r2.setu.mom";
     const MANAGED_VIDEO_HOSTS = ["r2.setu.mom", "eo.setu.mom"];
     const IMAGE_RACE_COUNT = 3;
     const IMAGE_FOLDER_BY_CATEGORY = {

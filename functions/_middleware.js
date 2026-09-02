@@ -1,6 +1,6 @@
 const DEFAULT_WORKER_DOWNLOAD_DOMAIN = "https://dl.setu.mom";
 const DEFAULT_VIDEO_MEDIA_DOMAIN = "https://eo.setu.mom";
-const DEFAULT_IMAGE_MEDIA_DOMAIN = "https://eo.setu.mom";
+const DEFAULT_IMAGE_MEDIA_DOMAIN = "https://r2.setu.mom";
 
 function getDomainSetting(env, name, fallback) {
   return String(env?.[name] || fallback).replace(/\/+$/, "");
@@ -15,7 +15,7 @@ export async function onRequest(context) {
     /^\/setu\/.+/.test(pathname) || 
     /^\/zrsetu\/.+/.test(pathname) || 
     /^\/acg\/.+/.test(pathname);
-  const isServiceWorker = pathname === "/script/sw.js";
+  const isServiceWorker = pathname === "/scripts/sw.js";
 
   // 如果不匹配目标路径，直接放行，绝不修改任何内容
   if (!isTargetPage && !isServiceWorker) {

@@ -3,25 +3,20 @@ document.addEventListener("DOMContentLoaded", function() {
     const DOWNLOAD_ORIGIN = "https://dl.setu.mom";
     const VIDEO_ORIGIN = "https://eo.setu.mom";
     const IMAGE_ORIGIN = "https://eo.setu.mom";
-    const MANAGED_VIDEO_HOSTS = ["r2.setu.mom", "eo.setu.mom"];
     const IMAGE_FOLDER_BY_CATEGORY = {
         zrsetu: "zrsetu_pic",
         setu: "setu_pic",
         acg: "acg_pic"
     };
 
-    function isManagedVideoHost(hostname) {
-        return MANAGED_VIDEO_HOSTS.includes(String(hostname || "").toLowerCase());
-    }
-
-    function buildManagedVideoUrl(value) {
+    function buildVideoUrl(value) {
         const raw = String(value || "").trim();
         if (!raw) return "";
 
         try {
-            const parsed = new URL(raw);
-            if (!isManagedVideoHost(parsed.hostname)) return raw;
-            return VIDEO_ORIGIN + parsed.pathname + parsed.search + parsed.hash;
+            // Full URLs, including the R2 video URL, must remain unchanged.
+            new URL(raw);
+            return raw;
         } catch (error) {
             const path = raw.replace(/^\/+/, "");
             return path ? `${VIDEO_ORIGIN}/${path}` : "";
@@ -32,7 +27,7 @@ document.addEventListener("DOMContentLoaded", function() {
         document.querySelectorAll("video source").forEach(source => {
             const currentSrc = source.getAttribute("src") || "";
             const sourcePath = source.dataset.videoPath || source.dataset.src || currentSrc;
-            const nextSrc = buildManagedVideoUrl(sourcePath);
+            const nextSrc = buildVideoUrl(sourcePath);
 
             if (!nextSrc || currentSrc === nextSrc) return;
             source.src = nextSrc;

@@ -51,7 +51,7 @@ export async function onRequest(context) {
 document.addEventListener("DOMContentLoaded", function() {
     const VIDEO_ORIGIN = ${JSON.stringify(videoMediaDomain)};
     const IMAGE_ORIGIN = ${JSON.stringify(imageMediaDomain)};
-    const MANAGED_VIDEO_HOSTS = ["r2.setutime.top", "eo.setutime.top"];
+    const MANAGED_VIDEO_HOSTS = ["r2.setutime.top", "eo.setutime.top", "v.setutime.top"];
     const IMAGE_FOLDER_BY_CATEGORY = {
         zrsetu: "zrsetu_pic",
         setu: "setu_pic",

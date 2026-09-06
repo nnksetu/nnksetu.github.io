@@ -3,6 +3,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const DOWNLOAD_ORIGIN = "https://dl.setutime.top";
     const VIDEO_ORIGIN = "https://eo.setutime.top";
     const IMAGE_ORIGIN = "https://r2.setutime.top";
+    const MANAGED_VIDEO_HOSTS = new Set(["r2.setutime.top", "eo.setutime.top", "v.setutime.top"]);
     const IMAGE_FOLDER_BY_CATEGORY = {
         zrsetu: "zrsetu_pic",
         setu: "setu_pic",
@@ -14,9 +15,9 @@ document.addEventListener("DOMContentLoaded", function() {
         if (!raw) return "";
 
         try {
-            // Full URLs, including the R2 video URL, must remain unchanged.
-            new URL(raw);
-            return raw;
+            const parsed = new URL(raw);
+            if (!MANAGED_VIDEO_HOSTS.has(parsed.hostname.toLowerCase())) return raw;
+            return `${VIDEO_ORIGIN}${parsed.pathname}${parsed.search}${parsed.hash}`;
         } catch (error) {
             const path = raw.replace(/^\/+/, "");
             return path ? `${VIDEO_ORIGIN}/${path}` : "";

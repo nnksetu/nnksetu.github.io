@@ -1,8 +1,8 @@
 document.addEventListener("DOMContentLoaded", function() {
-    const SITE_ORIGIN = "https://www.setu.mom";
-    const DOWNLOAD_ORIGIN = "https://dl.setu.mom";
-    const VIDEO_ORIGIN = "https://eo.setu.mom";
-    const IMAGE_ORIGIN = "https://eo.setu.mom";
+    const SITE_ORIGIN = "https://setutime.top";
+    const DOWNLOAD_ORIGIN = "https://dl.setutime.top";
+    const VIDEO_ORIGIN = "https://eo.setutime.top";
+    const IMAGE_ORIGIN = "https://r2.setutime.top";
     const IMAGE_FOLDER_BY_CATEGORY = {
         zrsetu: "zrsetu_pic",
         setu: "setu_pic",

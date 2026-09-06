@@ -1,6 +1,6 @@
-const DEFAULT_WORKER_DOWNLOAD_DOMAIN = "https://dl.setu.mom";
-const DEFAULT_VIDEO_MEDIA_DOMAIN = "https://eo.setu.mom";
-const DEFAULT_IMAGE_MEDIA_DOMAIN = "https://r2.setu.mom";
+const DEFAULT_WORKER_DOWNLOAD_DOMAIN = "https://dl.setutime.top";
+const DEFAULT_VIDEO_MEDIA_DOMAIN = "https://eo.setutime.top";
+const DEFAULT_IMAGE_MEDIA_DOMAIN = "https://r2.setutime.top";
 
 function getDomainSetting(env, name, fallback) {
   return String(env?.[name] || fallback).replace(/\/+$/, "");
@@ -51,7 +51,7 @@ export async function onRequest(context) {
 document.addEventListener("DOMContentLoaded", function() {
     const VIDEO_ORIGIN = ${JSON.stringify(videoMediaDomain)};
     const IMAGE_ORIGIN = ${JSON.stringify(imageMediaDomain)};
-    const MANAGED_VIDEO_HOSTS = ["r2.setu.mom", "eo.setu.mom"];
+    const MANAGED_VIDEO_HOSTS = ["r2.setutime.top", "eo.setutime.top"];
     const IMAGE_FOLDER_BY_CATEGORY = {
         zrsetu: "zrsetu_pic",
         setu: "setu_pic",
@@ -172,7 +172,7 @@ document.addEventListener("DOMContentLoaded", function() {
             const prevNo = currentNo - 1;
             const prevLink = document.getElementById('prev-link');
             if (prevLink) {
-                prevLink.href = \`https://setu.mom/zrsetu/\${prevNo}\`;
+                prevLink.href = \`https://setutime.top/zrsetu/\${prevNo}\`;
             }
             const downloadUrl = \`${workerDownloadDomain}/support?id=zrsetu_\${currentNo}\`;
             const topSaveBtn = document.querySelector('.save-blue');

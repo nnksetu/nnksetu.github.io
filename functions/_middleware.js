@@ -1,5 +1,5 @@
 const DEFAULT_WORKER_DOWNLOAD_DOMAIN = "https://dl.setutime.top";
-const DEFAULT_VIDEO_MEDIA_DOMAIN = "https://eo.setutime.top";
+const DEFAULT_VIDEO_MEDIA_DOMAIN = "https://v.setutime.top";
 const DEFAULT_IMAGE_MEDIA_DOMAIN = "https://r2.setutime.top";
 
 function getDomainSetting(env, name, fallback) {

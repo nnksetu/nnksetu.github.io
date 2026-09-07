@@ -7,7 +7,7 @@ const categories = [
   { name: 'setu', folder: 'setu' },
   { name: 'zrsetu', folder: 'zrsetu' }
 ];
-const IMAGE_ORIGIN = 'https://eo.setutime.top';
+const IMAGE_ORIGIN = 'https://r2.setutime.top';
 const IMAGE_FOLDER_BY_CATEGORY = {
   acg: 'acg_pic',
   setu: 'setu_pic',
@@ -63,7 +63,7 @@ function extractPreview(filePath, category) {
     const issueNumber = path.basename(filePath, '.html');
     if (!imageFolder || !imageNumber || !/^\d+$/.test(issueNumber)) return '';
 
-    // JSON 封面统一使用 eo 图床，不再依赖 HTML 中原图床地址是否有效。
+    // JSON 封面统一使用 r2 图床，避免 EO 在并发封面请求下返回 418。
     return `${IMAGE_ORIGIN}/${imageFolder}/pic-${issueNumber}-${imageNumber}.webp`;
   } catch (error) {
     console.log(`读取预览图失败 ${filePath}: ${error.message}`);

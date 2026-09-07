@@ -2,13 +2,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const SITE_ORIGIN = "https://setutime.top";
     const DOWNLOAD_ORIGIN = "https://dl.setutime.top";
     const VIDEO_ORIGIN = "https://v.setutime.top";
-    const IMAGE_ORIGIN = "https://r2.setutime.top";
-    const MANAGED_VIDEO_HOSTS = new Set(["r2.setutime.top", "eo.setutime.top", "v.setutime.top"]);
-    const IMAGE_FOLDER_BY_CATEGORY = {
-        zrsetu: "zrsetu_pic",
-        setu: "setu_pic",
-        acg: "acg_pic"
-    };
+    const MANAGED_VIDEO_HOSTS = new Set(["v.setutime.top"]);
 
     function buildVideoUrl(value) {
         const raw = String(value || "").trim();
@@ -120,144 +114,53 @@ document.addEventListener("DOMContentLoaded", function() {
     })();
 
     // ==========================================
-    // 1. 优先读取页面声明的分类，旧页面再从 URL 解析[cite: 4]
+    // 1. 从页面声明或 URL 获取分类，并更新页面导航链接
     // ==========================================
-    const path = window.location.pathname; //[cite: 4]
-    function getCategoryFromPath() { //[cite: 4]
-        if (path.includes('/zrsetu/')) return 'zrsetu'; //[cite: 4]
-        if (path.includes('/acg/')) return 'acg'; //[cite: 4]
-        if (path.includes('/setu/')) return 'setu'; //[cite: 4]
-        return null; //[cite: 4]
-    } //[cite: 4]
+    const path = window.location.pathname;
+    const validCategories = new Set(["zrsetu", "acg", "setu"]);
 
-    const declaredCategory = (document.body?.dataset.category || '').trim().toLowerCase(); //[cite: 4]
-    const category = IMAGE_FOLDER_BY_CATEGORY[declaredCategory] //[cite: 4]
-        ? declaredCategory //[cite: 4]
-        : (getCategoryFromPath() || 'setu'); //[cite: 4]
+    function getCategoryFromPath() {
+        if (path.includes("/zrsetu/")) return "zrsetu";
+        if (path.includes("/acg/")) return "acg";
+        if (path.includes("/setu/")) return "setu";
+        return null;
+    }
 
-    let currentNo = null; //[cite: 4]
-    const titleEl = document.querySelector('.title'); //[cite: 4]
-    if (titleEl) { //[cite: 4]
-        const match = titleEl.innerText.match(/\d+/); //[cite: 4]
-        if (match) { //[cite: 4]
-            currentNo = parseInt(match[0], 10); //[cite: 4]
-        }
+    const declaredCategory = (document.body?.dataset.category || "").trim().toLowerCase();
+    const category = validCategories.has(declaredCategory)
+        ? declaredCategory
+        : (getCategoryFromPath() || "setu");
+
+    let currentNo = null;
+    const titleEl = document.querySelector(".title");
+    if (titleEl) {
+        const match = titleEl.innerText.match(/\d+/);
+        if (match) currentNo = parseInt(match[0], 10);
     }
 
     if (!currentNo) {
-        const pathMatch = path.match(/\/(\d+)(\.html)?/); //[cite: 4]
-        if (pathMatch) { //[cite: 4]
-            currentNo = parseInt(pathMatch[1], 10); //[cite: 4]
+        const pathMatch = path.match(/\/(\d+)(\.html)?/);
+        if (pathMatch) currentNo = parseInt(pathMatch[1], 10);
+    }
+
+    if (currentNo) {
+        const prevLink = document.getElementById("prev-link");
+        if (prevLink) {
+            prevLink.href = `${SITE_ORIGIN}/${category}/${currentNo - 1}`;
         }
+
+        const downloadUrl = `${DOWNLOAD_ORIGIN}/support?id=${category}_${currentNo}`;
+        const topSaveBtn = document.querySelector(".save-blue");
+        if (topSaveBtn) topSaveBtn.href = downloadUrl;
+
+        const bottomSaveBtn = document.querySelector(".preserve");
+        if (bottomSaveBtn) bottomSaveBtn.href = downloadUrl;
     }
 
     // ==========================================
-    // 2. 空图片占位自动补全默认预览图[cite: 4]
-    function fillEmptyImageSources() { //[cite: 4]
-        const imageFolder = IMAGE_FOLDER_BY_CATEGORY[category]; //[cite: 4]
-        if (!imageFolder || !currentNo) return; //[cite: 4]
-
-        document.querySelectorAll('.img-wrap img[data-src]').forEach(img => { //[cite: 4]
-            const source = (img.getAttribute('data-src') || '').trim(); //[cite: 4]
-            if (source) return; //[cite: 4]
-
-            const alt = (img.getAttribute('alt') || '').match(/\d+/); //[cite: 4]
-            if (!alt) return; //[cite: 4]
-
-            img.dataset.src = `${IMAGE_ORIGIN}/${imageFolder}/pic-${currentNo}-${alt[0]}.webp`; //[cite: 4]
-        }); //[cite: 4]
-    } //[cite: 4]
-
-    fillEmptyImageSources(); //[cite: 4]
-
-    // 3. 默认图床懒加载[cite: 4]
+    // 2. 底部固定按钮滚动显隐
     // ==========================================
-    function loadDefault(img, wrap) { //[cite: 4]
-        const src = img.dataset.src; //[cite: 4]
-        if (!src) return; //[cite: 4]
-        img.decoding = 'async'; //[cite: 4]
-        img.src = src; //[cite: 4]
-        img.onload = () => wrap.classList.add('loaded'); //[cite: 4]
-    }
-
-    // ==========================================
-    // 4. 内存回收机制[cite: 4]
-    // ==========================================
-    const MAX_ACTIVE_IMAGES = 100; //[cite: 4]
-
-    function manageMemory() { //[cite: 4]
-        const loadedWraps = Array.from(document.querySelectorAll('.img-wrap.loaded')); //[cite: 4]
-        const activeImgs = loadedWraps //[cite: 4]
-            .map(wrap => wrap.querySelector('img')) //[cite: 4]
-            .filter(img => img && img.src && !img.src.includes('about:blank')); //[cite: 4]
-
-        if (activeImgs.length > MAX_ACTIVE_IMAGES) { //[cite: 4]
-            const countToRecycle = activeImgs.length - MAX_ACTIVE_IMAGES; //[cite: 4]
-            for (let i = 0; i < countToRecycle; i++) { //[cite: 4]
-                const imgToRecycle = activeImgs[i]; //[cite: 4]
-                const rect = imgToRecycle.getBoundingClientRect(); //[cite: 4]
-                if (rect.bottom < -1000) { //[cite: 4]
-                    imgToRecycle.removeAttribute('src'); //[cite: 4]
-                }
-            }
-        }
-    }
-
-    // ==========================================
-    // 5. 滚动观察与预加载[cite: 4]
-    // ==========================================
-    const allImgs = Array.from(document.querySelectorAll('.img-wrap img')); //[cite: 4]
-
-    if ('IntersectionObserver' in window) { //[cite: 4]
-        const imageObserver = new IntersectionObserver((entries) => { //[cite: 4]
-            entries.forEach(entry => { //[cite: 4]
-                const img = entry.target; //[cite: 4]
-                const wrap = img.parentElement; //[cite: 4]
-
-                if (!entry.isIntersecting) return; //[cite: 4]
-                if (img.src && img.src !== window.location.href && !img.src.includes('about:blank')) return; //[cite: 4]
-
-                loadDefault(img, wrap); //[cite: 4]
-            });
-
-            manageMemory(); //[cite: 4]
-        }, {
-            rootMargin: "1500px 0px 1500px 0px" //[cite: 4]
-        });
-
-        allImgs.forEach(img => imageObserver.observe(img)); //[cite: 4]
-    } else {
-        allImgs.forEach(img => { //[cite: 4]
-            loadDefault(img, img.parentElement); //[cite: 4]
-        });
-    }
-
-    // ==========================================
-    // 6. 动态计算链接[cite: 4]
-    // ==========================================
-    if (currentNo) { //[cite: 4]
-        const prevNo = currentNo - 1; //[cite: 4]
-
-        const prevLink = document.getElementById('prev-link'); //[cite: 4]
-        if (prevLink) { //[cite: 4]
-            prevLink.href = `${SITE_ORIGIN}/${category}/${prevNo}`; //[cite: 4]
-        }
-
-        const downloadUrl = `${DOWNLOAD_ORIGIN}/support?id=${category}_${currentNo}`; //[cite: 4]
-        const topSaveBtn = document.querySelector('.save-blue'); //[cite: 4]
-        if (topSaveBtn) { //[cite: 4]
-            topSaveBtn.href = downloadUrl; //[cite: 4]
-        }
-        const bottomSaveBtn = document.querySelector('.preserve'); //[cite: 4]
-        if (bottomSaveBtn) { //[cite: 4]
-            bottomSaveBtn.href = downloadUrl; //[cite: 4]
-        }
-    }
-
-    // ==========================================
-    // 7. 底部固定按钮滚动显隐[cite: 4]
-    // ==========================================
-    const fixedBtn = document.querySelector('.fixed-button'); //[cite: 4]
+    const fixedBtn = document.querySelector(".fixed-button");
     if (fixedBtn) { //[cite: 4]
         let lastScrollY = window.scrollY; //[cite: 4]
         let ticking = false; //[cite: 4]

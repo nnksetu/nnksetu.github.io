@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const SITE_ORIGIN = "https://setutime.top";
     const DOWNLOAD_ORIGIN = "https://dl.setutime.top";
     const VIDEO_ORIGIN = "https://v.setutime.top";
-    const IMAGE_ORIGIN = "https://r2.setutime.top";
+    const IMAGE_ORIGIN = "https://eo.setutime.top";
     const MANAGED_VIDEO_HOSTS = new Set(["r2.setutime.top", "eo.setutime.top", "v.setutime.top"]);
     const IMAGE_FOLDER_BY_CATEGORY = {
         zrsetu: "zrsetu_pic",

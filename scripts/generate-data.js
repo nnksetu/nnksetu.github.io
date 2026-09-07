@@ -7,7 +7,7 @@ const categories = [
   { name: 'setu', folder: 'setu' },
   { name: 'zrsetu', folder: 'zrsetu' }
 ];
-const IMAGE_ORIGIN = 'https://r2.setutime.top';
+const IMAGE_ORIGIN = 'https://eo.setutime.top';
 const IMAGE_FOLDER_BY_CATEGORY = {
   acg: 'acg_pic',
   setu: 'setu_pic',

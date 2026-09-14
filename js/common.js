@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const IMAGE_ORIGIN = "https://r2.setutime.top";
     const IMAGE_EO_ORIGIN = "https://eo.setutime.top";
     const MANAGED_VIDEO_HOSTS = ["r2.setutime.top", "eo.setutime.top", "v.setutime.top"];
-    const IMAGE_RACE_COUNT = 3;
+    const IMAGE_RACE_COUNT = 1;
     const IMAGE_FOLDER_BY_CATEGORY = {
         zrsetu: "zrsetu_pic",
         setu: "setu_pic",
@@ -125,7 +125,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     fillEmptyImageSources();
 
-    // 3. 前三张图片三线路竞速，胜出线路用于本页其余图片
+    // 3. 首张图片三线路竞速，胜出线路用于本页其余图片
     function raceImageSources(sources) {
         const uniqueSources = sources.filter(({ src }, index, items) => (
             src && items.findIndex(item => item.src === src) === index

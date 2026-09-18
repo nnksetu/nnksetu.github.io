@@ -10,6 +10,13 @@
 <link rel="icon" href="https://r2.setutime.top/favicon.png" type="image/png">
 <meta name="description" content="点击前往SetuTime~">
 <title>SetuTime!</title>
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/scripts/sw.js', { scope: '/' }).catch(error => {
+      console.warn('Image cache service worker registration failed:', error);
+    });
+  }
+</script>
 <style>
   html, body {
     background: #50C878;
@@ -81,20 +88,27 @@
   
   .tab-slider { position: absolute; top: 5px; left: 5px; height: calc(100% - 10px); width: calc(33.3333% - 5px); border-radius: 25px; z-index: 1; transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), background 0.3s, width 0.3s; box-shadow: 0 4px 12px rgba(80,200,120,0.3); }
   
-  ul.list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; min-height: 400px; }
-  ul.list li { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 18px; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: all 0.25s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.01); -webkit-tap-highlight-color: transparent; }
+  ul.list { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 14px; min-height: 400px; min-width: 0; width: 100%; }
+  .list-column { display: flex; flex-direction: column; gap: 14px; min-width: 0; width: 100%; }
+  ul.list li { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 0; display: flex; flex-direction: column; align-items: stretch; justify-content: flex-start; align-self: stretch; width: 100%; max-width: 100%; height: fit-content; overflow: hidden; cursor: pointer; transition: all 0.25s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.01); -webkit-tap-highlight-color: transparent; }
   ul.list li:hover { border-color: #50C878; box-shadow: 0 6px 16px rgba(80,200,120,0.06); }
   ul.list li:active { transform: scale(0.98); background: #f9fafb; }
   
-  .item-left { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0; text-align: left; padding-right: 12px; }
+  .preview-wrap { position: relative; width: 100%; min-height: 150px; border-radius: 12px; background: #f3f4f6; overflow: hidden; }
+  .preview-wrap::before { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 37%, #f3f4f6 63%); background-size: 400% 100%; animation: skeleton-loading 1.4s ease infinite; }
+  .preview-wrap img { position: relative; z-index: 1; width: 100%; height: auto; display: block; object-fit: contain; opacity: 0; transition: opacity 0.35s ease; }
+  .preview-wrap.loaded { min-height: 0; }
+  .preview-wrap.loaded::before { opacity: 0; }
+  .preview-wrap.loaded img { opacity: 1; }
+  .preview-wrap.preview-unavailable { display: none; }
+  .preview-fallback { display: none; }
+  .item-content { display: flex; align-items: center; min-width: 0; padding: 12px 14px 14px; }
+  .item-left { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0; text-align: left; }
   .item-title { font-size: 16px; font-weight: 600; color: #111827; white-space: nowrap; }
-  .item-sub { font-size: 13px !important; color: #6b7280 !important; line-height: 1.5 !important; white-space: normal !important; word-break: break-all !important; overflow: visible !important; flex: 1; }
+  .item-sub { font-size: 13px !important; color: #6b7280 !important; line-height: 1.5 !important; white-space: normal !important; word-break: normal !important; overflow-wrap: anywhere !important; overflow: visible !important; flex: 1; }
   
-  .item-btn { background: #f3f4f6; color: #4b5563; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; transition: all 0.25s; flex-shrink: 0; user-select: none; }
-  ul.list li:hover .item-btn { background: #50C878; color: #ffffff; }
-  
-  .skeleton-list { display: flex; flex-direction: column; gap: 14px; min-height: 400px; }
-  .skeleton-item { height: 72px; background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 37%, #f3f4f6 63%); background-size: 400% 100%; animation: skeleton-loading 1.4s ease infinite; border-radius: 18px; }
+  .skeleton-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; min-height: 400px; }
+  .skeleton-item { height: 72px; background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 37%, #f3f4f6 63%); background-size: 400% 100%; animation: skeleton-loading 1.4s ease infinite; border-radius: 14px; }
   @keyframes skeleton-loading { 0% { background-position: 100% 0 } 100% { background-position: 0 0 } }
   
   .pagination-container { display: flex; align-items: center; justify-content: space-between; margin-top: 35px; gap: 10px; user-select: none; }
@@ -129,37 +143,76 @@
   .search-results .item:hover { border-color: #50C878; background: rgba(80,200,120,0.01); transform: translateY(-1px); }
   .search-results .item .title { font-weight: 600; color: #111827; font-size: 15px; flex-shrink: 0; margin-right: 15px; }
   .search-results .item .sub { color: #6b7280 !important; font-size: 13px !important; line-height: 1.4 !important; white-space: normal !important; word-break: break-all !important; overflow: visible !important; flex: 1; text-align: right; }
+
+  .hidden-entry-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.78); z-index: 1200; display: none; align-items: center; justify-content: center; padding: 24px; box-sizing: border-box; opacity: 0; pointer-events: none; }
+  .hidden-entry-overlay.active { display: flex; opacity: 1; pointer-events: auto; backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px); }
+  .hidden-entry-dialog { width: 100%; max-width: 390px; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 26px; padding: 24px; box-shadow: 0 24px 70px rgba(17,24,39,0.12); box-sizing: border-box; transform: translateY(12px) scale(0.98); transition: transform 0.28s cubic-bezier(0.25, 1, 0.5, 1); }
+  .hidden-entry-overlay.active .hidden-entry-dialog { transform: translateY(0) scale(1); }
+  .hidden-entry-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+  .hidden-entry-title { margin: 0; font-size: 20px; font-weight: 700; color: #111827; }
+  .hidden-entry-close { width: 34px; height: 34px; border: 1px solid #e5e7eb; border-radius: 50%; background: #f9fafb; color: #6b7280; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; padding: 0; flex-shrink: 0; }
+  .hidden-entry-close:hover { background: #f3f4f6; color: #111827; }
+  .hidden-entry-close svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; }
+  .hidden-entry-input { width: 100%; height: 48px; background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 24px; padding: 0 18px; font-size: 16px; color: #111827; outline: none; box-sizing: border-box; transition: all 0.25s; }
+  .hidden-entry-input:focus { background: #ffffff; border-color: #50C878; box-shadow: 0 0 0 3px rgba(80,200,120,0.15); }
+  .hidden-entry-error { min-height: 20px; margin: 10px 2px 12px; font-size: 13px; color: #ef4444; line-height: 1.5; }
+  .hidden-entry-submit { width: 100%; height: 48px; border: none; border-radius: 24px; background: #50C878; color: #ffffff; font-size: 15px; font-weight: 700; cursor: pointer; box-shadow: 0 8px 22px rgba(80,200,120,0.28); transition: all 0.24s; }
+  .hidden-entry-submit:hover { transform: translateY(-1px); box-shadow: 0 10px 26px rgba(80,200,120,0.34); }
+  .hidden-entry-submit:active { transform: scale(0.98); }
+  .hidden-entry-submit:disabled { opacity: 0.68; cursor: wait; transform: none; }
+
+  @media (min-width: 900px) {
+    .container { max-width: 960px; }
+    ul.list { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+    .list-column { gap: 16px; }
+    .skeleton-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+    .skeleton-item { height: 280px; }
+  }
+
+  @media (max-width: 899px) {
+    .container { padding-left: 12px; padding-right: 12px; }
+    ul.list, .skeleton-list { gap: 8px; }
+    .list-column { gap: 8px; }
+    ul.list li { border-radius: 12px; }
+    .preview-wrap { background: #ffffff; }
+    .item-content { padding: 10px 11px 11px; }
+    .item-title { font-size: 14px; }
+    .item-sub { font-size: 11.5px !important; line-height: 1.35 !important; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden !important; }
+  }
   
   /* Theme overrides */
   html.green-theme .tab-slider, body.green-theme .tab-slider { background: #50C878; box-shadow: 0 4px 12px rgba(80,200,120,0.3); }
   html.green-theme ul.list li:hover, body.green-theme ul.list li:hover { border-color: #50C878; box-shadow: 0 6px 16px rgba(80,200,120,0.1); }
-  html.green-theme ul.list li:hover .item-btn, body.green-theme ul.list li:hover .item-btn { background: #50C878; color: #ffffff; }
   html.green-theme .page-btn:hover:not(.disabled), body.green-theme .page-btn:hover:not(.disabled) { border-color: #50C878; color: #50C878; background: rgba(80,200,120,0.03); }
   html.green-theme .search-trigger, body.green-theme .search-trigger { background: #50C878; box-shadow: 0 6px 20px rgba(80,200,120,0.4); }
   html.green-theme .search-trigger:hover, body.green-theme .search-trigger:hover { background: #62d387; box-shadow: 0 8px 24px rgba(80,200,120,0.5); }
   html.green-theme .search-input:focus, body.green-theme .search-input:focus { border-color: #50C878; box-shadow: 0 0 0 3px rgba(80,200,120,0.15); }
   html.green-theme .search-results .item:hover, body.green-theme .search-results .item:hover { border-color: #50C878; background: rgba(80,200,120,0.02); }
   html.green-theme .page-current-input:focus, body.green-theme .page-current-input:focus { border-color: #50C878; box-shadow: 0 0 0 2px rgba(80,200,120,0.15); }
+  html.green-theme .hidden-entry-input:focus, body.green-theme .hidden-entry-input:focus { border-color: #50C878; box-shadow: 0 0 0 3px rgba(80,200,120,0.15); }
+  html.green-theme .hidden-entry-submit, body.green-theme .hidden-entry-submit { background: #50C878; box-shadow: 0 8px 22px rgba(80,200,120,0.28); }
 
   html.pink-theme .tab-slider, body.pink-theme .tab-slider { background: #f8b8c8; box-shadow: 0 4px 12px rgba(248,184,200,0.3); }
   html.pink-theme ul.list li:hover, body.pink-theme ul.list li:hover { border-color: #f8b8c8; box-shadow: 0 6px 16px rgba(248,184,200,0.1); }
-  html.pink-theme ul.list li:hover .item-btn, body.pink-theme ul.list li:hover .item-btn { background: #f8b8c8; color: #ffffff; }
   html.pink-theme .page-btn:hover:not(.disabled), body.pink-theme .page-btn:hover:not(.disabled) { border-color: #f8b8c8; color: #f8b8c8; background: rgba(248,184,200,0.03); }
   html.pink-theme .search-trigger, body.pink-theme .search-trigger { background: #f8b8c8; box-shadow: 0 6px 20px rgba(248,184,200,0.4); }
   html.pink-theme .search-trigger:hover, body.pink-theme .search-trigger:hover { background: #fca1b7; box-shadow: 0 8px 24px rgba(248,184,200,0.5); }
   html.pink-theme .search-input:focus, body.pink-theme .search-input:focus { border-color: #f8b8c8; box-shadow: 0 0 0 3px rgba(248,184,200,0.15); }
   html.pink-theme .search-results .item:hover, body.pink-theme .search-results .item:hover { border-color: #f8b8c8; background: rgba(248,184,200,0.02); }
   html.pink-theme .page-current-input:focus, body.pink-theme .page-current-input:focus { border-color: #f8b8c8; box-shadow: 0 0 0 2px rgba(248,184,200,0.15); }
+  html.pink-theme .hidden-entry-input:focus, body.pink-theme .hidden-entry-input:focus { border-color: #f8b8c8; box-shadow: 0 0 0 3px rgba(248,184,200,0.15); }
+  html.pink-theme .hidden-entry-submit, body.pink-theme .hidden-entry-submit { background: #f8b8c8; box-shadow: 0 8px 22px rgba(248,184,200,0.28); }
 
   html.blue-theme .tab-slider, body.blue-theme .tab-slider { background: #428cca; box-shadow: 0 4px 12px rgba(66,140,202,0.3); }
   html.blue-theme ul.list li:hover, body.blue-theme ul.list li:hover { border-color: #428cca; box-shadow: 0 6px 16px rgba(66,140,202,0.1); }
-  html.blue-theme ul.list li:hover .item-btn, body.blue-theme ul.list li:hover .item-btn { background: #428cca; color: #ffffff; }
   html.blue-theme .page-btn:hover:not(.disabled), body.blue-theme .page-btn:hover:not(.disabled) { border-color: #428cca; color: #428cca; background: rgba(66,140,202,0.03); }
   html.blue-theme .search-trigger, body.blue-theme .search-trigger { background: #428cca; box-shadow: 0 6px 20px rgba(66,140,202,0.4); }
   html.blue-theme .search-trigger:hover, body.blue-theme .search-trigger:hover { background: #53a3e6; box-shadow: 0 8px 24px rgba(66,140,202,0.5); }
   html.blue-theme .search-input:focus, body.blue-theme .search-input:focus { border-color: #428cca; box-shadow: 0 0 0 3px rgba(66,140,202,0.15); }
   html.blue-theme .search-results .item:hover, body.blue-theme .search-results .item:hover { border-color: #428cca; background: rgba(66,140,202,0.02); }
   html.blue-theme .page-current-input:focus, body.blue-theme .page-current-input:focus { border-color: #428cca; box-shadow: 0 0 0 2px rgba(66,140,202,0.15); }
+  html.blue-theme .hidden-entry-input:focus, body.blue-theme .hidden-entry-input:focus { border-color: #428cca; box-shadow: 0 0 0 3px rgba(66,140,202,0.15); }
+  html.blue-theme .hidden-entry-submit, body.blue-theme .hidden-entry-submit { background: #428cca; box-shadow: 0 8px 22px rgba(66,140,202,0.28); }
 
   .dark-mode-toggle { position: absolute; top: 20px; right: 20px; width: 40px; height: 40px; background: rgba(255,255,255,0.15); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: white; border: 1px solid rgba(255,255,255,0.2); transition: all 0.25s; z-index: 101; -webkit-tap-highlight-color: transparent; }
   .dark-mode-toggle:hover { background: rgba(255,255,255,0.3); transform: scale(1.05); }
@@ -176,8 +229,6 @@
   html.dark-theme ul.list li:active { background: #374151; }
   html.dark-theme .item-title { color: #f9fafb; }
   html.dark-theme .item-sub { color: #9ca3af !important; }
-  html.dark-theme .item-btn { background: #374151; color: #d1d5db; }
-  html.dark-theme ul.list li:hover .item-btn { color: #ffffff; }
   html.dark-theme .skeleton-item { background: linear-gradient(90deg, #374151 25%, #4b5563 37%, #374151 63%); background-size: 400% 100%; }
   html.dark-theme .page-btn { background: #1f2937; border-color: #374151; color: #d1d5db; }
   html.dark-theme .page-btn.disabled { background: #111827; border-color: #374151; color: #4b5563; }
@@ -191,6 +242,16 @@
   html.dark-theme .search-results .item { background: #1f2937; border-color: #374151; }
   html.dark-theme .search-results .item .title { color: #f9fafb; }
   html.dark-theme .search-results .item .sub { color: #9ca3af !important; }
+  html.dark-theme .hidden-entry-overlay { background: rgba(17,24,39,0.82); }
+  html.dark-theme .hidden-entry-dialog { background: #1f2937; border-color: #374151; box-shadow: 0 24px 70px rgba(0,0,0,0.32); }
+  html.dark-theme .hidden-entry-title { color: #f9fafb; }
+  html.dark-theme .hidden-entry-close { background: #374151; border-color: #4b5563; color: #d1d5db; }
+  html.dark-theme .hidden-entry-close:hover { background: #4b5563; color: #ffffff; }
+  html.dark-theme .hidden-entry-input { background: #374151; border-color: #4b5563; color: #f9fafb; }
+  html.dark-theme .hidden-entry-input:focus { background: #1f2937; }
+  html.dark-theme .preview-wrap, html.dark-theme .preview-fallback { background: #374151; }
+  html.dark-theme .preview-wrap::before { background: linear-gradient(90deg, #374151 25%, #4b5563 37%, #374151 63%); background-size: 400% 100%; }
+
 </style>
 </head>
 <body>
@@ -254,10 +315,31 @@
   <div class="search-results" id="searchResults"></div>
 </div>
 
+<div class="hidden-entry-overlay" id="hiddenEntryOverlay" aria-hidden="true">
+  <form class="hidden-entry-dialog" id="hiddenEntryForm">
+    <div class="hidden-entry-top">
+      <h2 class="hidden-entry-title">隐藏入口</h2>
+      <button type="button" class="hidden-entry-close" onclick="closeHiddenEntryDialog()" aria-label="关闭">
+        <svg viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18"></line><line x1="18" y1="6" x2="6" y2="18"></line></svg>
+      </button>
+    </div>
+    <input type="password" class="hidden-entry-input" id="hiddenEntryInput" autocomplete="off" inputmode="numeric" placeholder="输入本期密码">
+    <div class="hidden-entry-error" id="hiddenEntryError"></div>
+    <button type="submit" class="hidden-entry-submit" id="hiddenEntrySubmit">进入</button>
+  </form>
+</div>
+
 <script>
 const ONE_HOUR = 60 * 60 * 1000;
+const DOWNLOAD_ORIGIN = 'https://dl.setutime.top';
+const HIDDEN_ENTRY_API = `${DOWNLOAD_ORIGIN}/api/hidden-entry/check`;
+const HIDDEN_ENTRY_TRIGGER_WINDOW = 1500;
+const HIDDEN_ENTRY_TRIGGER_COUNT = 5;
+const OWNED_SITE_HOSTS = ['setutime.com', 'www.setutime.com', 'setutime.top'];
 
 let currentTab = 'acg';
+let hiddenEntryTapTimes = [];
+let hiddenEntryBusy = false;
 
 function getSavedPage(tabType) {
   try {
@@ -298,6 +380,10 @@ let allItems = {
   zrsetu: []
 };
 
+// 优先使用 JSON 中的预览图，旧 JSON 没有 preview 时再从子页面提取
+const previewCache = {};
+const previewRequests = {};
+
 // 各分类总条数（从任意一页 JSON 的 total 字段获取）
 let totalCount = {
   acg: 0,
@@ -333,6 +419,110 @@ function initDarkMode() {
   }
 }
 initDarkMode();
+
+function registerHiddenEntryTap() {
+  const now = Date.now();
+  hiddenEntryTapTimes = hiddenEntryTapTimes.filter(time => now - time <= HIDDEN_ENTRY_TRIGGER_WINDOW);
+  hiddenEntryTapTimes.push(now);
+  if (hiddenEntryTapTimes.length >= HIDDEN_ENTRY_TRIGGER_COUNT) {
+    hiddenEntryTapTimes = [];
+    openHiddenEntryDialog();
+    return true;
+  }
+  return false;
+}
+
+function openHiddenEntryDialog() {
+  toggleSearch(false);
+  const overlay = document.getElementById('hiddenEntryOverlay');
+  const input = document.getElementById('hiddenEntryInput');
+  const error = document.getElementById('hiddenEntryError');
+  const submit = document.getElementById('hiddenEntrySubmit');
+  if (!overlay || !input) return;
+  hiddenEntryBusy = false;
+  input.value = '';
+  if (error) error.innerText = '';
+  if (submit) {
+    submit.disabled = false;
+    submit.innerText = '进入';
+  }
+  overlay.classList.add('active');
+  overlay.setAttribute('aria-hidden', 'false');
+  setTimeout(() => input.focus(), 80);
+}
+
+function closeHiddenEntryDialog() {
+  const overlay = document.getElementById('hiddenEntryOverlay');
+  if (!overlay) return;
+  overlay.classList.remove('active');
+  overlay.setAttribute('aria-hidden', 'true');
+}
+
+function isOwnedSiteHost(hostname) {
+  return OWNED_SITE_HOSTS.includes(String(hostname || '').toLowerCase());
+}
+
+function resolveHiddenEntryUrl(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+
+  if (raw.startsWith('/')) {
+    return window.location.origin + raw;
+  }
+
+  try {
+    const target = new URL(raw);
+    if (isOwnedSiteHost(target.hostname)) {
+      return window.location.origin + target.pathname + target.search + target.hash;
+    }
+    return target.href;
+  } catch (e) {
+    return window.location.origin + '/' + raw.replace(/^\/+/, '');
+  }
+}
+
+async function submitHiddenEntry(event) {
+  event.preventDefault();
+  if (hiddenEntryBusy) return;
+
+  const input = document.getElementById('hiddenEntryInput');
+  const error = document.getElementById('hiddenEntryError');
+  const submit = document.getElementById('hiddenEntrySubmit');
+  const code = input ? input.value.trim() : '';
+  if (!code) {
+    if (error) error.innerText = '请输入本期密码';
+    return;
+  }
+
+  hiddenEntryBusy = true;
+  if (error) error.innerText = '';
+  if (submit) {
+    submit.disabled = true;
+    submit.innerText = '验证中...';
+  }
+
+  try {
+    const query = new URLSearchParams({
+      code,
+      siteOrigin: window.location.origin
+    });
+    const response = await fetch(HIDDEN_ENTRY_API + '?' + query.toString(), { method: 'GET', cache: 'no-store' });
+    const data = await response.json();
+    if (data && data.success && data.url) {
+      window.location.href = resolveHiddenEntryUrl(data.url);
+      return;
+    }
+    if (error) error.innerText = (data && data.msg) ? data.msg : '入口密码不正确';
+  } catch (e) {
+    if (error) error.innerText = '网络异常，请稍后重试';
+  }
+
+  hiddenEntryBusy = false;
+  if (submit) {
+    submit.disabled = false;
+    submit.innerText = '进入';
+  }
+}
 
 function getVisibleTabIndex(type) {
   if (type === 'acg') return 0;
@@ -473,6 +663,152 @@ async function ensureServerPage(tab, serverPage) {
   return pageData;
 }
 
+function getPreviewKey(tab, file) {
+  return `${tab}/${file}`;
+}
+
+async function fetchPreviewUrl(tab, item) {
+  const key = getPreviewKey(tab, item.file);
+  if (Object.prototype.hasOwnProperty.call(previewCache, key)) {
+    return previewCache[key];
+  }
+  if (previewRequests[key]) {
+    return previewRequests[key];
+  }
+
+  if (item.preview) {
+    previewCache[key] = item.preview;
+    return item.preview;
+  }
+
+  const pageUrl = `${rootUrl}${tab}/${item.file}`;
+  previewRequests[key] = fetch(pageUrl, { cache: 'force-cache' })
+    .then(response => {
+      if (!response.ok) throw new Error('Preview page request failed');
+      return response.text();
+    })
+    .then(html => {
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      const imageUrls = Array.from(doc.querySelectorAll('.image-item img'))
+        .map(img => img.getAttribute('data-src') || img.getAttribute('src'))
+        .filter(Boolean)
+        .map(url => new URL(url, pageUrl).href);
+
+      // 偶数张图取前一个中间位置，例如 40 张取第 20 张
+      const middleIndex = imageUrls.length ? Math.ceil(imageUrls.length / 2) - 1 : -1;
+      const previewUrl = middleIndex >= 0 ? imageUrls[middleIndex] : null;
+      previewCache[key] = previewUrl;
+      return previewUrl;
+    })
+    .catch(error => {
+      console.warn(`Preview extraction failed for ${pageUrl}`, error);
+      previewCache[key] = null;
+      return null;
+    })
+    .finally(() => {
+      delete previewRequests[key];
+    });
+
+  return previewRequests[key];
+}
+
+async function loadPreviewForCard(card, tab, item) {
+  if (!card || !card.isConnected) return;
+
+  const image = card.querySelector('.preview-wrap img');
+  const fallback = card.querySelector('.preview-fallback');
+  const previewWrap = card.querySelector('.preview-wrap');
+  if (!image || !fallback || !previewWrap) return;
+
+  const key = getPreviewKey(tab, item.file);
+  const previewUrl = await fetchPreviewUrl(tab, item);
+  if (!card.isConnected || card.dataset.previewKey !== key) return;
+
+  if (!previewUrl) {
+    previewWrap.classList.add('preview-unavailable');
+    return;
+  }
+
+  return new Promise(resolve => {
+    let settled = false;
+
+    const finish = loaded => {
+      if (settled) return;
+      settled = true;
+      image.onload = null;
+      image.onerror = null;
+
+      if (loaded) {
+        previewWrap.classList.add('loaded');
+        fallback.hidden = true;
+      } else {
+        previewWrap.classList.add('preview-unavailable');
+      }
+      resolve(loaded);
+    };
+
+    image.onload = () => finish(true);
+    image.onerror = () => finish(false);
+    image.src = previewUrl;
+
+    if (image.complete) {
+      finish(image.naturalWidth > 0);
+    }
+  });
+}
+
+function getListColumnCount() {
+  return window.matchMedia('(min-width: 900px)').matches ? 3 : 2;
+}
+
+function createPreviewCard(item, tab, itemIndex) {
+  const previewKey = getPreviewKey(tab, item.file);
+  const card = document.createElement('li');
+  card.className = 'preview-card';
+  card.dataset.itemIndex = itemIndex;
+  card.dataset.previewKey = previewKey;
+  card.onclick = () => window.open(`/${tab}/${item.file}`, '_self');
+  card.innerHTML = `
+    <div class="preview-wrap">
+      <img alt="第 ${item.file.match(/\d+/)?.[0] || '?'} 期预览图" loading="lazy" decoding="async">
+      <div class="preview-fallback" hidden>预览图暂时无法加载</div>
+    </div>
+    <div class="item-content">
+      <div class="item-left">
+        <div class="item-title">第 ${item.file.match(/\d+/)?.[0] || '?'} 期</div>
+        <div class="item-sub">${item.caption || '精选合集发布'}</div>
+      </div>
+    </div>
+  `;
+  return card;
+}
+
+function getShortestListColumn(columns) {
+  return columns.reduce((shortest, column) => {
+    return column.offsetHeight < shortest.offsetHeight ? column : shortest;
+  }, columns[0]);
+}
+
+function distributeCardsToShortestColumn(cards, columns) {
+  cards.forEach(card => {
+    getShortestListColumn(columns).appendChild(card);
+  });
+}
+
+function distributeCardsRoundRobin(cards, columns) {
+  cards.forEach((card, index) => {
+    columns[index % columns.length].appendChild(card);
+  });
+}
+
+function rebalanceListColumns(cards, columns, listDiv, renderTab) {
+  if (!listDiv.isConnected || currentTab !== renderTab || !cards.every(card => card.isConnected)) return;
+  columns.forEach(column => {
+    while (column.firstChild) column.firstChild.remove();
+  });
+  distributeCardsToShortestColumn(cards, columns);
+}
+
 async function renderCurrentList(isTabSwitch = false) {
   const listDiv = document.getElementById('contentList');
   const paginationCtrl = document.getElementById('paginationCtrl');
@@ -480,7 +816,7 @@ async function renderCurrentList(isTabSwitch = false) {
   
   if (isTabSwitch) {
     listDiv.style.display = 'none';
-    skeleton.style.display = 'flex';
+    skeleton.style.display = 'grid';
     paginationCtrl.style.display = 'none';
   }
   
@@ -516,19 +852,39 @@ async function renderCurrentList(isTabSwitch = false) {
   if (pageItems.length === 0) {
     listDiv.innerHTML = `<div style="text-align:center;padding:40px;color:#9ca3af;font-weight:600;width:100%;">暂无当前页数据</div>`;
   } else {
-    listDiv.innerHTML = pageItems.map(item => `
-      <li onclick="window.open('/${currentTab}/${item.file}', '_self')">
-        <div class="item-left">
-          <div class="item-title">第 ${item.file.match(/\d+/)?.[0] || '?'} 期</div>
-          <div class="item-sub">${item.caption || '精选合集发布'}</div>
-        </div>
-        <div class="item-btn">点击阅读</div>
-      </li>
-    `).join('');
+    const renderTab = currentTab;
+    const columnCount = getListColumnCount();
+    listDiv.innerHTML = Array.from(
+      { length: columnCount },
+      () => '<div class="list-column"></div>'
+    ).join('');
+
+    const columns = Array.from(listDiv.querySelectorAll('.list-column'));
+    const cards = pageItems.map((item, itemIndex) => {
+      const card = createPreviewCard(item, renderTab, itemIndex);
+      return card;
+    });
+
+    // 列表尚未显示时所有列高度都是 0，首次按高度分配会把卡片全部放进第一列。
+    // 先轮换分配保证首帧列数正确，图片加载后再按真实高度重排。
+    distributeCardsRoundRobin(cards, columns);
+    let rebalanceQueued = false;
+    const queueRebalance = () => {
+      if (rebalanceQueued) return;
+      rebalanceQueued = true;
+      requestAnimationFrame(() => {
+        rebalanceQueued = false;
+        rebalanceListColumns(cards, columns, listDiv, renderTab);
+      });
+    };
+
+    cards.forEach((card, itemIndex) => {
+      loadPreviewForCard(card, renderTab, pageItems[itemIndex]).then(queueRebalance);
+    });
   }
   
   skeleton.style.display = 'none';
-  listDiv.style.display = 'flex';
+  listDiv.style.display = 'grid';
   
   const listLi = listDiv.querySelectorAll('li');
   listLi.forEach((li, idx) => {
@@ -640,6 +996,7 @@ function doSearch() {
 window.onkeydown = (e) => {
   if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); toggleSearch(true); }
   if (e.key === 'Escape') {
+    closeHiddenEntryDialog();
     toggleSearch(false);
   }
 };
@@ -654,9 +1011,16 @@ function initTouchEvents() {
     darkBtn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
+      if (registerHiddenEntryTap()) return;
       toggleDarkMode();
     });
   }
+
+  const hiddenEntryForm = document.getElementById('hiddenEntryForm');
+  if (hiddenEntryForm) {
+    hiddenEntryForm.addEventListener('submit', submitHiddenEntry);
+  }
+
 }
 
 async function startAppNow() {
@@ -704,7 +1068,7 @@ async function startAppNow() {
   // 后台慢慢预加载当前分类其余页，方便搜索
   preloadAllSearchData();
 }
-
+  
 document.addEventListener('DOMContentLoaded', startAppNow);
 </script>
 </body>

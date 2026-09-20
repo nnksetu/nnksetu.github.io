@@ -93,16 +93,11 @@
   ul.list li { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 0; display: flex; flex-direction: column; align-items: stretch; justify-content: flex-start; align-self: stretch; width: 100%; max-width: 100%; height: fit-content; overflow: hidden; cursor: pointer; transition: all 0.25s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.01); -webkit-tap-highlight-color: transparent; }
   ul.list li:hover { border-color: #50C878; box-shadow: 0 6px 16px rgba(80,200,120,0.06); }
   ul.list li:active { transform: scale(0.98); background: #f9fafb; }
-  ul.list.gallery-switching-out { opacity: 0 !important; transform: translateY(-8px) scale(0.985); transition: opacity 0.18s ease-out, transform 0.24s cubic-bezier(0.25, 1, 0.5, 1); pointer-events: none; }
-  ul.list.gallery-switching-in .preview-card { opacity: 0; transform: translateY(14px) scale(0.975); animation: gallery-card-in 0.42s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; animation-delay: var(--card-delay, 0ms); }
-  ul.list.gallery-switching-in .preview-wrap img { animation: gallery-cover-in 0.62s cubic-bezier(0.2, 0.8, 0.2, 1) both; animation-delay: calc(var(--card-delay, 0ms) + 40ms); }
-  @keyframes gallery-card-in { from { opacity: 0; transform: translateY(14px) scale(0.975); } to { opacity: 1; transform: translateY(0) scale(1); } }
-  @keyframes gallery-cover-in { from { opacity: 1; transform: scale(1.055); } to { opacity: 1; transform: scale(1); } }
+  ul.list.gallery-switching-in .preview-card { opacity: 0; animation: gallery-card-in 0.2s ease-out forwards; }
+  @keyframes gallery-card-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
   
-  .preview-wrap { position: relative; width: 100%; aspect-ratio: 3 / 2; border-radius: 12px; background: #f3f4f6; overflow: hidden; }
-  .preview-wrap::before { content: ""; position: absolute; inset: 0; z-index: 2; background: #f3f4f6; opacity: 0; pointer-events: none; }
-  .preview-wrap img { position: relative; z-index: 1; width: 100%; height: 100%; display: block; object-fit: cover; opacity: 1; }
-  .preview-wrap.loaded::before { opacity: 0; }
+  .preview-wrap { position: relative; display: block; width: 100%; min-height: 0; border-radius: 12px; background: #f3f4f6; overflow: hidden; line-height: 0; }
+  .preview-wrap img { position: relative; z-index: 1; width: 100%; height: auto; min-height: 0; display: block; opacity: 1; }
   .preview-wrap.preview-unavailable { display: none; }
   .preview-fallback { display: none; }
   .item-content { display: flex; align-items: center; min-width: 0; padding: 12px 14px 14px; }
@@ -253,13 +248,9 @@
   html.dark-theme .hidden-entry-input { background: #374151; border-color: #4b5563; color: #f9fafb; }
   html.dark-theme .hidden-entry-input:focus { background: #1f2937; }
   html.dark-theme .preview-wrap, html.dark-theme .preview-fallback { background: #374151; }
-  html.dark-theme .preview-wrap::before { background: #374151; }
 
   @media (prefers-reduced-motion: reduce) {
-    ul.list.gallery-switching-out,
-    ul.list.gallery-switching-in .preview-card,
-    ul.list.gallery-switching-in .preview-wrap img { animation: none; transition: none; }
-    ul.list.gallery-switching-out { opacity: 1; transform: none; }
+    ul.list.gallery-switching-in .preview-card { animation: none; transition: none; }
     ul.list.gallery-switching-in .preview-card { opacity: 1; transform: none; }
   }
 
@@ -821,10 +812,6 @@ function rebalanceListColumns(cards, columns, listDiv, renderTab) {
   distributeCardsToShortestColumn(cards, columns);
 }
 
-function waitForGalleryExit() {
-  return new Promise(resolve => setTimeout(resolve, 190));
-}
-
 async function renderCurrentList(isTabSwitch = false, isPageChange = false) {
   const requestId = ++renderRequestId;
   const listDiv = document.getElementById('contentList');
@@ -833,13 +820,7 @@ async function renderCurrentList(isTabSwitch = false, isPageChange = false) {
   const animateGallery = isTabSwitch || isPageChange;
   
   if (animateGallery) {
-    const hasVisibleCards = listDiv.style.display !== 'none' && listDiv.querySelector('.preview-card');
     listDiv.classList.remove('gallery-switching-in');
-    if (hasVisibleCards) {
-      listDiv.classList.add('gallery-switching-out');
-      await waitForGalleryExit();
-      if (requestId !== renderRequestId) return;
-    }
     if (isTabSwitch) {
       listDiv.style.display = 'none';
       skeleton.style.display = 'grid';
@@ -894,7 +875,6 @@ async function renderCurrentList(isTabSwitch = false, isPageChange = false) {
     const columns = Array.from(listDiv.querySelectorAll('.list-column'));
     const cards = pageItems.map((item, itemIndex) => {
       const card = createPreviewCard(item, renderTab, itemIndex);
-      card.style.setProperty('--card-delay', `${Math.min(itemIndex, 7) * 28}ms`);
       return card;
     });
 
@@ -917,7 +897,6 @@ async function renderCurrentList(isTabSwitch = false, isPageChange = false) {
   }
   
   skeleton.style.display = 'none';
-  listDiv.classList.remove('gallery-switching-out');
   if (animateGallery) listDiv.classList.add('gallery-switching-in');
   listDiv.style.display = 'grid';
   listDiv.style.visibility = 'visible';
@@ -930,7 +909,7 @@ async function renderCurrentList(isTabSwitch = false, isPageChange = false) {
   if (animateGallery) {
     setTimeout(() => {
       if (requestId === renderRequestId) listDiv.classList.remove('gallery-switching-in');
-    }, 720);
+    }, 220);
   }
   
   document.getElementById('pageCurrentInput').value = activePage;

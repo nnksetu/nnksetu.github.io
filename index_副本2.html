@@ -93,11 +93,6 @@
   ul.list li { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 0; display: flex; flex-direction: column; align-items: stretch; justify-content: flex-start; align-self: stretch; width: 100%; max-width: 100%; height: fit-content; overflow: hidden; cursor: pointer; transition: all 0.25s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.01); -webkit-tap-highlight-color: transparent; }
   ul.list li:hover { border-color: #50C878; box-shadow: 0 6px 16px rgba(80,200,120,0.06); }
   ul.list li:active { transform: scale(0.98); background: #f9fafb; }
-  ul.list.gallery-switching-out { opacity: 0 !important; transform: translateY(-8px) scale(0.985); transition: opacity 0.18s ease-out, transform 0.24s cubic-bezier(0.25, 1, 0.5, 1); pointer-events: none; }
-  ul.list.gallery-switching-in .preview-card { opacity: 0; transform: translateY(14px) scale(0.975); animation: gallery-card-in 0.42s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; animation-delay: var(--card-delay, 0ms); }
-  ul.list.gallery-switching-in .preview-wrap img { animation: gallery-cover-in 0.62s cubic-bezier(0.2, 0.8, 0.2, 1) both; animation-delay: calc(var(--card-delay, 0ms) + 40ms); }
-  @keyframes gallery-card-in { from { opacity: 0; transform: translateY(14px) scale(0.975); } to { opacity: 1; transform: translateY(0) scale(1); } }
-  @keyframes gallery-cover-in { from { opacity: 0.72; transform: scale(1.055); } to { opacity: 1; transform: scale(1); } }
   
   .preview-wrap { position: relative; width: 100%; min-height: 150px; border-radius: 12px; background: #f3f4f6; overflow: hidden; }
   .preview-wrap::before { content: ""; position: absolute; inset: 0; z-index: 2; background: #f3f4f6; opacity: 1; pointer-events: none; transition: opacity 0.24s ease-out; }
@@ -255,14 +250,6 @@
   html.dark-theme .preview-wrap, html.dark-theme .preview-fallback { background: #374151; }
   html.dark-theme .preview-wrap::before { background: #374151; }
 
-  @media (prefers-reduced-motion: reduce) {
-    ul.list.gallery-switching-out,
-    ul.list.gallery-switching-in .preview-card,
-    ul.list.gallery-switching-in .preview-wrap img { animation: none; transition: none; }
-    ul.list.gallery-switching-out { opacity: 1; transform: none; }
-    ul.list.gallery-switching-in .preview-card { opacity: 1; transform: none; }
-  }
-
 </style>
 </head>
 <body>
@@ -394,7 +381,6 @@ let allItems = {
 // 优先使用 JSON 中的预览图，旧 JSON 没有 preview 时再从子页面提取
 const previewCache = {};
 const previewRequests = {};
-let renderRequestId = 0;
 
 // 各分类总条数（从任意一页 JSON 的 total 字段获取）
 let totalCount = {
@@ -821,24 +807,12 @@ function rebalanceListColumns(cards, columns, listDiv, renderTab) {
   distributeCardsToShortestColumn(cards, columns);
 }
 
-function waitForGalleryExit() {
-  return new Promise(resolve => setTimeout(resolve, 190));
-}
-
 async function renderCurrentList(isTabSwitch = false) {
-  const requestId = ++renderRequestId;
   const listDiv = document.getElementById('contentList');
   const paginationCtrl = document.getElementById('paginationCtrl');
   const skeleton = document.getElementById('skeleton');
   
   if (isTabSwitch) {
-    const hasVisibleCards = listDiv.style.display !== 'none' && listDiv.querySelector('.preview-card');
-    listDiv.classList.remove('gallery-switching-in');
-    if (hasVisibleCards) {
-      listDiv.classList.add('gallery-switching-out');
-      await waitForGalleryExit();
-      if (requestId !== renderRequestId) return;
-    }
     listDiv.style.display = 'none';
     skeleton.style.display = 'grid';
     paginationCtrl.style.display = 'none';
@@ -856,11 +830,8 @@ async function renderCurrentList(isTabSwitch = false) {
     if (!cachePages[currentTab][p]) {
       if (listDiv.style.display !== 'none') listDiv.style.opacity = '0.4';
       await ensureServerPage(currentTab, p);
-      if (requestId !== renderRequestId) return;
     }
   }
-
-  if (requestId !== renderRequestId) return;
   
   listDiv.style.opacity = '1';
   
@@ -889,7 +860,6 @@ async function renderCurrentList(isTabSwitch = false) {
     const columns = Array.from(listDiv.querySelectorAll('.list-column'));
     const cards = pageItems.map((item, itemIndex) => {
       const card = createPreviewCard(item, renderTab, itemIndex);
-      card.style.setProperty('--card-delay', `${Math.min(itemIndex, 7) * 28}ms`);
       return card;
     });
 
@@ -912,20 +882,12 @@ async function renderCurrentList(isTabSwitch = false) {
   }
   
   skeleton.style.display = 'none';
-  listDiv.classList.remove('gallery-switching-out');
-  if (isTabSwitch) listDiv.classList.add('gallery-switching-in');
   listDiv.style.display = 'grid';
   
   const listLi = listDiv.querySelectorAll('li');
   listLi.forEach((li, idx) => {
     setTimeout(() => li.classList.add('show'), idx * 20);
   });
-
-  if (isTabSwitch) {
-    setTimeout(() => {
-      if (requestId === renderRequestId) listDiv.classList.remove('gallery-switching-in');
-    }, 720);
-  }
   
   document.getElementById('pageCurrentInput').value = activePage;
   document.getElementById('pageTotalLabel').innerText = totalPages;

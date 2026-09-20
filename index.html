@@ -97,10 +97,10 @@
   ul.list.gallery-switching-in .preview-card { opacity: 0; transform: translateY(14px) scale(0.975); animation: gallery-card-in 0.42s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; animation-delay: var(--card-delay, 0ms); }
   ul.list.gallery-switching-in .preview-wrap img { animation: gallery-cover-in 0.62s cubic-bezier(0.2, 0.8, 0.2, 1) both; animation-delay: calc(var(--card-delay, 0ms) + 40ms); }
   @keyframes gallery-card-in { from { opacity: 0; transform: translateY(14px) scale(0.975); } to { opacity: 1; transform: translateY(0) scale(1); } }
-  @keyframes gallery-cover-in { from { opacity: 0.72; transform: scale(1.055); } to { opacity: 1; transform: scale(1); } }
+  @keyframes gallery-cover-in { from { opacity: 1; transform: scale(1.055); } to { opacity: 1; transform: scale(1); } }
   
   .preview-wrap { position: relative; width: 100%; min-height: 150px; border-radius: 12px; background: #f3f4f6; overflow: hidden; }
-  .preview-wrap::before { content: ""; position: absolute; inset: 0; z-index: 2; background: #f3f4f6; opacity: 1; pointer-events: none; transition: opacity 0.24s ease-out; }
+  .preview-wrap::before { content: ""; position: absolute; inset: 0; z-index: 2; background: #f3f4f6; opacity: 0; pointer-events: none; }
   .preview-wrap img { position: relative; z-index: 1; width: 100%; height: auto; display: block; object-fit: contain; opacity: 1; }
   .preview-wrap.loaded::before { opacity: 0; }
   .preview-wrap.preview-unavailable { display: none; }
@@ -825,13 +825,14 @@ function waitForGalleryExit() {
   return new Promise(resolve => setTimeout(resolve, 190));
 }
 
-async function renderCurrentList(isTabSwitch = false) {
+async function renderCurrentList(isTabSwitch = false, isPageChange = false) {
   const requestId = ++renderRequestId;
   const listDiv = document.getElementById('contentList');
   const paginationCtrl = document.getElementById('paginationCtrl');
   const skeleton = document.getElementById('skeleton');
+  const animateGallery = isTabSwitch || isPageChange;
   
-  if (isTabSwitch) {
+  if (animateGallery) {
     const hasVisibleCards = listDiv.style.display !== 'none' && listDiv.querySelector('.preview-card');
     listDiv.classList.remove('gallery-switching-in');
     if (hasVisibleCards) {
@@ -839,8 +840,12 @@ async function renderCurrentList(isTabSwitch = false) {
       await waitForGalleryExit();
       if (requestId !== renderRequestId) return;
     }
-    listDiv.style.display = 'none';
-    skeleton.style.display = 'grid';
+    if (isTabSwitch) {
+      listDiv.style.display = 'none';
+      skeleton.style.display = 'grid';
+    } else {
+      listDiv.style.visibility = 'hidden';
+    }
     paginationCtrl.style.display = 'none';
   }
   
@@ -913,15 +918,16 @@ async function renderCurrentList(isTabSwitch = false) {
   
   skeleton.style.display = 'none';
   listDiv.classList.remove('gallery-switching-out');
-  if (isTabSwitch) listDiv.classList.add('gallery-switching-in');
+  if (animateGallery) listDiv.classList.add('gallery-switching-in');
   listDiv.style.display = 'grid';
+  listDiv.style.visibility = 'visible';
   
   const listLi = listDiv.querySelectorAll('li');
   listLi.forEach((li, idx) => {
     setTimeout(() => li.classList.add('show'), idx * 20);
   });
 
-  if (isTabSwitch) {
+  if (animateGallery) {
     setTimeout(() => {
       if (requestId === renderRequestId) listDiv.classList.remove('gallery-switching-in');
     }, 720);
@@ -963,7 +969,7 @@ function handleInputJump(val) {
   
   currentPage[currentTab] = pageNum;
   savePage(currentTab, pageNum);
-  renderCurrentList();
+  renderCurrentList(false, true);
 }
 
 function changePage(direction) {
@@ -975,7 +981,7 @@ function changePage(direction) {
   
   currentPage[currentTab] = newPage;
   savePage(currentTab, newPage);
-  renderCurrentList();
+  renderCurrentList(false, true);
 }
 
 function toggleSearch(show) {

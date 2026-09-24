@@ -35,6 +35,7 @@ from urllib.request import HTTPSHandler, ProxyHandler, Request, build_opener
 
 DEFAULT_BASE_URL = "https://r2-origin.setutime.com/zrsetu_zip"
 DEFAULT_WORKERS = 1
+DEFAULT_START_ISSUE = 780
 DEFAULT_ORIGIN_IPS = ("172.67.187.66", "104.21.88.241")
 ISSUE_RE = re.compile(r"^(\d+)\.html$", re.IGNORECASE)
 ADULT_MARKER = "🔞"
@@ -95,9 +96,8 @@ class ProgressDisplay:
     def finish(self, issue: int, status: str) -> None:
         with self.lock:
             current = self.state[issue]
-            if status in {"downloaded", "skipped"}:
-                current[0] = current[1] or 1
-                current[1] = current[1] or 1
+            if status in {"downloaded", "skipped"} and current[1] is not None:
+                current[0] = current[1]
             current[2] = status
             if self.enabled:
                 self._render_locked()
@@ -116,7 +116,8 @@ class ProgressDisplay:
             bar = "#" * filled + "-" * (24 - filled)
             progress = f"{percent:6.1%} {format_bytes(downloaded)}/{format_bytes(total)}"
         else:
-            bar = "-" * 24
+            filled = 24 if status in {"downloaded", "skipped"} else 0
+            bar = "#" * filled + "-" * (24 - filled)
             progress = f"       {format_bytes(downloaded)}/?"
         return f"{issue:>4} [{bar}] {progress:<25} {status}"
 
@@ -465,34 +466,13 @@ def download_one_curl(
     if destination.exists() and not overwrite:
         return issue, "skipped", "already exists"
 
-    # System DNS is currently returning a Clash Fake-IP for this host. Probe
-    # the known public Cloudflare addresses while keeping the original host as
-    # the TLS SNI/HTTP Host value.
-    selected_ip = None
-    status = None
-    total = None
+    # Avoid a HEAD request before every archive. Some origins reject HEAD, and
+    # probing each address first adds long delays without making the download
+    # more reliable. Try the data request directly and rotate resolved IPs.
     last_error = "unknown error"
-    for origin_ip in origin_ips or (None,):
-        status, total, probe_error = curl_probe(
-            url,
-            proxy,
-            ca_bundle,
-            timeout,
-            origin_ip,
-        )
-        if status == 404:
-            return issue, "failed", "HTTP 404: source archive does not exist"
-        if status is not None and 200 <= status < 400:
-            selected_ip = origin_ip
-            break
-        if probe_error:
-            last_error = probe_error
-
-    # Continue to the actual request even if HEAD was unavailable.
+    total = None
     for attempt in range(1, retries + 1):
-        origin_ip = selected_ip
-        if origin_ip is None and origin_ips:
-            origin_ip = origin_ips[(attempt - 1) % len(origin_ips)]
+        origin_ip = origin_ips[(attempt - 1) % len(origin_ips)] if origin_ips else None
         success, detail = curl_download(
             issue,
             url,
@@ -575,6 +555,12 @@ def parse_args() -> argparse.Namespace:
         help="Directory for downloaded ZIP files (default: %(default)s)",
     )
     parser.add_argument(
+        "--start-issue",
+        type=int,
+        default=DEFAULT_START_ISSUE,
+        help="Highest issue to include; download this issue and lower issues (default: %(default)s)",
+    )
+    parser.add_argument(
         "--workers",
         type=int,
         default=DEFAULT_WORKERS,
@@ -589,8 +575,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--retries",
         type=int,
-        default=3,
-        help="Attempts per file (default: %(default)s)",
+        default=10,
+        help="Attempts per file, resuming partial data after interrupted transfers (default: %(default)s)",
     )
     parser.add_argument(
         "--timeout",
@@ -619,6 +605,19 @@ def parse_args() -> argparse.Namespace:
         help="Download backend (default: curl; python is retained as a fallback)",
     )
     parser.add_argument(
+        "--origin-ip",
+        action="append",
+        help=(
+            "Public IP to use with curl --resolve; repeatable. "
+            "Defaults to the currently verified Cloudflare addresses."
+        ),
+    )
+    parser.add_argument(
+        "--no-origin-resolve",
+        action="store_true",
+        help="Use system DNS instead of forcing the public origin IP",
+    )
+    parser.add_argument(
         "--no-progress",
         action="store_true",
         help="Disable live progress bars",
@@ -634,6 +633,8 @@ def parse_args() -> argparse.Namespace:
         help="Only print the descending URLs; do not download",
     )
     args = parser.parse_args()
+    if args.start_issue < 1:
+        parser.error("--start-issue must be >= 1")
     if args.workers < 1 or args.retries < 1 or args.timeout <= 0:
         parser.error("--workers and --retries must be >= 1; --timeout must be > 0")
     if args.batch_size is not None and args.batch_size < 1:
@@ -644,19 +645,25 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
     issues, excluded = load_issues(args.json_dir)
+    issues = [issue for issue in issues if issue <= args.start_issue]
 
     print(f"Source: {args.json_dir}")
     print(f"Excluded by {ADULT_MARKER}: {len(excluded)} issues")
-    print(f"To download: {len(issues)} issues, descending order")
+    print(
+        f"To download: {len(issues)} issues at or below {args.start_issue}, "
+        "descending order"
+    )
     print(f"Output: {args.output_dir}")
     print(f"Proxy: {args.proxy or 'none (direct or environment settings)'}")
     print(f"Additional CA bundle: {args.ca_bundle or 'none'}")
     print(f"Backend: {args.backend} ({CURL_PATH if args.backend == 'curl' else 'urllib'})")
+    origin_ips = () if args.no_origin_resolve else tuple(args.origin_ip or DEFAULT_ORIGIN_IPS)
+    print(f"Origin IP override: {', '.join(origin_ips) if origin_ips else 'system DNS'}")
     fake_ips = fake_ip_addresses("r2-origin.setutime.com")
     if fake_ips:
         print(
             "WARNING: system DNS/TUN is active; r2-origin.setutime.com resolves "
-            f"to Fake-IP {', '.join(fake_ips)}. Omitting --proxy does not bypass it.",
+            f"to Fake-IP {', '.join(fake_ips)}. Using the public IP override instead.",
             file=sys.stderr,
         )
 
@@ -690,6 +697,7 @@ def main() -> int:
                     args.ca_bundle,
                     progress,
                     args.backend,
+                    origin_ips,
                 )
                 for issue in batch
             }

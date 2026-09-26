@@ -35,7 +35,7 @@ from urllib.request import HTTPSHandler, ProxyHandler, Request, build_opener
 
 DEFAULT_BASE_URL = "https://r2-origin.setutime.com/zrsetu_zip"
 DEFAULT_WORKERS = 1
-DEFAULT_START_ISSUE = 780
+DEFAULT_START_ISSUE = 349
 DEFAULT_ORIGIN_IPS = ("172.67.187.66", "104.21.88.241")
 ISSUE_RE = re.compile(r"^(\d+)\.html$", re.IGNORECASE)
 ADULT_MARKER = "🔞"
@@ -373,6 +373,21 @@ def load_issues(json_dir: Path) -> tuple[list[int], dict[int, str]]:
     return sorted(issues, reverse=True), excluded
 
 
+def load_issue_list(path: Path) -> list[int]:
+    """Read issue numbers from a plain text list, one number per line."""
+    issues = set()
+    with path.open("r", encoding="utf-8") as handle:
+        for line_number, line in enumerate(handle, start=1):
+            value = line.strip()
+            if not value or value.startswith("#"):
+                continue
+            match = re.fullmatch(r"\d+", value)
+            if not match:
+                raise ValueError(f"Invalid issue number at {path}:{line_number}: {value!r}")
+            issues.add(int(value))
+    return sorted(issues, reverse=True)
+
+
 def archive_url(base_url: str, issue: int) -> str:
     filename = f"ZrSetuTime - 第{issue}期原图.zip"
     return f"{base_url.rstrip('/')}/{quote(filename)}"
@@ -471,7 +486,10 @@ def download_one_curl(
     # more reliable. Try the data request directly and rotate resolved IPs.
     last_error = "unknown error"
     total = None
-    for attempt in range(1, retries + 1):
+    attempt = 0
+    retry_delay = 15
+    while True:
+        attempt += 1
         origin_ip = origin_ips[(attempt - 1) % len(origin_ips)] if origin_ips else None
         success, detail = curl_download(
             issue,
@@ -488,10 +506,24 @@ def download_one_curl(
             os.replace(partial, destination)
             return issue, "downloaded", detail
         last_error = detail
-        if attempt < retries:
-            time.sleep(min(2**attempt, 10))
+        http_error = re.search(r"returned error: (\d{3})", last_error)
+        if http_error:
+            status = int(http_error.group(1))
+            if 400 <= status < 500 and status not in {408, 429}:
+                return issue, "failed", last_error
 
-    return issue, "failed", last_error
+        if attempt % retries == 0:
+            partial_size = partial.stat().st_size if partial.exists() else 0
+            print(
+                f"[RETRY     ] {issue}: {last_error}; keeping {format_bytes(partial_size)} "
+                f"and retrying in {retry_delay}s",
+                file=sys.stderr,
+                flush=True,
+            )
+            time.sleep(retry_delay)
+            retry_delay = min(retry_delay * 2, 300)
+        else:
+            time.sleep(min(attempt, 5))
 
 
 def download_one(
@@ -559,6 +591,11 @@ def parse_args() -> argparse.Namespace:
         type=int,
         default=DEFAULT_START_ISSUE,
         help="Highest issue to include; download this issue and lower issues (default: %(default)s)",
+    )
+    parser.add_argument(
+        "--issue-list",
+        type=Path,
+        help="Plain text file containing exact issue numbers to download, one per line",
     )
     parser.add_argument(
         "--workers",
@@ -645,14 +682,25 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
     issues, excluded = load_issues(args.json_dir)
-    issues = [issue for issue in issues if issue <= args.start_issue]
+    if args.issue_list:
+        requested = load_issue_list(args.issue_list)
+        eligible = set(issues)
+        invalid = [issue for issue in requested if issue not in eligible]
+        if invalid:
+            print(
+                f"WARNING: ignoring {len(invalid)} issue(s) absent from eligible JSON data: "
+                + ", ".join(map(str, invalid)),
+                file=sys.stderr,
+            )
+        issues = [issue for issue in requested if issue in eligible]
+        selection_description = f"exact issue list ({args.issue_list})"
+    else:
+        issues = [issue for issue in issues if issue <= args.start_issue]
+        selection_description = f"issues at or below {args.start_issue}"
 
     print(f"Source: {args.json_dir}")
     print(f"Excluded by {ADULT_MARKER}: {len(excluded)} issues")
-    print(
-        f"To download: {len(issues)} issues at or below {args.start_issue}, "
-        "descending order"
-    )
+    print(f"To download: {len(issues)} {selection_description}, descending order")
     print(f"Output: {args.output_dir}")
     print(f"Proxy: {args.proxy or 'none (direct or environment settings)'}")
     print(f"Additional CA bundle: {args.ca_bundle or 'none'}")

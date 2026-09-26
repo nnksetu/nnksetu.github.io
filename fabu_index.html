@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#428cca">
+  <meta name="description" content="SetuTime 发布页，涩图导航最新地址发布页。">
+  <title>SetuTime 发布页</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --blue-900: #123b67;
+      --blue-800: #1b568e;
+      --blue-700: #2d75b5;
+      --blue-600: #428cca;
+      --blue-100: #dceefe;
+      --blue-50: #f4f9ff;
+      --ink: #18324d;
+      --muted: #6b8299;
+      --line: #d7e6f3;
+      --white: #ffffff;
+      --shadow: 0 24px 70px rgba(28, 83, 132, 0.14);
+    }
+
+    * { box-sizing: border-box; }
+
+    html { min-height: 100%; scroll-behavior: smooth; }
+
+    body {
+      min-width: 320px;
+      min-height: 100vh;
+      margin: 0;
+      overflow-x: hidden;
+      color: var(--ink);
+      background:
+        linear-gradient(rgba(66, 140, 202, 0.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(66, 140, 202, 0.045) 1px, transparent 1px),
+        var(--blue-50);
+      background-size: 36px 36px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button, a { font: inherit; }
+    a { color: inherit; }
+
+    .page-shell {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      isolation: isolate;
+    }
+
+    .page-shell::before {
+      position: absolute;
+      z-index: -1;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 330px;
+      content: "";
+      background: linear-gradient(180deg, rgba(29, 100, 163, 0.98), rgba(66, 140, 202, 0.91));
+      clip-path: polygon(0 0, 100% 0, 100% 78%, 84% 88%, 66% 81%, 46% 94%, 24% 84%, 0 92%);
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: min(100% - 40px, 1080px);
+      margin: 0 auto;
+      padding: 24px 0;
+      color: rgba(255, 255, 255, 0.88);
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 11px;
+      text-decoration: none;
+      letter-spacing: 0.02em;
+    }
+
+    .brand-mark {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      color: var(--blue-700);
+      background: #fff;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 800;
+      box-shadow: 0 7px 20px rgba(13, 50, 87, 0.16);
+    }
+
+    .brand-name {
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    .topbar-note {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: rgba(255, 255, 255, 0.77);
+      font-size: 13px;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      background: #bce8ff;
+      border-radius: 50%;
+      box-shadow: 0 0 0 4px rgba(188, 232, 255, 0.17);
+    }
+
+    .content {
+      width: min(100% - 40px, 760px);
+      margin: 44px auto 0;
+      padding: 0 0 52px;
+    }
+
+    .hero {
+      margin-bottom: 36px;
+      color: var(--white);
+      text-align: center;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 0 12px;
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.1);
+      color: rgba(255, 255, 255, 0.82);
+      font-size: 12px;
+      letter-spacing: 0.14em;
+    }
+
+    h1 {
+      margin: 18px 0 10px;
+      font-size: clamp(34px, 7vw, 58px);
+      line-height: 1.12;
+      letter-spacing: 0.015em;
+      font-weight: 800;
+    }
+
+    .hero-subtitle {
+      margin: 0;
+      color: rgba(255, 255, 255, 0.81);
+      font-size: clamp(15px, 2.5vw, 18px);
+      letter-spacing: 0.08em;
+    }
+
+    .panel {
+      padding: clamp(22px, 5vw, 38px);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.93);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+
+    .panel-heading {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 20px;
+      padding-bottom: 19px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .panel-kicker {
+      margin: 0 0 5px;
+      color: var(--blue-600);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .panel-title {
+      margin: 0;
+      color: var(--blue-900);
+      font-size: 24px;
+      line-height: 1.25;
+    }
+
+    .panel-desc {
+      max-width: 170px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+      text-align: right;
+    }
+
+    .links-list {
+      display: grid;
+      gap: 12px;
+      margin: 24px 0 0;
+    }
+
+    .link-card {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      min-width: 0;
+      padding: 16px 17px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(247, 251, 255, 0.85);
+      text-decoration: none;
+      transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease, background 180ms ease;
+    }
+
+    .link-card.primary-address {
+      min-height: 104px;
+      padding: 22px;
+      border-color: rgba(66, 140, 202, 0.3);
+      background: linear-gradient(135deg, #ffffff, #f2f8ff);
+      box-shadow: 0 18px 45px rgba(66, 140, 202, 0.16);
+    }
+
+    .link-card:hover,
+    .link-card:focus-visible {
+      outline: none;
+      border-color: rgba(66, 140, 202, 0.55);
+      background: #fff;
+      box-shadow: 0 18px 38px rgba(66, 140, 202, 0.16);
+      transform: translateY(-2px);
+    }
+
+    .link-index {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 40px;
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: var(--blue-600);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 800;
+      box-shadow: 0 9px 20px rgba(66, 140, 202, 0.24);
+    }
+
+    .link-copy {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .link-label {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin-bottom: 3px;
+      color: var(--blue-900);
+      font-size: 18px;
+      font-weight: 750;
+    }
+
+    .link-url {
+      overflow: hidden;
+      color: var(--muted);
+      font-size: 15px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .open-badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 0 9px;
+      border-radius: 999px;
+      background: rgba(66, 140, 202, 0.1);
+      color: var(--blue-700);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+    }
+
+    .current-badge {
+      display: none;
+      padding: 3px 7px;
+      border-radius: 999px;
+      background: #e2f5eb;
+      color: #23764a;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .link-card.is-current .current-badge { display: inline-flex; }
+
+    .link-arrow {
+      display: inline-flex;
+      flex: 0 0 auto;
+      color: var(--blue-600);
+    }
+
+    .link-arrow svg {
+      width: 19px;
+      height: 19px;
+      fill: none;
+      stroke: currentColor;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-width: 1.8;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .action-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 44px;
+      padding: 0 18px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+      color: var(--blue-800);
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: transform 180ms ease, border-color 180ms ease, background 180ms ease, box-shadow 180ms ease;
+    }
+
+    .action-button:hover,
+    .action-button:focus-visible {
+      outline: none;
+      border-color: rgba(66, 140, 202, 0.52);
+      background: #f5faff;
+      box-shadow: 0 7px 18px rgba(66, 140, 202, 0.1);
+      transform: translateY(-1px);
+    }
+
+    .action-button.primary {
+      border-color: var(--blue-600);
+      background: var(--blue-600);
+      color: #fff;
+      box-shadow: 0 9px 22px rgba(66, 140, 202, 0.24);
+    }
+
+    .action-button.primary:hover,
+    .action-button.primary:focus-visible {
+      border-color: var(--blue-700);
+      background: var(--blue-700);
+      box-shadow: 0 11px 26px rgba(66, 140, 202, 0.3);
+    }
+
+    .action-button svg {
+      width: 17px;
+      height: 17px;
+      fill: none;
+      stroke: currentColor;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-width: 1.9;
+    }
+
+    .footer {
+      margin-top: auto;
+      padding: 0 20px 27px;
+      color: #7d94a8;
+      font-size: 12px;
+      text-align: center;
+    }
+
+    .footer p { margin: 0; }
+    .footer span { color: var(--blue-600); }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 3;
+      max-width: calc(100vw - 36px);
+      padding: 11px 15px;
+      border: 1px solid rgba(255, 255, 255, 0.85);
+      border-radius: 10px;
+      background: rgba(23, 68, 110, 0.94);
+      color: #fff;
+      box-shadow: 0 12px 30px rgba(23, 68, 110, 0.24);
+      font-size: 13px;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(8px);
+      transition: opacity 180ms ease, transform 180ms ease;
+    }
+
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    @media (max-width: 620px) {
+      .topbar { width: min(100% - 28px, 1080px); padding: 17px 0; }
+      .topbar-note { font-size: 12px; }
+      .content { width: min(100% - 28px, 760px); margin-top: 39px; padding-bottom: 42px; }
+      .hero { margin-bottom: 31px; }
+      .hero-subtitle { letter-spacing: 0.04em; }
+      .panel { border-radius: 18px; }
+      .panel-heading { display: block; }
+      .panel-desc { max-width: none; margin-top: 9px; text-align: left; }
+      .link-card { gap: 12px; padding: 14px 13px; }
+      .link-card.primary-address { min-height: 96px; padding: 18px 15px; }
+      .link-index { flex-basis: 36px; width: 36px; height: 36px; border-radius: 10px; }
+      .link-label { font-size: 15px; }
+      .link-url { font-size: 13px; }
+      .actions { display: grid; grid-template-columns: 1fr; }
+      .action-button { width: 100%; }
+    }
+
+    @media (max-width: 390px) {
+      .brand-name { font-size: 15px; }
+      .topbar-note { max-width: 100px; text-align: right; line-height: 1.35; }
+      .eyebrow { font-size: 11px; letter-spacing: 0.1em; }
+      h1 { font-size: 34px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-shell">
+    <header class="topbar">
+      <a class="brand" href="https://www.setu.mom" aria-label="进入 SetuTime">
+        <span class="brand-mark" aria-hidden="true">S</span>
+        <span class="brand-name">SetuTime</span>
+      </a>
+      <div class="topbar-note"><span class="status-dot" aria-hidden="true"></span>Latest</div>
+    </header>
+
+    <main class="content">
+      <section class="hero" aria-labelledby="page-title">
+        <div class="eyebrow">WELCOME TO SETUTIME</div>
+        <h1 id="page-title">SetuTime发布页</h1>
+        <p class="hero-subtitle">涩图导航最新地址发布页</p>
+      </section>
+
+      <section class="panel" aria-labelledby="latest-title">
+        <div class="panel-heading">
+          <div>
+            <p class="panel-kicker">Latest Address</p>
+            <h2 class="panel-title" id="latest-title">最新地址</h2>
+          </div>
+          <p class="panel-desc">Official release page.</p>
+        </div>
+
+        <div class="links-list">
+          <a class="link-card primary-address" data-host="www.setu.mom" href="https://www.setu.mom" target="_blank" rel="noopener noreferrer">
+            <span class="link-index">01</span>
+            <span class="link-copy">
+              <span class="link-label">主站 <span class="open-badge">OPEN NOW</span><span class="current-badge">当前入口</span></span>
+              <span class="link-url">www.setu.mom</span>
+            </span>
+            <span class="link-arrow" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M5 12h13"></path><path d="m13 6 6 6-6 6"></path></svg>
+            </span>
+          </a>
+        </div>
+
+        <div class="actions">
+          <a class="action-button primary" href="https://www.setu.mom" target="_blank" rel="noopener noreferrer">
+            <svg viewBox="0 0 24 24"><path d="M5 12h13"></path><path d="m13 6 6 6-6 6"></path></svg>
+            进入 SetuTime
+          </a>
+          <button class="action-button" id="copy-button" type="button">
+            <svg viewBox="0 0 24 24"><rect x="8" y="8" width="11" height="12" rx="2"></rect><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h2"></path></svg>
+            复制主站地址
+          </button>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>© SetuTime · <span>Latest Address</span></p>
+    </footer>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const hostname = window.location.hostname.toLowerCase();
+    document.querySelectorAll('.link-card[data-host]').forEach((card) => {
+      const host = card.dataset.host.toLowerCase();
+      const bareHost = host.replace(/^www\./, '');
+      if (hostname === host || hostname === bareHost || hostname.endsWith('.' + bareHost)) {
+        card.classList.add('is-current');
+      }
+    });
+
+    const toast = document.getElementById('toast');
+    let toastTimer;
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 2200);
+    }
+
+    document.getElementById('copy-button').addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText('https://www.setu.mom');
+        showToast('主站地址已复制');
+      } catch (error) {
+        showToast('请手动复制：www.setu.mom');
+      }
+    });
+  </script>
+</body>
+</html>

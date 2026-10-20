@@ -8,7 +8,6 @@ document.addEventListener("DOMContentLoaded", function() {
     const SITE_ORIGIN = "https://setutime.top";
     const DOWNLOAD_ORIGIN = "https://dl.setutime.top";
     const VIDEO_ORIGIN = "https://r2.setutime.top";
-    const IMAGE_ORIGIN = "https://r2.setutime.top";
     const IMAGE_EO_ORIGIN = "https://eo.setutime.top";
     const MANAGED_VIDEO_HOSTS = ["r2.setutime.top", "eo.setutime.top", "v.setutime.top"];
     const IMAGE_RACE_COUNT = 1;
@@ -93,7 +92,7 @@ document.addEventListener("DOMContentLoaded", function() {
         return (img.dataset.htmlSrc || '').trim();
     }
 
-    function buildManagedImageUrl(img, origin = IMAGE_ORIGIN) {
+    function buildImageUrl(img, origin) {
         const imageFolder = IMAGE_FOLDER_BY_CATEGORY[category];
         const imageNumber = getImageNumber(img);
         if (!imageFolder || !currentNo || !imageNumber) return '';
@@ -114,18 +113,12 @@ document.addEventListener("DOMContentLoaded", function() {
                 img.dataset.htmlSrc = htmlSource;
                 return;
             }
-
-            const managedSource = buildManagedImageUrl(img);
-            if (managedSource) {
-                img.dataset.managedSrc = managedSource;
-                if (!source) img.dataset.src = managedSource;
-            }
         });
     }
 
     fillEmptyImageSources();
 
-    // 3. 首张图片三线路竞速，胜出线路用于本页其余图片
+    // 3. 首张图片两线路竞速，胜出线路用于本页其余图片
     function raceImageSources(sources) {
         const uniqueSources = sources.filter(({ src }, index, items) => (
             src && items.findIndex(item => item.src === src) === index
@@ -161,15 +154,14 @@ document.addEventListener("DOMContentLoaded", function() {
     function getImageSource(img, route) {
         const sources = {
             html: getHtmlImageSource(img),
-            managed: (img.dataset.managedSrc || buildManagedImageUrl(img)).trim(),
-            eo: buildManagedImageUrl(img, IMAGE_EO_ORIGIN)
+            eo: buildImageUrl(img, IMAGE_EO_ORIGIN)
         };
 
-        return sources[route] || sources.html || sources.managed || sources.eo;
+        return sources[route] || sources.html || sources.eo;
     }
 
     function getFallbackImageSource(img, route, primarySource) {
-        const fallbackRoutes = ['html', 'managed', 'eo'].filter(item => item !== route);
+        const fallbackRoutes = ['html', 'eo'].filter(item => item !== route);
         return fallbackRoutes
             .map(fallbackRoute => getImageSource(img, fallbackRoute))
             .find(source => source && source !== primarySource) || '';
@@ -210,8 +202,7 @@ document.addEventListener("DOMContentLoaded", function() {
             const wrap = img.parentElement;
             const sources = [
                 { route: 'html', src: getHtmlImageSource(img) },
-                { route: 'managed', src: (img.dataset.managedSrc || buildManagedImageUrl(img)).trim() },
-                { route: 'eo', src: buildManagedImageUrl(img, IMAGE_EO_ORIGIN) }
+                { route: 'eo', src: buildImageUrl(img, IMAGE_EO_ORIGIN) }
             ];
 
             img.dataset.racing = 'true';
@@ -229,7 +220,7 @@ document.addEventListener("DOMContentLoaded", function() {
             });
         })
     ).then(results => {
-        const routePriority = ['html', 'managed', 'eo'];
+        const routePriority = ['html', 'eo'];
         selectedImageRoute = routePriority.reduce((winner, route) => {
             const wins = results.filter(result => result === route).length;
             const winnerWins = results.filter(result => result === winner).length;

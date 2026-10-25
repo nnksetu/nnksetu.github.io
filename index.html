@@ -7,6 +7,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" id="meta-theme-color" content="#50C878">
 <link rel="stylesheet" href="https://cdn.jsdmirror.com/gh/FrecklyComb1728/blog@main/public/fonts/xiaolai.css">
+<link rel="stylesheet" href="https://cdn.jsdmirror.com/npm/@fontsource/titan-one@5.2.5/400.css">
 <link rel="icon" href="https://eo.setutime.top/favicon.png" type="image/png">
 <meta name="description" content="点击前往SetuTime~">
 <title>SetuTime!</title>
@@ -67,11 +68,45 @@
   ul.list li { opacity: 0; transform: translateY(10px); transition: opacity 0.35s ease-out, transform 0.35s cubic-bezier(0.2, 1, 0.2, 1); }
   .loaded ul.list li.show { opacity: 1; transform: translateY(0); }
   
-  header { background: transparent; color: #ffffff; padding: 40px 20px 20px; text-align: center; position: relative; }
-  header h1 { margin: 0; font-size: 37px; font-weight: 700; letter-spacing: 1px; text-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-  header p { 
-    margin: 8px 0 0; opacity: 0.9; font-size: 18px; font-weight: 400; 
-    font-family: 'xiaolai', -apple-system, BlinkMacSystemFont, sans-serif; letter-spacing: 0.5px; 
+  header {
+    background: transparent; color: #ffffff;
+    padding: 46px 0 28px; text-align: left; position: relative;
+  }
+
+  .header-inner {
+    width: 100%; max-width: 700px; margin: 0 auto;
+    padding: 0 20px; box-sizing: border-box;
+  }
+
+  header h1 {
+    margin: 0; width: fit-content;
+    font-family: "Titan One", "Avenir Next", "Futura", "Century Gothic", "Segoe UI", "PingFang SC", "Hiragino Sans", sans-serif;
+    font-size: clamp(38px, 6.2vw, 52px); font-weight: 400;
+    line-height: 1; letter-spacing: -0.01em; text-shadow: none;
+    color: var(--title-ink);
+  }
+
+  header p {
+    display: flex; align-items: center; gap: 10px;
+    margin: 16px 0 0; opacity: 1;
+    font-family: 'xiaolai', "Avenir Next", "Segoe UI", "PingFang SC", "Hiragino Sans", sans-serif;
+    font-size: 14px; font-weight: 400; letter-spacing: 0.1em; line-height: 1.4;
+  }
+
+  header p::before {
+    content: ""; flex: 0 0 auto; width: 26px; height: 2px;
+    border-radius: 2px; background: var(--accent);
+  }
+
+  @media (min-width: 900px) {
+    .header-inner { max-width: 960px; }
+  }
+
+  @media (max-width: 899px) {
+    header { padding: 34px 0 20px; }
+    .header-inner { padding: 0 12px; }
+    header h1 { font-size: clamp(34px, 9.6vw, 46px); letter-spacing: -0.005em; }
+    header p { font-size: 12px; letter-spacing: 0.12em; }
   }
   
   .main-wrapper {
@@ -259,6 +294,7 @@
     --page-bg: #eef3f8;
     --page-text: #172033;
     --page-muted: #68758a;
+    --title-ink: #475569;
     --sheet-bg: transparent;
     --panel-bg: rgba(255, 255, 255, 0.88);
     --panel-border: rgba(23, 32, 51, 0.08);
@@ -276,6 +312,7 @@
     --page-bg: #090d16;
     --page-text: #f8fafc;
     --page-muted: #9aa7bb;
+    --title-ink: #cfd8e3;
     --sheet-bg: transparent;
     --panel-bg: rgba(17, 24, 39, 0.78);
     --panel-border: rgba(255, 255, 255, 0.09);
@@ -368,7 +405,7 @@
   }
 
   header h1 {
-    color: var(--page-text);
+    color: var(--title-ink);
     text-shadow: none;
     user-select: none;
     -webkit-user-select: none;
@@ -559,8 +596,10 @@
     <svg class="sun-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
     <svg class="moon-icon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
   </div>
-  <h1 id="main-title">SetuTime</h1>
-  <p id="sub-title">全年龄向ACGイラストまとめ</p>
+  <div class="header-inner">
+    <h1 id="main-title">SetuTime!</h1>
+    <p id="sub-title">全年龄向ACGイラストまとめ</p>
+  </div>
 </header>
 
 <div class="main-wrapper">

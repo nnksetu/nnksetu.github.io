@@ -8,7 +8,7 @@
 <meta name="theme-color" id="meta-theme-color" content="#50C878">
 <link rel="stylesheet" href="css/fonts.css">
 <link rel="preload" href="fonts/mochiy-pop-one-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="icon" href="https://r2.setutime.top/favicon.png" type="image/png">
+<link rel="icon" href="https://eo.setutime.top/favicon.png" type="image/png">
 <meta name="description" content="点击前往SetuTime~">
 <title>SetuTime!</title>
 <script>
@@ -411,9 +411,10 @@ let allItems = {
   zrsetu: []
 };
 
-// 优先使用 JSON 中的预览图，旧 JSON 没有 preview 时再从子页面提取
+// JSON 中的预览图（EO 图床）作为主封面，加载失败时回退到子页面自带的图床
 const previewCache = {};
-const previewRequests = {};
+const subpagePreviewCache = {};
+const subpagePreviewRequests = {};
 let renderRequestId = 0;
 
 // 各分类总条数（从任意一页 JSON 的 total 字段获取）
@@ -705,8 +706,17 @@ async function ensureServerPage(tab, serverPage) {
   return pageData;
 }
 
+const PRIMARY_COVER_ORIGIN = 'https://eo.setutime.top';
+
 function getPreviewKey(tab, file) {
   return `${tab}/${file}`;
+}
+
+// 旧 JSON / 旧的接口缓存里可能仍是 r2 地址，运行时统一改为 EO 主图床
+function normalizePreviewUrl(url) {
+  const value = String(url || '').trim();
+  if (!value) return '';
+  return value.replace(/^https?:\/\/r2\.setutime\.top\//i, `${PRIMARY_COVER_ORIGIN}/`);
 }
 
 async function fetchPreviewUrl(tab, item) {
@@ -714,63 +724,57 @@ async function fetchPreviewUrl(tab, item) {
   if (Object.prototype.hasOwnProperty.call(previewCache, key)) {
     return previewCache[key];
   }
-  if (previewRequests[key]) {
-    return previewRequests[key];
-  }
 
-  if (item.preview) {
-    previewCache[key] = item.preview;
-    return item.preview;
+  previewCache[key] = normalizePreviewUrl(item.preview) || null;
+  return previewCache[key];
+}
+
+function extractMiddleImageUrl(doc, pageUrl) {
+  const imageUrls = Array.from(doc.querySelectorAll('.image-item img'))
+    .map(img => img.getAttribute('data-src') || img.getAttribute('src'))
+    .filter(Boolean)
+    .map(url => new URL(url, pageUrl).href);
+
+  // 偶数张图取前一个中间位置，例如 40 张取第 20 张
+  const middleIndex = imageUrls.length ? Math.ceil(imageUrls.length / 2) - 1 : -1;
+  return middleIndex >= 0 ? imageUrls[middleIndex] : null;
+}
+
+// 回退封面：读取子页面自己的 image-item 图床地址
+async function fetchSubpagePreviewUrl(tab, item) {
+  const key = `${tab}/${item.file}`;
+  if (Object.prototype.hasOwnProperty.call(subpagePreviewCache, key)) {
+    return subpagePreviewCache[key];
+  }
+  if (subpagePreviewRequests[key]) {
+    return subpagePreviewRequests[key];
   }
 
   const pageUrl = `${rootUrl}${tab}/${item.file}`;
-  previewRequests[key] = fetch(pageUrl, { cache: 'force-cache' })
+  subpagePreviewRequests[key] = fetch(pageUrl, { cache: 'force-cache' })
     .then(response => {
-      if (!response.ok) throw new Error('Preview page request failed');
+      if (!response.ok) throw new Error('Fallback preview page request failed');
       return response.text();
     })
     .then(html => {
       const doc = new DOMParser().parseFromString(html, 'text/html');
-      const imageUrls = Array.from(doc.querySelectorAll('.image-item img'))
-        .map(img => img.getAttribute('data-src') || img.getAttribute('src'))
-        .filter(Boolean)
-        .map(url => new URL(url, pageUrl).href);
-
-      // 偶数张图取前一个中间位置，例如 40 张取第 20 张
-      const middleIndex = imageUrls.length ? Math.ceil(imageUrls.length / 2) - 1 : -1;
-      const previewUrl = middleIndex >= 0 ? imageUrls[middleIndex] : null;
-      previewCache[key] = previewUrl;
-      return previewUrl;
+      const fallbackUrl = extractMiddleImageUrl(doc, pageUrl);
+      subpagePreviewCache[key] = fallbackUrl;
+      return fallbackUrl;
     })
     .catch(error => {
-      console.warn(`Preview extraction failed for ${pageUrl}`, error);
-      previewCache[key] = null;
+      console.warn(`Fallback preview extraction failed for ${pageUrl}`, error);
+      subpagePreviewCache[key] = null;
       return null;
     })
     .finally(() => {
-      delete previewRequests[key];
+      delete subpagePreviewRequests[key];
     });
 
-  return previewRequests[key];
+  return subpagePreviewRequests[key];
 }
 
-async function loadPreviewForCard(card, tab, item) {
-  if (!card || !card.isConnected) return;
-
-  const image = card.querySelector('.preview-wrap img');
-  const fallback = card.querySelector('.preview-fallback');
-  const previewWrap = card.querySelector('.preview-wrap');
-  if (!image || !fallback || !previewWrap) return;
-
-  const key = getPreviewKey(tab, item.file);
-  const previewUrl = await fetchPreviewUrl(tab, item);
-  if (!card.isConnected || card.dataset.previewKey !== key) return;
-
-  if (!previewUrl) {
-    previewWrap.classList.add('preview-unavailable');
-    return;
-  }
-
+function loadImageSource(image, sourceUrl) {
   return new Promise(resolve => {
     let settled = false;
 
@@ -779,24 +783,57 @@ async function loadPreviewForCard(card, tab, item) {
       settled = true;
       image.onload = null;
       image.onerror = null;
-
-      if (loaded) {
-        previewWrap.classList.add('loaded');
-        fallback.hidden = true;
-      } else {
-        previewWrap.classList.add('preview-unavailable');
-      }
       resolve(loaded);
     };
 
     image.onload = () => finish(true);
     image.onerror = () => finish(false);
-    image.src = previewUrl;
+    image.src = sourceUrl;
 
     if (image.complete) {
       finish(image.naturalWidth > 0);
     }
   });
+}
+
+async function loadPreviewForCard(card, tab, item) {
+  if (!card || !card.isConnected) return false;
+
+  const image = card.querySelector('.preview-wrap img');
+  const fallback = card.querySelector('.preview-fallback');
+  const previewWrap = card.querySelector('.preview-wrap');
+  if (!image || !fallback || !previewWrap) return false;
+
+  const key = getPreviewKey(tab, item.file);
+  const isStale = () => !card.isConnected || card.dataset.previewKey !== key;
+
+  const previewUrl = await fetchPreviewUrl(tab, item);
+  if (isStale()) return false;
+
+  let loaded = false;
+  if (previewUrl) {
+    loaded = await loadImageSource(image, previewUrl);
+  }
+
+  // EO 封面加载失败（或 JSON 没有 preview）时，回退到子页面内嵌的原始图床
+  if (!loaded && !isStale()) {
+    const fallbackUrl = await fetchSubpagePreviewUrl(tab, item);
+    if (!isStale() && fallbackUrl && fallbackUrl !== previewUrl) {
+      loaded = await loadImageSource(image, fallbackUrl);
+    }
+  }
+
+  if (isStale()) return loaded;
+
+  if (loaded) {
+    previewWrap.classList.add('loaded');
+    previewWrap.classList.remove('preview-unavailable');
+    fallback.hidden = true;
+  } else {
+    previewWrap.classList.add('preview-unavailable');
+  }
+
+  return loaded;
 }
 
 function getListColumnCount() {

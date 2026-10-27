@@ -7,7 +7,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     const SITE_ORIGIN = "https://setutime.top";
     const DOWNLOAD_ORIGIN = "https://dl.setutime.top";
-    const VIDEO_ORIGIN = "https://r2.setutime.top";
+    const VIDEO_ORIGIN = "https://eo.setutime.top";
     const IMAGE_EO_ORIGIN = "https://eo.setutime.top";
     const MANAGED_VIDEO_HOSTS = ["r2.setutime.top", "eo.setutime.top", "v.setutime.top"];
     const IMAGE_RACE_COUNT = 1;

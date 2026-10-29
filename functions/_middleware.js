@@ -1,7 +1,7 @@
 export async function onRequest(context) {
   const response = await context.next();
 
-  if (new URL(context.request.url).pathname !== "/scripts/sw.js") {
+  if (new URL(context.request.url).pathname !== "/sw.js") {
     return response;
   }
 

@@ -1,3 +1,4 @@
+// 放在根目录，Service Worker 作用域自然就是 /，可以拦截首页封面请求。
 const IMAGE_CACHE_NAME = "setutime-image-cache-v1";
 const IMAGE_META_CACHE_NAME = "setutime-image-cache-meta-v1";
 const IMAGE_CACHE_TTL = 180 * 24 * 60 * 60 * 1000;

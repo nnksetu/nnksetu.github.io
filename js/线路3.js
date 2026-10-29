@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", function() {
     if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.register("/scripts/sw.js", { scope: "/" }).catch(error => {
+        navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(error => {
             console.warn("Image cache service worker registration failed:", error);
         });
     }

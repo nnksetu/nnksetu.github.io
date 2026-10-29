@@ -13,7 +13,7 @@
 <title>SetuTime!</title>
 <script>
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/scripts/sw.js', { scope: '/' }).catch(error => {
+    navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(error => {
       console.warn('Image cache service worker registration failed:', error);
     });
   }
@@ -416,6 +416,7 @@ const previewCache = {};
 const subpagePreviewCache = {};
 const subpagePreviewRequests = {};
 let renderRequestId = 0;
+let previewObserver = null;
 
 // 各分类总条数（从任意一页 JSON 的 total 字段获取）
 let totalCount = {
@@ -902,6 +903,10 @@ function rebalanceListColumns(cards, columns, listDiv, renderTab) {
 
 async function renderCurrentList(isTabSwitch = false, isPageChange = false) {
   const requestId = ++renderRequestId;
+  if (previewObserver) {
+    previewObserver.disconnect();
+    previewObserver = null;
+  }
   const listDiv = document.getElementById('contentList');
   const paginationCtrl = document.getElementById('paginationCtrl');
   const skeleton = document.getElementById('skeleton');
@@ -979,9 +984,24 @@ async function renderCurrentList(isTabSwitch = false, isPageChange = false) {
       });
     };
 
-    cards.forEach((card, itemIndex) => {
-      loadPreviewForCard(card, renderTab, pageItems[itemIndex]).then(queueRebalance);
-    });
+    // 只给进入视口的卡片请求封面，首屏外的图片留到滚动时再加载。
+    if ('IntersectionObserver' in window) {
+      const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          if (!entry.isIntersecting) return;
+          const card = entry.target;
+          observer.unobserve(card);
+          const itemIndex = Number(card.dataset.itemIndex);
+          loadPreviewForCard(card, renderTab, pageItems[itemIndex]).then(queueRebalance);
+        });
+      }, { rootMargin: '0px 0px' });
+      previewObserver = observer;
+      cards.forEach(card => observer.observe(card));
+    } else {
+      cards.forEach((card, itemIndex) => {
+        loadPreviewForCard(card, renderTab, pageItems[itemIndex]).then(queueRebalance);
+      });
+    }
   }
   
   skeleton.style.display = 'none';

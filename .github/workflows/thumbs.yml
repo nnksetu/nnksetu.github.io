@@ -54,6 +54,21 @@ jobs:
       - name: Install dependencies
         run: npm ci --prefix scripts --no-audit --no-fund
 
+      - name: Diagnose R2 TLS
+        env:
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID || vars.R2_ACCOUNT_ID }}
+          R2_ENDPOINT: ${{ secrets.R2_ENDPOINT || vars.R2_ENDPOINT }}
+        run: |
+          set +e
+          echo "R2_ACCOUNT_ID length: ${#R2_ACCOUNT_ID}"
+          endpoints="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com https://${R2_ACCOUNT_ID}.eu.r2.cloudflarestorage.com"
+          if [ -n "$R2_ENDPOINT" ]; then endpoints="$R2_ENDPOINT $endpoints"; fi
+          for endpoint in $endpoints; do
+            echo "== $endpoint"
+            curl -sS -o /dev/null -w "  TLS default: HTTP %{http_code}\n" --max-time 20 "$endpoint/" || true
+            curl -sS --tlsv1.2 --tls-max 1.2 -o /dev/null -w "  TLS 1.2:     HTTP %{http_code}\n" --max-time 20 "$endpoint/" || true
+          done
+
       - name: Generate and upload thumbnails
         env:
           R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID || vars.R2_ACCOUNT_ID }}

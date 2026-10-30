@@ -378,6 +378,7 @@
   var PRIMARY_COVER_ORIGIN = 'https://eo.setutime.top';
   // 缩略图由 GitHub Actions 生成后上传到 R2，经 r2.setutime.top 的公开图片前缀提供
   var THUMB_ORIGIN = 'https://r2.setutime.top';
+  var THUMB_DIR = 'thumbs-720';
   var THUMB_PATH_PREFIXES = ['acg_pic', 'setu_pic', 'zrsetu_pic', 'V'];
 
   function getPreviewKey(tab, file) {
@@ -421,7 +422,7 @@
     if (!file) return '';
     file = file.replace(/\.[^.]+$/, '') + '.webp';
 
-    var thumbPath = [prefix, 'thumbs'].concat(segments, [file]).join('/');
+    var thumbPath = [prefix, THUMB_DIR].concat(segments, [file]).join('/');
     var encodedPath = thumbPath.split('/').map(encodeURIComponent).join('/');
     return THUMB_ORIGIN + '/' + encodedPath;
   }

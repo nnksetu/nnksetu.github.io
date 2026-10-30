@@ -16,8 +16,9 @@
  *   R2_ACCOUNT_ID / R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY / R2_BUCKET
  * 可选：
  *   R2_PUBLIC_BASE（默认 https://r2.setutime.top）
- *   THUMB_WIDTH（默认 480）/ THUMB_QUALITY（默认 75）
- *   THUMB_CONCURRENCY（默认 6）/ FORCE=1 / DRY_RUN=1
+ *   THUMB_WIDTH（默认 720）/ THUMB_QUALITY（默认 82）
+ *   THUMB_CONCURRENCY（默认 6）/ THUMB_LIMIT（调试用）/ FORCE=1 / DRY_RUN=1
+ *   THUMB_LOCAL_DIR：只生成到本地目录、不上传（GitHub Actions 里配合 rclone 使用）
  */
 'use strict';
 
@@ -31,11 +32,16 @@ const ALLOWED_HOSTS = new Set(['eo.setutime.top', 'r2.setutime.top']);
 const THUMB_PREFIXES = new Set(['acg_pic', 'setu_pic', 'zrsetu_pic', 'V']);
 
 const R2_PUBLIC_BASE = String(process.env.R2_PUBLIC_BASE || 'https://r2.setutime.top').replace(/\/+$/, '');
-const THUMB_WIDTH = Math.max(120, parseInt(process.env.THUMB_WIDTH, 10) || 480);
-const THUMB_QUALITY = Math.min(95, Math.max(40, parseInt(process.env.THUMB_QUALITY, 10) || 75));
+const THUMB_WIDTH = Math.max(120, parseInt(process.env.THUMB_WIDTH, 10) || 720);
+const THUMB_QUALITY = Math.min(95, Math.max(40, parseInt(process.env.THUMB_QUALITY, 10) || 82));
+const THUMB_DIR = String(process.env.THUMB_DIR || `thumbs-${THUMB_WIDTH}`).trim() || `thumbs-${THUMB_WIDTH}`;
 const CONCURRENCY = Math.min(16, Math.max(1, parseInt(process.env.THUMB_CONCURRENCY, 10) || 6));
 const FORCE = /^(1|true|yes)$/i.test(String(process.env.FORCE || ''));
 const DRY_RUN = /^(1|true|yes)$/i.test(String(process.env.DRY_RUN || ''));
+const LOCAL_DIR = String(process.env.THUMB_LOCAL_DIR || '').trim()
+  ? path.resolve(String(process.env.THUMB_LOCAL_DIR).trim())
+  : '';
+const LIMIT = Math.max(0, parseInt(process.env.THUMB_LIMIT, 10) || 0);
 
 function readJson(file) {
   return JSON.parse(fs.readFileSync(file, 'utf8'));
@@ -69,7 +75,7 @@ function parsePreviewUrl(raw) {
   if (!file || file.endsWith('.')) return null;
 
   const webpName = file.replace(/\.[^.]+$/, '') + '.webp';
-  const key = [prefix, 'thumbs'].concat(segments, [webpName]).join('/');
+  const key = [prefix, THUMB_DIR].concat(segments, [webpName]).join('/');
   const encodedKey = key.split('/').map(encodeURIComponent).join('/');
 
   return {
@@ -164,7 +170,7 @@ async function listExistingKeys(s3, ListObjectsV2Command, bucket) {
     do {
       const result = await s3.send(new ListObjectsV2Command({
         Bucket: bucket,
-        Prefix: `${prefix}/thumbs/`,
+        Prefix: `${prefix}/${THUMB_DIR}/`,
         ContinuationToken: token
       }));
       for (const object of result.Contents || []) {
@@ -178,7 +184,7 @@ async function listExistingKeys(s3, ListObjectsV2Command, bucket) {
 
 async function main() {
   const collected = collectTargets();
-  const targets = collected.targets;
+  const targets = LIMIT ? collected.targets.slice(0, LIMIT) : collected.targets;
 
   console.log(`[thumbs] 数据条目 ${collected.total}，无预览图 ${collected.withoutPreview}，待处理缩略图 ${targets.length}`);
   if (DRY_RUN) {
@@ -186,6 +192,62 @@ async function main() {
       console.log(`[dry-run] ${target.sourceUrl}\n          -> ${target.publicUrl}`);
     }
     console.log(`[dry-run] 共 ${targets.length} 个，未下载/上传`);
+    return;
+  }
+
+  // 本地输出模式：只生成文件，由 workflow 里的 rclone 负责上传，绕开 S3 SDK/TLS
+  if (LOCAL_DIR) {
+    const sharpLocal = require('sharp');
+    let generated = 0;
+    let skippedLocal = 0;
+    let bytes = 0;
+    const failuresLocal = [];
+    await mapLimit(targets, CONCURRENCY, async target => {
+      const outPath = path.join(LOCAL_DIR, target.key);
+      if (!FORCE) {
+        try {
+          const stat = await fs.promises.stat(outPath);
+          if (stat.size > 0) {
+            skippedLocal += 1;
+            return;
+          }
+        } catch (error) {}
+      }
+      try {
+        const original = await fetchOriginal(target.sourceUrl);
+        const thumb = await sharpLocal(original, { failOn: 'none' })
+          .rotate()
+          .resize({ width: THUMB_WIDTH, withoutEnlargement: true })
+          .webp({ quality: THUMB_QUALITY, effort: 5, smartSubsample: true })
+          .toBuffer();
+        await fs.promises.mkdir(path.dirname(outPath), { recursive: true });
+        await fs.promises.writeFile(outPath, thumb);
+        generated += 1;
+        bytes += thumb.length;
+        if (generated % 25 === 0) console.log(`[thumbs] 已生成 ${generated}/${targets.length}`);
+      } catch (error) {
+        failuresLocal.push({ key: target.key, error: error.message });
+        console.warn(`[thumbs] 失败 ${target.key}: ${error.message}`);
+      }
+    });
+    const localSummary = [
+      '',
+      '### R2 缩略图生成结果（本地输出）',
+      '',
+      `- 数据条目：${collected.total}`,
+      `- 待处理：${targets.length}`,
+      `- 已生成：${generated}`,
+      `- 已存在跳过：${skippedLocal}`,
+      `- 失败：${failuresLocal.length}`,
+      `- 输出目录：${LOCAL_DIR}`,
+      `- 生成体积：${(bytes / 1024 / 1024).toFixed(1)} MB`,
+      `- 目录：${THUMB_DIR}`
+    ].join('\n');
+    console.log(localSummary);
+    if (process.env.GITHUB_STEP_SUMMARY) {
+      fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, localSummary + '\n');
+    }
+    if (failuresLocal.length && generated === 0) process.exitCode = 1;
     return;
   }
 
@@ -276,7 +338,7 @@ async function main() {
       const thumb = await sharp(original, { failOn: 'none' })
         .rotate()
         .resize({ width: THUMB_WIDTH, withoutEnlargement: true })
-        .webp({ quality: THUMB_QUALITY, effort: 4 })
+        .webp({ quality: THUMB_QUALITY, effort: 5, smartSubsample: true })
         .toBuffer();
 
       await s3.send(new PutObjectCommand({

@@ -5,7 +5,7 @@ const IMAGE_CACHE_TTL = 180 * 24 * 60 * 60 * 1000;
 const MAX_IMAGE_ENTRIES = 300; // 控制缓存体积，避免长期使用撑爆配额
 const TRIM_INTERVAL = 10 * 60 * 1000;
 const CACHEABLE_IMAGE_HOSTS = new Set(["eo.setutime.top", "r2.setutime.top"]);
-const COVER_IMAGE_PATH = /^\/(?:acg_pic|setu_pic|zrsetu_pic)\/(?:thumbs\/)?pic-\d+-\d+\.webp$/;
+const COVER_IMAGE_PATH = /^\/(?:acg_pic|setu_pic|zrsetu_pic)\/(?:thumbs(?:-\d+)?\/)?pic-\d+-\d+\.webp$/;
 
 let lastTrimAt = 0;
 

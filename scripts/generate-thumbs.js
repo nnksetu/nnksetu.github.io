@@ -4,10 +4,10 @@
  *
  * 设计要点：
  * - 只读取 data/{acg,setu,zrsetu}/*.json 里的 preview 地址，不修改 JSON；
- * - 缩略图 key 由原图路径推导：<前缀>/thumbs/<原文件名>.webp
+ * - 缩略图统一放在桶根目录的 thumbs-720/ 下：
  *   例如 https://eo.setutime.top/acg_pic/pic-15-35.webp
- *      -> acg_pic/thumbs/pic-15-35.webp
- *      -> https://r2.setutime.top/acg_pic/thumbs/pic-15-35.webp
+ *      -> thumbs-720/acg_pic/pic-15-35.webp
+ *      -> https://r2.setutime.top/thumbs-720/acg_pic/pic-15-35.webp
  * - 前端 js/index.js 的 getThumbUrl() 用完全相同的规则推导，所以新增内容只要
  *   跑一次本脚本即可，不需要提交 data 变更。
  * - 已存在的缩略图会跳过；传 FORCE=1 可全部重新生成。
@@ -75,7 +75,7 @@ function parsePreviewUrl(raw) {
   if (!file || file.endsWith('.')) return null;
 
   const webpName = file.replace(/\.[^.]+$/, '') + '.webp';
-  const key = [prefix, THUMB_DIR].concat(segments, [webpName]).join('/');
+  const key = [THUMB_DIR, prefix].concat(segments, [webpName]).join('/');
   const encodedKey = key.split('/').map(encodeURIComponent).join('/');
 
   return {
@@ -170,7 +170,7 @@ async function listExistingKeys(s3, ListObjectsV2Command, bucket) {
     do {
       const result = await s3.send(new ListObjectsV2Command({
         Bucket: bucket,
-        Prefix: `${prefix}/${THUMB_DIR}/`,
+        Prefix: `${THUMB_DIR}/${prefix}/`,
         ContinuationToken: token
       }));
       for (const object of result.Contents || []) {

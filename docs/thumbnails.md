@@ -9,12 +9,26 @@
 
   ```
   https://eo.setutime.top/acg_pic/pic-15-35.webp
-    -> acg_pic/thumbs-720/pic-15-35.webp
-    -> https://r2.setutime.top/acg_pic/thumbs-720/pic-15-35.webp
+    -> thumbs-720/acg_pic/pic-15-35.webp
+    -> https://r2.setutime.top/thumbs-720/acg_pic/pic-15-35.webp
   ```
 
 - 前端 `js/index.js` 用同样的规则推导 URL，先加载缩略图，404/失败时回退到原图，所以**不需要修改 JSON、也不需要提交图片**；
-- 缩略图放在 `acg_pic/thumbs-720/`、`setu_pic/thumbs-720/`、`zrsetu_pic/thumbs-720/`、`V/thumbs-720/` 下。现有 r2.setutime.top 网关已经把 `/acg_pic`、`/setu_pic`、`/zrsetu_pic`、`/V` 作为公开图片前缀，因此缩略图可以直接公开访问，不需要改 R2 Worker。
+- 缩略图统一放在桶根目录的 `thumbs-720/` 下，按分类分子目录：`thumbs-720/acg_pic/`、`thumbs-720/setu_pic/`、`thumbs-720/zrsetu_pic/`、`thumbs-720/V/`。
+
+> **必须改 R2 Worker**：`/thumbs-720` 在桶根目录，不在原来的公开图片前缀 `/acg_pic`、`/setu_pic`、`/zrsetu_pic`、`/V` 之下。如果 `r2.setutime.top` 的 Worker 没有放行它，缩略图会返回 403，前端会自动回退原图。
+>
+> 在 `r2 workers.txt` 里把 `/thumbs-720` 加进 `PUBLIC_IMAGE_PREFIXES` 并重新部署：
+>
+> ```js
+> const PUBLIC_IMAGE_PREFIXES = [
+>   "/thumbs-720",
+>   "/zrsetu_pic",
+>   "/setu_pic",
+>   "/acg_pic",
+>   "/V",
+> ];
+> ```
 
 ## 一次性配置
 
@@ -45,7 +59,7 @@ R2 API Token 权限：
 4. 跑完后访问任意一条验证：
 
    ```
-   https://r2.setutime.top/acg_pic/thumbs-720/pic-15-35.webp
+   https://r2.setutime.top/thumbs-720/acg_pic/pic-15-35.webp
    ```
 
 当前数据约 1183 张封面，首次会下载约 830 MB 原图，生成约 60–80 MB 缩略图，通常几分钟到十几分钟。
@@ -97,5 +111,5 @@ node scripts/generate-thumbs.js
 
 - **TLS handshake failure / SSL alert 40**：确认 `R2_ACCOUNT_ID` 是 32 位十六进制 Account ID，不是 Zone ID、Token ID 或完整 URL。脚本已经强制 `forcePathStyle: true`，不会再请求 `bucket.account.r2.cloudflarestorage.com` 这种会触发 SNI 证书错误的虚拟主机地址。
 - **缩略图 404**：脚本还没跑，或 R2 token 没有该 bucket 权限。前端会自动回退原图，不影响访问。
-- **上传成功但打不开**：确认路径在 `/acg_pic/thumbs-720/...` 这类公开前缀下；如果换了 R2 网关域名，改 `R2_PUBLIC_BASE` 和 `js/index.js` 里的 `THUMB_ORIGIN`。
+- **上传成功但打不开**：确认路径在 `/thumbs-720/...` 下，并且 R2 Worker 已把 `/thumbs-720` 加进 `PUBLIC_IMAGE_PREFIXES`；如果换了 R2 网关域名，改 `R2_PUBLIC_BASE` 和 `js/index.js` 里的 `THUMB_ORIGIN`。
 - **想省 R2 存储**：缩略图通常 40–70 KB，1183 张约 60–80 MB，R2 免费额度足够。

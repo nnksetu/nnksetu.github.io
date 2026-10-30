@@ -422,7 +422,7 @@
     if (!file) return '';
     file = file.replace(/\.[^.]+$/, '') + '.webp';
 
-    var thumbPath = [prefix, THUMB_DIR].concat(segments, [file]).join('/');
+    var thumbPath = [THUMB_DIR, prefix].concat(segments, [file]).join('/');
     var encodedPath = thumbPath.split('/').map(encodeURIComponent).join('/');
     return THUMB_ORIGIN + '/' + encodedPath;
   }

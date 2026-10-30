@@ -95,6 +95,7 @@
   var preloadState = { acg: null, setu: null, zrsetu: null };
 
   var previewCache = {};
+  var thumbState = 'unknown'; // unknown | available | unavailable
   var subpagePreviewCache = {};
   var subpagePreviewRequests = {};
 
@@ -392,6 +393,7 @@
 
   // 由原图地址推导 R2 缩略图地址；生成规则与 scripts/generate-thumbs.js 保持一致
   function getThumbUrl(previewUrl) {
+    if (thumbState === 'unavailable') return '';
     var raw = String(previewUrl || '').trim();
     if (!raw) return '';
     var url;
@@ -524,7 +526,13 @@
     // 优先加载 480px 缩略图；缩略图还没生成时回退到原图
     var chain = thumbUrl
       ? loadImageSource(image, thumbUrl).then(function (loaded) {
-          if (loaded || isStale()) return loaded;
+          if (loaded) {
+            thumbState = 'available';
+            return true;
+          }
+          if (isStale()) return false;
+          // 缩略图还没生成时只探测一次，避免整页每张卡都先发一个 404
+          if (thumbState === 'unknown') thumbState = 'unavailable';
           return previewUrl ? loadImageSource(image, previewUrl) : false;
         })
       : (previewUrl ? loadImageSource(image, previewUrl) : Promise.resolve(false));

@@ -208,9 +208,26 @@ async function main() {
   } = require('@aws-sdk/client-s3');
 
   const bucket = String(process.env.R2_BUCKET).trim();
+  // 兼容误把 Account ID 填成 URL 的情况
+  const accountId = String(process.env.R2_ACCOUNT_ID)
+    .trim()
+    .replace(/^https?:\/\//i, '')
+    .replace(/\/.*$/, '');
+  if (!/^[a-f0-9]{32}$/i.test(accountId)) {
+    console.warn('[thumbs] R2_ACCOUNT_ID 看起来不是标准的 32 位十六进制 Account ID，请检查是否填成了 Zone ID / Token ID');
+  }
+
+  // R2 的 S3 端点：自定义 endpoint 时要用 path-style，否则 SDK 会请求
+  // bucket.accountid.r2.cloudflarestorage.com，SNI/证书不匹配会直接 TLS handshake failure
+  const endpoint = String(process.env.R2_ENDPOINT || `https://${accountId}.r2.cloudflarestorage.com`).replace(/\/+$/, '');
+  let endpointHost = endpoint;
+  try { endpointHost = new URL(endpoint).host; } catch (error) {}
+  console.log(`[thumbs] R2 endpoint: ${endpointHost}，bucket: ${bucket}，path-style: true`);
+
   const s3 = new S3Client({
     region: 'auto',
-    endpoint: `https://${String(process.env.R2_ACCOUNT_ID).trim()}.r2.cloudflarestorage.com`,
+    endpoint,
+    forcePathStyle: true,
     credentials: {
       accessKeyId: String(process.env.R2_ACCESS_KEY_ID).trim(),
       secretAccessKey: String(process.env.R2_SECRET_ACCESS_KEY).trim()

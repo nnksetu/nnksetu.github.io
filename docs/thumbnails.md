@@ -88,11 +88,13 @@ node scripts/generate-thumbs.js
 | `THUMB_CONCURRENCY` | `6` | 并发下载/上传数 |
 | `FORCE` | `false` | 为 `1` 时忽略已有缩略图 |
 | `R2_PUBLIC_BASE` | `https://r2.setutime.top` | 公开访问前缀 |
+| `R2_ENDPOINT` | 自动 | 一般不用改；EU jurisdiction 的 bucket 可填 `https://<ACCOUNT_ID>.eu.r2.cloudflarestorage.com` |
 
 如果要改宽度，前端不需要改；URL 只和路径有关。
 
 ## 常见问题
 
+- **TLS handshake failure / SSL alert 40**：确认 `R2_ACCOUNT_ID` 是 32 位十六进制 Account ID，不是 Zone ID、Token ID 或完整 URL。脚本已经强制 `forcePathStyle: true`，不会再请求 `bucket.account.r2.cloudflarestorage.com` 这种会触发 SNI 证书错误的虚拟主机地址。
 - **缩略图 404**：脚本还没跑，或 R2 token 没有该 bucket 权限。前端会自动回退原图，不影响访问。
 - **上传成功但打不开**：确认路径在 `/acg_pic/thumbs/...` 这类公开前缀下；如果换了 R2 网关域名，改 `R2_PUBLIC_BASE` 和 `js/index.js` 里的 `THUMB_ORIGIN`。
 - **想省 R2 存储**：缩略图通常只有几十 KB，1183 张约 30–50 MB，R2 免费额度足够。

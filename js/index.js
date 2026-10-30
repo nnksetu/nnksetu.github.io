@@ -100,6 +100,10 @@
 
   var renderRequestId = 0;
   var previewObserver = null;
+  var previewQueue = [];
+  var activePreviewLoads = 0;
+  var MAX_PREVIEW_LOADS = 2;
+  var skeletonTimer = null;
   var currentColumnCount = 0;
   var resizeTimer = null;
   var searchTimer = null;
@@ -575,10 +579,37 @@
     });
   }
 
+  // 限制同时解码的大图数量：封面单张约 390 KB / 2482px，四张并发解码在手机上会明显掉帧
+  function enqueuePreview(card, tab, item) {
+    if (!card || !item) return;
+    previewQueue.push({ card: card, tab: tab, item: item });
+    pumpPreviewQueue();
+  }
+
+  function pumpPreviewQueue() {
+    while (activePreviewLoads < MAX_PREVIEW_LOADS && previewQueue.length) {
+      var job = previewQueue.shift();
+      if (!job.card.isConnected) continue;
+      activePreviewLoads += 1;
+      loadPreviewForCard(job.card, job.tab, job.item)
+        .catch(function () {})
+        .then(function () {
+          activePreviewLoads -= 1;
+          pumpPreviewQueue();
+        });
+    }
+  }
+
+  function clearSkeletonTimer() {
+    if (!skeletonTimer) return;
+    window.clearTimeout(skeletonTimer);
+    skeletonTimer = null;
+  }
+
   function observeCards(cards, pageItems, tab) {
     if (!('IntersectionObserver' in window)) {
       cards.forEach(function (card, index) {
-        loadPreviewForCard(card, tab, pageItems[index]);
+        enqueuePreview(card, tab, pageItems[index]);
       });
       return;
     }
@@ -590,10 +621,10 @@
           var card = entry.target;
           observer.unobserve(card);
           var itemIndex = Number(card.dataset.itemIndex);
-          loadPreviewForCard(card, tab, pageItems[itemIndex]);
+          enqueuePreview(card, tab, pageItems[itemIndex]);
         });
       },
-      { rootMargin: '300px 0px' }
+      { rootMargin: '0px' }
     );
 
     previewObserver = observer;
@@ -641,6 +672,7 @@
     var skeleton = $('skeleton');
     if (!listDiv) return;
 
+    clearSkeletonTimer();
     disconnectPreviewObserver();
     listDiv.replaceChildren(
       makeMessage('数据加载失败', '网络异常或数据文件暂时不可用，请检查网络后重试。', '重新加载', function () {
@@ -679,20 +711,28 @@
     var skeleton = $('skeleton');
     if (!listDiv || !pagination || !skeleton) return Promise.resolve();
 
+    clearSkeletonTimer();
+    previewQueue.length = 0;
     disconnectPreviewObserver();
 
-    if (isTabSwitch) {
-      listDiv.hidden = true;
-      listDiv.classList.remove('gallery-switching-in');
-      skeleton.hidden = false;
-    } else if (isPageChange) {
-      listDiv.classList.add('is-switching');
-    }
+    if (isTabSwitch) listDiv.classList.remove('gallery-switching-in');
     pagination.hidden = true;
     listDiv.setAttribute('aria-busy', 'true');
 
-    // 先拿第 1 页：既用于 total/totalPages，也用于纠正已保存的越界页码
-    return ensureServerPage(renderTab, 1)
+    // 数据有缓存时渲染只要几十毫秒，别先闪一下骨架屏；超过 200ms 才显示加载态
+    if (isTabSwitch || isPageChange) {
+      skeletonTimer = window.setTimeout(function () {
+        if (requestId !== renderRequestId) return;
+        listDiv.hidden = true;
+        skeleton.hidden = false;
+      }, 200);
+    }
+
+    // 首次进入某分类才请求第 1 页拿 total；已知 total 时直接复用，少一次切分类请求
+    var firstPageReady = totalCount[renderTab]
+      ? Promise.resolve(true)
+      : ensureServerPage(renderTab, 1);
+    return firstPageReady
       .then(function (firstPage) {
         if (requestId !== renderRequestId) return;
         if (!firstPage) {
@@ -709,27 +749,18 @@
 
         var activePage = currentPage[renderTab];
         var startIdx = (activePage - 1) * ITEMS_PER_PAGE;
-        var endIdx = activePage * ITEMS_PER_PAGE;
-        var fileStart = Math.floor(startIdx / SERVER_ITEMS_PER_FILE) + 1;
-        var fileEnd = Math.floor((endIdx - 1) / SERVER_ITEMS_PER_FILE) + 1;
+        // ITEMS_PER_PAGE(10) 整除 SERVER_ITEMS_PER_FILE(50)：一个前端页永远只落在一个 JSON 文件内，
+        // 直接按文件内偏移取数据，不再依赖 allItems 的累计顺序（也支持直接跳页）。
+        var pageFile = Math.floor(startIdx / SERVER_ITEMS_PER_FILE) + 1;
+        var offsetInFile = startIdx % SERVER_ITEMS_PER_FILE;
 
-        var chain = Promise.resolve(true);
-        for (var p = fileStart; p <= fileEnd; p += 1) {
-          chain = chain.then(
-            (function (pageNumber) {
-              return function (ok) {
-                if (!ok) return false;
-                if (cachePages[renderTab][pageNumber]) return true;
-                listDiv.style.opacity = '0.4';
-                return ensureServerPage(renderTab, pageNumber).then(function (data) {
-                  return !!data;
-                });
-              };
-            })(p)
-          );
-        }
+        var pageReady = cachePages[renderTab][pageFile]
+          ? Promise.resolve(true)
+          : ensureServerPage(renderTab, pageFile).then(function (data) {
+              return !!data;
+            });
 
-        return chain.then(function (ok) {
+        return pageReady.then(function (ok) {
           if (requestId !== renderRequestId) return;
           if (!ok) {
             showLoadError(requestId);
@@ -738,11 +769,13 @@
 
           listDiv.style.opacity = '1';
 
-          allItems[renderTab].sort(function (a, b) {
+          var fileData = cachePages[renderTab][pageFile];
+          var fileItems = fileData && Array.isArray(fileData.items) ? fileData.items.slice() : [];
+          fileItems.sort(function (a, b) {
             return parseInt(getFileNumber(b.file) || 0, 10) - parseInt(getFileNumber(a.file) || 0, 10);
           });
 
-          var pageItems = allItems[renderTab].slice(startIdx, endIdx);
+          var pageItems = fileItems.slice(offsetInFile, offsetInFile + ITEMS_PER_PAGE);
           if (pageItems.length === 0) {
             listDiv.replaceChildren(makeMessage('暂无当前页数据', '可以返回第一页或切换分类看看。'));
           } else {
@@ -756,6 +789,7 @@
             listDiv.replaceChildren(fragment);
 
             // 先让列表可见，再启动 IntersectionObserver，避免隐藏状态下观测不到卡片
+            clearSkeletonTimer();
             skeleton.hidden = true;
             listDiv.hidden = false;
 
@@ -773,6 +807,7 @@
             });
           }
 
+          clearSkeletonTimer();
           skeleton.hidden = true;
           listDiv.hidden = false;
           listDiv.classList.remove('is-switching');
@@ -944,9 +979,7 @@
     if (!val) return;
 
     var pool = allItems[currentTab];
-    var matchedCount = 0;
-    var shown = 0;
-    var items = [];
+    var matched = [];
 
     for (var i = 0; i < pool.length; i += 1) {
       var item = pool[i];
@@ -954,12 +987,15 @@
       var isCaptionMatch = item.caption && String(item.caption).toLowerCase().indexOf(val) !== -1;
       var isNumMatch = issueNum && issueNum.indexOf(val) !== -1;
       if (!isCaptionMatch && !isNumMatch) continue;
-      matchedCount += 1;
-      if (shown < SEARCH_RESULT_LIMIT) {
-        items.push(item);
-        shown += 1;
-      }
+      matched.push(item);
     }
+
+    matched.sort(function (a, b) {
+      return parseInt(getFileNumber(b.file) || 0, 10) - parseInt(getFileNumber(a.file) || 0, 10);
+    });
+
+    var matchedCount = matched.length;
+    var items = matched.slice(0, SEARCH_RESULT_LIMIT);
 
     var loadedCount = pool.length;
     var expectedCount = getDisplayTotal();
@@ -1156,6 +1192,16 @@
       resizeTimer = window.setTimeout(rebuildColumns, 180);
     });
 
+    // 某些环境（如移动端地址栏收起）不一定触发 resize，用断点变化兜底
+    ['(min-width: 900px)', '(min-width: 1200px)'].forEach(function (query) {
+      var media = window.matchMedia(query);
+      var onChange = function () {
+        if (resizeTimer) window.clearTimeout(resizeTimer);
+        resizeTimer = window.setTimeout(rebuildColumns, 180);
+      };
+      if (media.addEventListener) media.addEventListener('change', onChange);
+    });
+
     // 关闭状态下让弹层完全不可聚焦
     if (searchOverlay) searchOverlay.inert = true;
     if (hiddenOverlay) hiddenOverlay.inert = true;
@@ -1173,8 +1219,8 @@
     if (searchInput) searchInput.value = '';
     if (searchResults) searchResults.replaceChildren();
 
+    window.scrollTo(0, 0);
     renderCurrentList({ tabSwitch: true });
-    preloadAllSearchData(type);
   }
 
   /* ---------------------------------------------------------------- 启动 */
@@ -1188,13 +1234,7 @@
     });
   }
 
-  function scheduleIdle(callback, timeout) {
-    if ('requestIdleCallback' in window) {
-      window.requestIdleCallback(callback, { timeout: timeout || 3000 });
-    } else {
-      window.setTimeout(callback, 1500);
-    }
-  }
+
 
   function startAppNow() {
     var pBar = $('topProgressBar');
@@ -1217,10 +1257,7 @@
         if (headerEl) headerEl.classList.remove('app-loading');
         document.body.classList.add('loaded');
 
-        // 空闲时再后台预加载，避免首屏抢带宽
-        scheduleIdle(function () {
-          preloadAllSearchData(currentTab);
-        });
+        // 搜索数据只在打开搜索时加载，避免切分类时后台请求和封面图抢带宽
       })
       .catch(function (error) {
         console.error('App start failed:', error);

@@ -1,0 +1,68 @@
+name: Generate R2 Thumbnails
+
+# 把 data/*/*.json 里的封面缩略图生成到 R2：
+#   https://r2.setutime.top/<分类图床>/thumbs/<文件名>.webp
+# 前端会按同一规则自动推导，所以本工作流不需要提交任何文件。
+#
+# 首次使用前，在仓库 Settings → Secrets and variables → Actions 配置：
+#   R2_ACCOUNT_ID
+#   R2_ACCESS_KEY_ID
+#   R2_SECRET_ACCESS_KEY
+#   R2_BUCKET
+# R2 API Token 需要该 bucket 的 Object Read & Write 权限。
+
+on:
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 忽略已有缩略图，全部重新生成
+        type: boolean
+        default: false
+  schedule:
+    # 每天 03:30 UTC（北京时间 11:30）兜底跑一次，处理新增内容
+    - cron: '30 3 * * *'
+  workflow_run:
+    # 数据工作流更新完 data/*.json 后自动跟进；它的提交带 [skip ci]，所以不能靠 push 触发
+    workflows: ["Auto Update data.json"]
+    types: [completed]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: r2-thumbnails
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Install dependencies
+        run: npm ci --prefix scripts --no-audit --no-fund
+
+      - name: Generate and upload thumbnails
+        env:
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID || vars.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID || vars.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY || vars.R2_SECRET_ACCESS_KEY }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET || vars.R2_BUCKET }}
+          R2_PUBLIC_BASE: https://r2.setutime.top
+          THUMB_WIDTH: '480'
+          THUMB_QUALITY: '75'
+          THUMB_CONCURRENCY: '6'
+          FORCE: ${{ github.event.inputs.force || 'false' }}
+        run: node scripts/generate-thumbs.js

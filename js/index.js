@@ -375,6 +375,9 @@
   /* ---------------------------------------------------------------- 预览图 */
 
   var PRIMARY_COVER_ORIGIN = 'https://eo.setutime.top';
+  // 缩略图由 GitHub Actions 生成后上传到 R2，经 r2.setutime.top 的公开图片前缀提供
+  var THUMB_ORIGIN = 'https://r2.setutime.top';
+  var THUMB_PATH_PREFIXES = ['acg_pic', 'setu_pic', 'zrsetu_pic', 'V'];
 
   function getPreviewKey(tab, file) {
     return tab + '/' + file;
@@ -385,6 +388,40 @@
     var value = String(url || '').trim();
     if (!value) return '';
     return value.replace(/^https?:\/\/r2\.setutime\.top\//i, PRIMARY_COVER_ORIGIN + '/');
+  }
+
+  // 由原图地址推导 R2 缩略图地址；生成规则与 scripts/generate-thumbs.js 保持一致
+  function getThumbUrl(previewUrl) {
+    var raw = String(previewUrl || '').trim();
+    if (!raw) return '';
+    var url;
+    try {
+      url = new URL(raw, window.location.href);
+    } catch (error) {
+      return '';
+    }
+    var host = url.hostname.toLowerCase();
+    if (host !== 'eo.setutime.top' && host !== 'r2.setutime.top') return '';
+
+    var pathname;
+    try {
+      pathname = decodeURIComponent(url.pathname);
+    } catch (error) {
+      return '';
+    }
+
+    var segments = pathname.split('/').filter(Boolean);
+    var prefix = segments.shift();
+    if (!prefix || THUMB_PATH_PREFIXES.indexOf(prefix) === -1 || !segments.length) return '';
+    if (segments.some(function (segment) { return segment === '..' || segment === '.'; })) return '';
+
+    var file = segments.pop();
+    if (!file) return '';
+    file = file.replace(/\.[^.]+$/, '') + '.webp';
+
+    var thumbPath = [prefix, 'thumbs'].concat(segments, [file]).join('/');
+    var encodedPath = thumbPath.split('/').map(encodeURIComponent).join('/');
+    return THUMB_ORIGIN + '/' + encodedPath;
   }
 
   function fetchPreviewUrl(tab, item) {
@@ -483,7 +520,14 @@
     }
 
     var previewUrl = fetchPreviewUrl(tab, item);
-    var chain = previewUrl ? loadImageSource(image, previewUrl) : Promise.resolve(false);
+    var thumbUrl = getThumbUrl(previewUrl);
+    // 优先加载 480px 缩略图；缩略图还没生成时回退到原图
+    var chain = thumbUrl
+      ? loadImageSource(image, thumbUrl).then(function (loaded) {
+          if (loaded || isStale()) return loaded;
+          return previewUrl ? loadImageSource(image, previewUrl) : false;
+        })
+      : (previewUrl ? loadImageSource(image, previewUrl) : Promise.resolve(false));
 
     return chain
       .then(function (loaded) {

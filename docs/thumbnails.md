@@ -10,13 +10,13 @@
   ```
   https://eo.setutime.top/acg_pic/pic-15-35.webp
     -> thumbs-720/acg_pic/pic-15-35.webp
-    -> https://r2.setutime.top/thumbs-720/acg_pic/pic-15-35.webp
+    -> https://eo.setutime.top/thumbs-720/acg_pic/pic-15-35.webp
   ```
 
 - 前端 `js/index.js` 用同样的规则推导 URL，先加载缩略图，404/失败时回退到原图，所以**不需要修改 JSON、也不需要提交图片**；
 - 缩略图统一放在桶根目录的 `thumbs-720/` 下，按分类分子目录：`thumbs-720/acg_pic/`、`thumbs-720/setu_pic/`、`thumbs-720/zrsetu_pic/`、`thumbs-720/V/`。
 
-> **必须改 R2 Worker**：`/thumbs-720` 在桶根目录，不在原来的公开图片前缀 `/acg_pic`、`/setu_pic`、`/zrsetu_pic`、`/V` 之下。如果 `r2.setutime.top` 的 Worker 没有放行它，缩略图会返回 403，前端会自动回退原图。
+> **必须改 R2 Worker**：`/thumbs-720` 在桶根目录，不在原来的公开图片前缀 `/acg_pic`、`/setu_pic`、`/zrsetu_pic`、`/V` 之下。如果 `eo.setutime.top` 的 Worker 没有放行它，缩略图会返回 403，前端会自动回退原图。
 >
 > 在 `r2 workers.txt` 里把 `/thumbs-720` 加进 `PUBLIC_IMAGE_PREFIXES` 并重新部署：
 >
@@ -59,7 +59,7 @@ R2 API Token 权限：
 4. 跑完后访问任意一条验证：
 
    ```
-   https://r2.setutime.top/thumbs-720/acg_pic/pic-15-35.webp
+   https://eo.setutime.top/thumbs-720/acg_pic/pic-15-35.webp
    ```
 
 当前数据约 1183 张封面，首次会下载约 830 MB 原图，生成约 60–80 MB 缩略图，通常几分钟到十几分钟。
@@ -102,7 +102,7 @@ node scripts/generate-thumbs.js
 | `THUMB_CONCURRENCY` | `6` | 并发下载/上传数 |
 | `THUMB_DIR` | `thumbs-720` | R2 目录；改宽度时一起改，前端需同步 |
 | `FORCE` | `false` | 为 `1` 时忽略已有缩略图 |
-| `R2_PUBLIC_BASE` | `https://r2.setutime.top` | 公开访问前缀 |
+| `R2_PUBLIC_BASE` | `https://eo.setutime.top` | 公开访问前缀 |
 | `R2_ENDPOINT` | 自动 | 一般不用改；EU jurisdiction 的 bucket 可填 `https://<ACCOUNT_ID>.eu.r2.cloudflarestorage.com` |
 
 如果要改宽度，目录也要一起改（默认是 `thumbs-720`，前端 `js/index.js` 里的 `THUMB_DIR` 需要同步），否则会命中旧缓存。

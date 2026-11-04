@@ -376,8 +376,8 @@
   /* ---------------------------------------------------------------- 预览图 */
 
   var PRIMARY_COVER_ORIGIN = 'https://eo.setutime.top';
-  // 缩略图由 GitHub Actions 生成后上传到 R2，经 r2.setutime.top 的公开图片前缀提供
-  var THUMB_ORIGIN = 'https://r2.setutime.top';
+  // 缩略图由 GitHub Actions 生成后上传到 R2，统一经 eo.setutime.top 的公开图片前缀提供
+  var THUMB_ORIGIN = 'https://eo.setutime.top';
   var THUMB_DIR = 'thumbs-720';
   var THUMB_PATH_PREFIXES = ['acg_pic', 'setu_pic', 'zrsetu_pic', 'V'];
 
@@ -385,14 +385,14 @@
     return tab + '/' + file;
   }
 
-  // 旧 JSON / 旧的接口缓存里可能仍是 r2 地址，运行时统一改为 EO 主图床
+  // 旧 JSON / 旧的接口缓存里仍可能残留 r2 地址，运行时统一改为 EO 主图床
   function normalizePreviewUrl(url) {
     var value = String(url || '').trim();
     if (!value) return '';
-    return value.replace(/^https?:\/\/r2\.setutime\.top\//i, PRIMARY_COVER_ORIGIN + '/');
+    return value.replace(/^https?:\/\/(?:r2|eo)\.setutime\.top\//i, PRIMARY_COVER_ORIGIN + '/');
   }
 
-  // 由原图地址推导 R2 缩略图地址；生成规则与 scripts/generate-thumbs.js 保持一致
+  // 由原图地址推导缩略图地址；生成规则与 scripts/generate-thumbs.js 保持一致
   function getThumbUrl(previewUrl) {
     if (thumbState === 'unavailable') return '';
     var raw = String(previewUrl || '').trim();
@@ -404,7 +404,7 @@
       return '';
     }
     var host = url.hostname.toLowerCase();
-    if (host !== 'eo.setutime.top' && host !== 'r2.setutime.top') return '';
+    if (host !== 'eo.setutime.top') return '';
 
     var pathname;
     try {

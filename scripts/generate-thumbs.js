@@ -7,7 +7,7 @@
  * - 缩略图统一放在桶根目录的 thumbs-720/ 下：
  *   例如 https://eo.setutime.top/acg_pic/pic-15-35.webp
  *      -> thumbs-720/acg_pic/pic-15-35.webp
- *      -> https://r2.setutime.top/thumbs-720/acg_pic/pic-15-35.webp
+ *      -> https://eo.setutime.top/thumbs-720/acg_pic/pic-15-35.webp
  * - 前端 js/index.js 的 getThumbUrl() 用完全相同的规则推导，所以新增内容只要
  *   跑一次本脚本即可，不需要提交 data 变更。
  * - 已存在的缩略图会跳过；传 FORCE=1 可全部重新生成。
@@ -15,7 +15,7 @@
  * 需要的环境变量：
  *   R2_ACCOUNT_ID / R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY / R2_BUCKET
  * 可选：
- *   R2_PUBLIC_BASE（默认 https://r2.setutime.top）
+ *   R2_PUBLIC_BASE（默认 https://eo.setutime.top）
  *   THUMB_WIDTH（默认 720）/ THUMB_QUALITY（默认 82）
  *   THUMB_CONCURRENCY（默认 6）/ THUMB_LIMIT（调试用）/ FORCE=1 / DRY_RUN=1
  *   THUMB_LOCAL_DIR：只生成到本地目录、不上传（GitHub Actions 里配合 rclone 使用）
@@ -28,10 +28,10 @@ const path = require('path');
 const ROOT = path.resolve(__dirname, '..');
 const DATA_DIR = path.join(ROOT, 'data');
 const CATEGORIES = ['acg', 'setu', 'zrsetu'];
-const ALLOWED_HOSTS = new Set(['eo.setutime.top', 'r2.setutime.top']);
+const ALLOWED_HOSTS = new Set(['eo.setutime.top']);
 const THUMB_PREFIXES = new Set(['acg_pic', 'setu_pic', 'zrsetu_pic', 'V']);
 
-const R2_PUBLIC_BASE = String(process.env.R2_PUBLIC_BASE || 'https://r2.setutime.top').replace(/\/+$/, '');
+const R2_PUBLIC_BASE = String(process.env.R2_PUBLIC_BASE || 'https://eo.setutime.top').replace(/\/+$/, '');
 const THUMB_WIDTH = Math.max(120, parseInt(process.env.THUMB_WIDTH, 10) || 720);
 const THUMB_QUALITY = Math.min(95, Math.max(40, parseInt(process.env.THUMB_QUALITY, 10) || 82));
 const THUMB_DIR = String(process.env.THUMB_DIR || `thumbs-${THUMB_WIDTH}`).trim() || `thumbs-${THUMB_WIDTH}`;
